@@ -171,8 +171,16 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     
         cl = strstr(new_resp->rbuf, "Content-Length: ");
         if (!cl)
-            new_resp->keepalive = 0; 
-        else 
+        {
+            /* Netscape sends this.  It is technically correct as the header
+             * may be mixed-case - we should be case-insensitive.  But,
+             * that gets mighty expensive. */
+            cl = strstr(new_resp->rbuf, "Content-length: "); 
+            if (!cl)
+                new_resp->keepalive = 0; 
+        }
+
+        if (cl)
         {
             cl += sizeof("Content-Length: ") - 1;
             ecl = strstr(cl, CRLF);
