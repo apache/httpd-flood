@@ -68,8 +68,7 @@
 struct ssl_socket_t {
     SSL_CTX *ssl_context;
     SSL *ssl_connection;
-    apr_socket_t *socket;
-    apr_pollfd_t *poll;
+    flood_socket_t *socket;
 };
 
 apr_status_t ssl_init_socket(apr_pool_t *pool)
@@ -99,7 +98,7 @@ ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
         return NULL;
 
     /* Get the native OS socket. */
-    apr_os_sock_get(&ossock, ssl_socket->socket);
+    apr_os_sock_get(&ossock, ssl_socket->socket->socket);
 
     /* Create a local context */
     ssl_socket->ssl_context = SSL_CTX_new(SSLv23_client_method());
@@ -114,9 +113,6 @@ ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
     /* Set the descriptors */
     SSL_set_fd(ssl_socket->ssl_connection, ossock);
     e = SSL_connect(ssl_socket->ssl_connection);
-
-    apr_poll_setup(&ssl_socket->poll, 1, pool);
-    apr_poll_socket_add(ssl_socket->poll, ssl_socket->socket, APR_POLLIN);
 
     if (e)
     {
@@ -143,8 +139,7 @@ void ssl_close_socket(ssl_socket_t *s)
 {
     SSL_free(s->ssl_connection);
     SSL_CTX_free(s->ssl_context);
-    /* s->poll can be cleaned up when our pool dies. */
-    apr_socket_close(s->socket);
+    close_socket(s->socket);
 }
 
 apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
@@ -154,7 +149,7 @@ apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
 
     /* Wait until there is something to read. */
     socketsRead = 1;
-    e = apr_poll(s->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+    e = apr_poll(s->socket->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
     e = SSL_read(s->ssl_connection, buf, *buflen);
     sslError = SSL_get_error(s->ssl_connection, e);
 
@@ -183,7 +178,7 @@ void ssl_read_socket_handshake(ssl_socket_t *s)
     /* Wait until there is something to read. */
     int socketsRead = 1;
     apr_status_t e;
-    e = apr_poll(s->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+    e = apr_poll(s->socket->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
     e = SSL_read(s->ssl_connection, buf, buflen);
 }
 

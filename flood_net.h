@@ -62,7 +62,10 @@
 
 #include "flood_profile.h"
 
-typedef struct flood_socket_t flood_socket_t;
+typedef struct flood_socket_t {
+    apr_socket_t *socket;
+    apr_pollfd_t *poll;
+} flood_socket_t;
 
 flood_socket_t* open_socket(apr_pool_t *pool, request_t *r);
 void close_socket(flood_socket_t *s);

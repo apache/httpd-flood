@@ -58,11 +58,6 @@
 #include "flood_profile.h"
 #include "flood_net.h"
 
-struct flood_socket_t {
-    apr_socket_t *socket;
-    apr_pollfd_t *poll;
-};
-
 /* Open the TCP connection to the server */
 flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
 {
