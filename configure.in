@@ -13,11 +13,56 @@ AC_PROG_MAKE_SET
 
 AC_CANONICAL_SYSTEM
 
-dnl openssl-0.9.x/{include,lib}
 AC_ARG_WITH(openssl,
-  [  --with-openssl=PATH     Prefix to openssl (default /pkg/openssl-0.9.6b)],
-  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-openssl requires a path'); else OPENSSL_PREFIX="$withval"; fi],
-  [OPENSSL_PREFIX="/pkg/openssl-0.9.6b"])
+  [  --with-openssl=PATH     Prefix to openssl],
+[if test "$withval" = "yes"; then
+  AC_MSG_ERROR('option --with-openssl requires a path')
+else
+  fl_openssl_prefix=$withval
+
+  if test "x$fl_openssl_prefix" != "x" -a ! -d "$fl_openssl_prefix"; then
+    AC_MSG_ERROR('open --with-openssl requires a path to a directory')
+  fi
+
+  dnl XXX: We could probably do some better checking here, like looking
+  dnl for headers and libraries with an explicit path.
+
+  dnl Prefix these to the list, so they override env var settings
+  CPPFLAGS="-I${fl_openssl_prefix}/include $CPPFLAGS"
+  dnl We may need to also include $fl_openssl_prefix/openssl
+  LDFLAGS="-L${fl_openssl_prefix}/lib $LDFLAGS"
+
+  case "$host" in
+    *-solaris2*)
+        LDFLAGS="$LDFLAGS -R${fl_openssl_prefix}/lib"
+        ;;
+    *linux*)
+        ;;
+  esac
+
+fi])
+
+dnl SSL is enabled by default
+AC_ARG_ENABLE(ssl,
+  [  --disable-ssl           Disable SSL support (enabled by default)],
+[enable_ssl=$enableval],
+[enable_ssl=yes])
+
+flood_has_openssl=0
+if test "$enable_ssl" = "yes"; then
+  AC_CHECK_HEADERS(openssl/ssl.h openssl/opensslv.h,,
+    AC_MSG_ERROR('OpenSSL Headers not found at patch specified'))
+  AC_TRY_COMPILE([#include <openssl/opensslv.h>],
+    [#if (OPENSSL_VERSION_NUMBER < 0x0090600fL)
+     #error You need OpenSSL version 0.9.6 or greater.
+     #endif],,
+    AC_MSG_ERROR('OpenSSL version 0.9.6 or greater required.'))
+  
+  AC_CHECK_LIB(crypto, SHA1, LIBS="$LIBS -lcrypto")
+  dnl BIO_next only appears in newer versions of OpenSSL
+  AC_CHECK_LIB(ssl, BIO_next, LIBS="$LIBS -lssl")
+  flood_has_openssl=1
+fi
 
 AC_ARG_WITH(randfile,
   [  --with-randfile=PATH    Path to a random file used by OpenSSL (default /tmp/.rnd)],
@@ -46,29 +91,6 @@ AC_ARG_WITH(apr,
   [APU_SOURCE="$HTTPD_SOURCE/srclib/apr-util"])
 
 . $APR_SOURCE/APRVARS
-
-EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -I${OPENSSL_PREFIX}/include"
-
-EXTRA_LDFLAGS="$EXTRA_LDFLAGS -L${OPENSSL_PREFIX}/lib"
-
-case "$host" in
-  *-solaris2*)
-      EXTRA_LDFLAGS="$EXTRA_LDFLAGS -R${OPENSSL_PREFIX}/lib"
-      ;;
-  *linux*)
-      ;;
-esac
-
-dnl Use our specified *FLAGS when testing for the libraries.
-LDFLAGS="$LDFLAGS $EXTRA_LDFLAGS"
-LIBS="$LIBS $EXTRA_LIBS"
-CPPFLAGS="$CPPFLAGS $EXTRA_CPPFLAGS"
-CFLAGS="$CFLAGS $EXTRA_CFLAGS"
-
-dnl Checks for libraries.
-dnl Replace `main' with a function in -lcrypto:
-AC_CHECK_LIB(crypto, SHA1)
-AC_CHECK_LIB(ssl, SSL_library_init)
 
 AC_CHECK_FUNC(strtoll, hasstrtoll="1", hasstrtoll="0")
 AC_CHECK_FUNC(strtoq, hasstrtoq="1", hasstrtoq="0")
@@ -109,6 +131,7 @@ AC_SUBST(prngrand48)
 AC_SUBST(prngrandom)
 AC_SUBST(hasstrtoll)
 AC_SUBST(hasstrtoq)
+AC_SUBST(flood_has_openssl)
 
 dnl Makefile outputs
 dnl Note: There can only be one AC_OUTPUT command.

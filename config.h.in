@@ -64,6 +64,8 @@
 #define FLOOD_HAS_STRTOLL   @hasstrtoll@
 #define FLOOD_HAS_STRTOQ    @hasstrtoq@
 
+#define FLOOD_HAS_OPENSSL   @flood_has_openssl@
+
 #if !FLOOD_HAS_STRTOLL && FLOOD_HAS_STRTOQ
 #define strtoll(p, e, b) strtoq(p, e, b)
 #endif

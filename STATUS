@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/10/17 22:18:17 $]
+Last modified at [$Date: 2001/11/16 22:38:12 $]
 
 Release:
 
@@ -28,10 +28,13 @@ Other bugs that need fixing:
       to recognize it.  However, all HTTP headers need to be normalized
       before checking their values.  This isn't easy to do.  Grr.
 
-    * Autoconf should check that OpenSSL is version 0.9.6a or greater.
-       Aaron says: <openssl/opensslv.h> defines OPENSSL_VERSION_NUMBER,
-                   someone just needs to write an autoconf rule to check
-                   for it.
+    * OpenSSL 0.9.6
+      Segfaults under high load.  Upgrade to OpenSSL 0.9.6b.
+       Aaron says: I'll bump the required version number after I upgrade. :)
+
+    * FLOOD_HAS_OPENSSL is now a CPP defined symbol. Use it to optionally
+      compile OpenSSL code so that we don't have to require OpenSSL any
+      longer.
 
 Other features that need writing:
 
@@ -129,6 +132,3 @@ Open issues:
       No one told BEA how to make an HTTP server.  Send it Connection: Close
       and a cookie, and it'll respond with Connection: Keep-Alive (no cookie
       and it honors Connection: Close).  That's wrong.
-
-    * OpenSSL 0.9.6
-      Segfaults under high load.  Upgrade to OpenSSL 0.9.6b.
