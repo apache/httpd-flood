@@ -78,7 +78,7 @@ apr_status_t simple_report_init(report_t **report, config_t *config, const char 
     return APR_SUCCESS;
 }
 
-apr_status_t simple_process_stats(report_t *report, int verified, request_t *req, response_t *resp)
+apr_status_t simple_process_stats(report_t *report, int verified, request_t *req, response_t *resp, flood_timer_t *timer)
 {
     simple_report_t *sr = (simple_report_t*)report;
 

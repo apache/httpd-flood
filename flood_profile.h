@@ -138,6 +138,15 @@ struct response_t {
 };
 typedef struct response_t response_t;
 
+/* Define a timer. */
+struct flood_timer_t {
+    apr_time_t connect;
+    apr_time_t write;
+    apr_time_t read;
+    apr_time_t close;
+};
+typedef struct flood_timer_t flood_timer_t;
+
 /**
  * profile_t holds all stateful data needed during the running of
  * a test. For example, if we wanted to test a single URL 10 times
@@ -221,7 +230,7 @@ struct profile_events_t {
      * per HTTP transaction, and immediatly after "verify_resp" is called.
      * Returns: boolean status of this function.
      */
-    apr_status_t (*process_stats)(report_t *report, int verified, request_t *req, response_t *resp);
+    apr_status_t (*process_stats)(report_t *report, int verified, request_t *req, response_t *resp, flood_timer_t *timer);
 
     /**
      * Generate a report on all statistical information

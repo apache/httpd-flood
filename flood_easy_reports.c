@@ -71,19 +71,25 @@ apr_status_t easy_report_init(report_t **report, config_t *config,
     return APR_SUCCESS;
 }
 
-apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, response_t *resp)
+apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, response_t *resp, flood_timer_t *timer)
 {
-    if (verified == FLOOD_VALID) {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " OK %d %s\n", 
-                        apr_time_now(), apr_os_thread_current(), req->uri);
-    } else if (verified == FLOOD_INVALID) {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " FAIL %d %s\n", 
-                        apr_time_now(), apr_os_thread_current(), req->uri);
-    } else {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %d %d %s\n", 
-                        apr_time_now(), verified, apr_os_thread_current(), 
-                        req->uri);
+    apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %" APR_INT64_T_FMT 
+                    " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT,
+                    timer->connect, timer->write, timer->read, timer->close);
+
+    switch (verified)
+    {
+    case FLOOD_VALID:
+        apr_file_printf(local_stdout, " OK ");
+        break;
+    case FLOOD_INVALID:
+        apr_file_printf(local_stdout, " FAIL ");
+        break;
+    default:
+        apr_file_printf(local_stdout, " %d ", verified);
     }
+
+    apr_file_printf(local_stdout, "%d %s\n", apr_os_thread_current(), req->uri);
 
     return APR_SUCCESS;
 }

@@ -1,5 +1,8 @@
 Changes since milestone-0-1:
 
+* Add better resolution timers (connect, write, read, close).  
+  [Justin Erenkrantz]
+
 * A farmer may now be run for an arbitrary amount of time (specified in
   seconds) rather than a specific number of requests.  [Justin Erenkrantz]
 

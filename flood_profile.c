@@ -607,6 +607,7 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
     request_t *req;
     response_t *resp;
     socket_t *socket;
+    flood_timer_t *timer;
     apr_status_t stat;
     int verified;
 
@@ -640,11 +641,14 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
     if ((stat = events->socket_init(&socket, pool)) != APR_SUCCESS)
         return stat;
 
+    timer = apr_palloc(pool, sizeof(flood_timer_t));
+
     do {
         if ((stat = events->get_next_url(&req, profile)) != APR_SUCCESS)
             return stat;
 
         /* sample timer "main" */
+        timer->connect = apr_time_now();
 
         if ((stat = events->begin_conn(socket, req, pool)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "open request failed.\n");
@@ -665,6 +669,7 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         }
 
         /* sample timer "send_req" */
+        timer->write = apr_time_now();
 
         if ((stat = events->recv_resp(&resp, socket, pool)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "receive request failed.\n");
@@ -672,6 +677,7 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         }
 
         /* sample timer "recv_resp" */
+        timer->read = apr_time_now();
 
         if ((stat = events->postprocess(profile, req, resp)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "postprocessing failed.\n");
@@ -683,17 +689,19 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
             return stat;
         }
 
-        /* sample timer "full_resp" */
-
-        if ((stat = events->process_stats(report, verified, req, resp)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "Unable to process statistics.\n");
-            return stat;
-        }
-
         if ((stat = events->end_conn(socket, req, resp)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "Unable to end the connection.\n");
             return stat;
         }
+
+        /* sample timer "full_resp" */
+        timer->close = apr_time_now();
+
+        if ((stat = events->process_stats(report, verified, req, resp, timer)) != APR_SUCCESS) {
+            apr_file_printf(local_stderr, "Unable to process statistics.\n");
+            return stat;
+        }
+
 
         if ((stat = events->request_destroy(req)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "Error cleaning up request.\n");
