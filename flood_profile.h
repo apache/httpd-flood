@@ -108,7 +108,7 @@ struct request_t {
     apr_size_t payloadsize;
     void * payload;
     
-    apr_uri_components *parsed_uri;
+    apr_uri_t *parsed_uri;
 
     /* Raw buffer connection 
      * FIXME: apr_bucket_t? */ 

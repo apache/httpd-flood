@@ -316,7 +316,7 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                     apr_text *t;
                     t = e->first_cdata.first; 
                     p->url[i].url = apr_pstrdup(pool, t->text);
-                    while (t = t->next)
+                    while ((t = t->next))
                     {
                         p->url[i].url = apr_pstrcat(pool, p->url[i].url, 
                                                     t->text, NULL);
@@ -588,9 +588,9 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
 
     }
 
-    r->parsed_uri = apr_pcalloc(rp->pool, sizeof(apr_uri_components));
+    r->parsed_uri = apr_pcalloc(rp->pool, sizeof(apr_uri_t));
 
-    apr_uri_parse_components(rp->pool, r->uri, r->parsed_uri);
+    apr_uri_parse(rp->pool, r->uri, r->parsed_uri);
     if (!r->parsed_uri->port)
     {
         r->parsed_uri->port = 
