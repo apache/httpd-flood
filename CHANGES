@@ -9,6 +9,33 @@ Changes since milestone-02:
 * Detect when we have a https URL and don't have SSL support built in.
   [Justin Erenkrantz]
 
+* Fix longstanding bug that was probably leaking massive file descriptors
+  when SSL was being used.  [Aaron Bannert]
+
+* Always link the runtime library search path into our binary for
+  libararies like APR, APR-UTIL, etc.  [Aaron Bannert]
+
+* Conditionally compile SSL support (set with the --enable-ssl parameter).
+  We no longer require SSL to build flood.  [Aaron Bannert]
+
+* SSL is now disabled by default and must be explicitly enabled.
+  This is to comply with certain legal restrictions.  [Aaron Bannert]
+
+* Require openssl 0.9.6 or greater. (This may be raised to 0.9.6b if
+  rumors of lower versions crashing under load become true.)
+  [Aaron Bannert]
+
+* If SSL is enabled we now check that we have the appropriate headers
+  and libraries available.  [Aaron Bannert]
+
+* Rework of --with-openssl parameter to work with the new --enable-ssl
+  param. There are three ways to use an installed openssl: if it
+  exists in the default places, if you specify CFLAGS/LDFLAGS to
+  the configure script, or if you specify the path prefix to the
+  installation with this new parameter.  [Aaron Bannert]
+
+* Add new parameter (--enable-ssl). [Aaron Bannert]
+
 * Display URL that failed when we get an error.  [Justin Erenkrantz]
 
 * Add support for platforms that do not have threads (or are unusable by APR).

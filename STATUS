@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/12/04 10:43:23 $]
+Last modified at [$Date: 2001/12/04 16:29:18 $]
 
 Release:
 
@@ -35,6 +35,7 @@ Other bugs that need fixing:
 
     * SEGVs when /tmp/.rnd doesn't exist are bad. Make it configurable
       and at least bomb with a good error message. (See Doug's patch.)
+       Status: This is fixed, no?
 
     * If APR has disabled threads, flood should as well. We might want
       to have an enable/disable parameter that does this also, providing
