@@ -144,7 +144,7 @@ static void ssl_lock(int mode, int n, const char *file, int line)
 
 static unsigned long ssl_id(void)
 {
-    /* FIXME: This is lame and nor portable. -aaron */
+    /* FIXME: This is lame and not portable. -aaron */
     return (unsigned long) apr_os_thread_current(); 
 }
 #endif
@@ -331,5 +331,30 @@ apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r)
     return APR_SUCCESS;     
 }
 
-#endif /* FLOOD_HAS_OPENSSL */
+#else /* FLOOD_HAS_OPENSSL */
 
+apr_status_t ssl_init_socket(apr_pool_t *pool)
+{
+    return APR_ENOTIMPL;
+}
+
+ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
+{
+    return NULL;
+}
+
+void ssl_close_socket(ssl_socket_t *s)
+{
+}
+
+apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r)
+{
+    return APR_ENOTIMPL;
+}
+
+apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
+{
+    return APR_ENOTIMPL;
+}
+
+#endif
