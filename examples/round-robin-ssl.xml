@@ -10,21 +10,28 @@
   <profile>
     <name>RoundRobinProfile</name>
     <description>Test of the Round Robin Configuration</description>
-    <useurllist>Test Hosts</useurllist>
-    <profile_init>round_robin_profile_init</profile_init>
-    <get_next_url>round_robin_get_next_url</get_next_url>
-    <send_req>ssl_send_req</send_req>
-    <create_req>round_robin_create_req</create_req>
-    <recv_resp>ssl_recv_resp</recv_resp>
-    <loop_condition>round_robin_loop_condition</loop_condition>
 
-    <verify_resp>verify_200</verify_resp>
-    <!-- request_destroy uses default -->
-    <!-- response_destroy uses default -->
-    <socket_destroy>ssl_socket_destroy</socket_destroy>
+    <useurllist>Test Hosts</useurllist>
+
+    <!-- Profile Events -->
+    <profile_init>round_robin_profile_init</profile_init>
+    <create_req>round_robin_create_req</create_req>
+    <get_next_url>round_robin_get_next_url</get_next_url>
+    <loop_condition>round_robin_loop_condition</loop_condition>
     <profile_destroy>round_robin_profile_destroy</profile_destroy>
 
-    <!-- Simple Reporting -->
+    <!-- Socket Events -->
+    <socket_init>ssl_socket_init</socket_init>
+    <begin_conn>ssl_begin_conn</begin_conn>
+    <send_req>ssl_send_req</send_req>
+    <recv_resp>ssl_recv_resp</recv_resp>
+    <end_conn>ssl_end_conn</end_conn>
+    <socket_destroy>ssl_socket_destroy</socket_destroy>
+
+    <!-- Verify Events -->
+    <verify_resp>verify_200</verify_resp>
+
+    <!-- Reporting Events -->
     <report_init>simple_report_init</report_init>
     <process_stats>simple_process_stats</process_stats>
     <report_stats>simple_report_stats</report_stats>

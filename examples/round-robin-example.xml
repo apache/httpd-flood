@@ -18,14 +18,25 @@
 
     <useurllist>Test Hosts</useurllist>
 
+    <!-- Profile Events -->
     <profile_init>round_robin_profile_init</profile_init>
     <get_next_url>round_robin_get_next_url</get_next_url>
     <create_req>round_robin_create_req</create_req>
-    <verify_resp>verify_200</verify_resp>
     <loop_condition>round_robin_loop_condition</loop_condition>
     <profile_destroy>round_robin_profile_destroy</profile_destroy>
 
-    <!-- Simple Reporting -->
+    <!-- Socket Events -->
+    <!-- default socket_init -->
+    <!-- default begin_conn -->
+    <!-- default send_req -->
+    <!-- default recv_resp -->
+    <!-- default end_conn -->
+    <!-- default socket_destroy -->
+
+    <!-- Verification Events -->
+    <verify_resp>verify_200</verify_resp>
+
+    <!-- Reporting Events -->
     <report_init>simple_report_init</report_init>
     <process_stats>simple_process_stats</process_stats>
     <report_stats>simple_report_stats</report_stats>

@@ -60,6 +60,8 @@
 #include <apr_network_io.h> /* apr_socket_t */
 #include <apr_pools.h>      /* apr_pool_t */
 
+#include "flood_profile.h"
+
 typedef struct flood_socket_t flood_socket_t;
 
 flood_socket_t* open_socket(apr_pool_t *pool, request_t *r);

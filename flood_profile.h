@@ -153,6 +153,8 @@ typedef void profile_t;
 typedef void report_t;
 
 struct profile_events_t {
+
+    /* Profile Events */
     /**
      * Reads a config_t object and creates any state necessary for this
      * run of a test profile. This routine is typically run only once
@@ -160,16 +162,6 @@ struct profile_events_t {
      * Returns: State object for this instance of a test profile.
      */
     apr_status_t (*profile_init)(profile_t **profile, config_t *config, const char *profile_name, apr_pool_t *pool);
-
-    /**
-     * Create/initialize a report structure that will be associated with
-     * this profile and will exist for the same lifetime as this profile.
-     * However, the data stored in this report is not coupled with the
-     * profile data, and the implementation may vary.
-     * Returns: APR_SUCCESS and sets report to the new instance, or
-     * an appropriate error otherwise.
-     */
-    apr_status_t (*report_init)(report_t **report, config_t *config, const char *profile_name, apr_pool_t *pool);
 
     /**
      * Reads the profile state (profile_t), retrieves the next request
@@ -180,29 +172,9 @@ struct profile_events_t {
     apr_status_t (*get_next_url)(request_t **request, profile_t *profile);
 
     /**
-     * Opens the communication channel to the server.
-     * Returns: The bi-directional socket used for this HTTP transaction.
-     */
-    apr_status_t (*open_req)(socket_t **sock, request_t *req, apr_pool_t *pool);
-
-    /**
      * Construct the request to be sent to the server.
      */
     apr_status_t (*create_req)(profile_t *p, request_t *r);
-
-    /**
-     * Actually sends the request to the server. Implementation will fit
-     * an HTTP function or some OS performance capability.
-     * Returns: The bi-directional socket used for this HTTP transaction.
-     */
-    apr_status_t (*send_req)(socket_t *sock, request_t *req, apr_pool_t *pool);
-
-    /**
-     * Receives the request from the server. Implementation will test
-     * some function of HTTP or some OS performance capability.
-     * Returns: The response returned from this socket.
-     */
-    apr_status_t (*recv_resp)(response_t **resp, socket_t *sock, apr_pool_t *pool);
 
     /**
      * Does any post processing on this request cycle. This is where
@@ -215,12 +187,33 @@ struct profile_events_t {
                                 response_t *resp);
 
     /**
-     * Tests this HTTP transaction (both Request and Response) to see if it
-     * is valid for this particular test profile. Also may need access to the
-     * state data for this test profile.
-     * Returns: boolean determining if this request/response was valid.
+     * Test to see if this test profile will continue with further tests or 
+     * complete.
+     * Returns: boolean
      */
-    apr_status_t (*verify_resp)(int *verified, profile_t *profile, request_t *req, response_t *resp);
+    int (*loop_condition)(profile_t *profile);
+
+    /**
+     * Destroy this profile. Cleanup routines that complement the above
+     * profile_init function. This function is called only after the
+     * test has successfully completed.
+     * Returns: apr_status_t signifying completion status
+     */
+    apr_status_t  (*profile_destroy)(profile_t *profile);
+
+
+
+
+    /* Reporting Events */
+    /**
+     * Create/initialize a report structure that will be associated with
+     * this profile and will exist for the same lifetime as this profile.
+     * However, the data stored in this report is not coupled with the
+     * profile data, and the implementation may vary.
+     * Returns: APR_SUCCESS and sets report to the new instance, or
+     * an appropriate error otherwise.
+     */
+    apr_status_t (*report_init)(report_t **report, config_t *config, const char *profile_name, apr_pool_t *pool);
 
     /**
      * Callback to this test profile so it can report on this particular
@@ -229,37 +222,6 @@ struct profile_events_t {
      * Returns: boolean status of this function.
      */
     apr_status_t (*process_stats)(report_t *report, int verified, request_t *req, response_t *resp);
-
-    /**
-     * Test to see if this test profile will continue with further tests or 
-     * complete.
-     * Returns: boolean
-     */
-    int (*loop_condition)(profile_t *profile);
-
-    /**
-     * Destroy the given request, which should be the request used
-     * during this pass of the test. This is called at the end
-     * of every successful pass through the test loop.
-     * Returns: apr_status_t signifying completion status
-     */
-    apr_status_t (*request_destroy)(request_t *req);
-
-    /**
-     * Destroy the given response, which should be the response used
-     * during this pass ofo the test. This is called at the end
-     * of every successful pass through the test loop.
-     * Returns: apr_status_t signifying completion status
-     */
-    apr_status_t (*response_destroy)(response_t *resp);
-
-    /**
-     * Destroy the socket used during with this pass, for some
-     * request/response pair. This is called at the end of
-     * every successful pass through the test loop.
-     * Returns: apr_status_t signifying completion status
-     */
-    apr_status_t  (*socket_destroy)(socket_t *socket);
 
     /**
      * Generate a report on all statistical information
@@ -273,13 +235,76 @@ struct profile_events_t {
      */
     apr_status_t (*destroy_report)(report_t *report);
 
+
+
+
+
+    /* Socket Events */
     /**
-     * Destroy this profile. Cleanup routines that complement the above
-     * profile_init function. This function is called only after the
-     * test has successfully completed.
+     * Create and initialize the communication channel that
+     * we'll use for this test.
+     */
+    apr_status_t (*socket_init)(socket_t **sock, apr_pool_t *pool);
+
+    /**
+     * Opens the communication channel to the server.
+     */
+    apr_status_t (*begin_conn)(socket_t *sock, request_t *req, apr_pool_t *pool);
+
+    /**
+     * Actually sends the request to the server. Implementation will fit
+     * an HTTP function or some OS performance capability.
+     */
+    apr_status_t (*send_req)(socket_t *sock, request_t *req, apr_pool_t *pool);
+
+    /**
+     * Receives the request from the server. Implementation will test
+     * some function of HTTP or some OS performance capability.
+     */
+    apr_status_t (*recv_resp)(response_t **resp, socket_t *sock, apr_pool_t *pool);
+
+    /**
+     * Tears down the communication channel to the server. Called once per pass
+     * through main request/response loop. Implementation typically closes
+     * the socket.
+     */
+    apr_status_t (*end_conn)(socket_t *sock, request_t *req, response_t *resp);
+
+    /**
+     * Destroy the given request, which should be the request used
+     * during this pass of the test. This is called at the end
+     * of every successful pass through the test loop.
+     */
+    apr_status_t (*request_destroy)(request_t *req);
+
+    /**
+     * Destroy the given response, which should be the response used
+     * during this pass of the test. This is called at the end
+     * of every successful pass through the test loop.
      * Returns: apr_status_t signifying completion status
      */
-    apr_status_t  (*profile_destroy)(profile_t *profile);
+    apr_status_t (*response_destroy)(response_t *resp);
+
+    /**
+     * Destroy the socket used during with this pass, for some
+     * request/response pair. This is called at the end of
+     * every successful pass through the test loop.
+     * Returns: apr_status_t signifying completion status
+     */
+    apr_status_t  (*socket_destroy)(socket_t *socket);
+
+
+
+
+
+    /* Verify Events */
+    /**
+     * Tests this HTTP transaction (both Request and Response) to see if it
+     * is valid for this particular test profile. Also may need access to the
+     * state data for this test profile.
+     * Returns: boolean determining if this request/response was valid.
+     */
+    apr_status_t (*verify_resp)(int *verified, profile_t *profile, request_t *req, response_t *resp);
 
 };
 typedef struct profile_events_t profile_events_t;

@@ -86,12 +86,12 @@ apr_status_t simple_process_stats(report_t *report, int verified, request_t *req
 
     if (verified == FLOOD_VALID) {
         sr->successes++;
-        apr_file_printf(local_stdout, "OK %s", req->uri);
+        apr_file_printf(local_stdout, "OK %s\n", req->uri);
     } else if (verified == FLOOD_INVALID) {
         sr->failures++;
-        apr_file_printf(local_stdout, "FAIL %s", req->uri);
+        apr_file_printf(local_stdout, "FAIL %s\n", req->uri);
     } else {
-        apr_file_printf(local_stderr, "simple_process_stats(): 'verified' was an invalid value.\n");
+        apr_file_printf(local_stderr, "simple_process_stats(): Internal Error: 'verified' has invalid value.\n");
     }
 
     return APR_SUCCESS;
