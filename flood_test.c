@@ -153,7 +153,7 @@ static apr_socket_t* open_socket(request_t *r)
         }
     }
 
-    apr_setsocketopt(socket, APR_SO_TIMEOUT, LOCAL_SOCKET_TIMEOUT);
+    apr_socket_timeout_set(socket, LOCAL_SOCKET_TIMEOUT);
 
     return socket;
 }

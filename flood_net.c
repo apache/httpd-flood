@@ -115,7 +115,7 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r,
         }
     }
 
-    apr_socket_opt_set(fs->socket, APR_SO_TIMEOUT, LOCAL_SOCKET_TIMEOUT);
+    apr_socket_timeout_set(fs->socket, LOCAL_SOCKET_TIMEOUT);
     fs->read_pollset.desc_type = APR_POLL_SOCKET;
     fs->read_pollset.desc.s = fs->socket;
     fs->read_pollset.reqevents = APR_POLLIN;
