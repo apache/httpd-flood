@@ -277,12 +277,13 @@ void ssl_close_socket(ssl_socket_t *s)
 apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
 {
     apr_status_t e;
-    int sslError, socketsRead;
+    int sslError;
+    apr_int32_t socketsRead;
 
     /* Wait until there is something to read. */
     if (SSL_pending(s->ssl_connection) < *buflen) {
-        socketsRead = 1;
-        e = apr_poll(s->socket->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+        e = apr_poll(&s->socket->read_pollset, 1, &socketsRead,
+                     LOCAL_SOCKET_TIMEOUT);
 
         if (socketsRead != 1)
             return APR_TIMEUP;
@@ -319,9 +320,10 @@ void ssl_read_socket_handshake(ssl_socket_t *s)
     char buf[1];
     int buflen = 1; 
     /* Wait until there is something to read. */
-    int socketsRead = 1;
+    apr_int32_t socketsRead;
     apr_status_t e;
-    e = apr_poll(s->socket->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+    e = apr_poll(&s->socket->read_pollset, 1, &socketsRead,
+                 LOCAL_SOCKET_TIMEOUT);
     e = SSL_read(s->ssl_connection, buf, buflen);
 }
 

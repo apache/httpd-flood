@@ -103,10 +103,11 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
     }
 
     apr_setsocketopt(fs->socket, APR_SO_TIMEOUT, LOCAL_SOCKET_TIMEOUT);
-
-    apr_poll_setup(&fs->poll, 1, pool);
-    apr_poll_socket_add(fs->poll, fs->socket, APR_POLLIN);
-
+    fs->read_pollset.desc_type = APR_POLL_SOCKET;
+    fs->read_pollset.desc.s = fs->socket;
+    fs->read_pollset.reqevents = APR_POLLIN;
+    fs->read_pollset.p = pool;
+    
     return fs;
 }
 
@@ -120,9 +121,9 @@ void close_socket(flood_socket_t *s)
 apr_status_t read_socket(flood_socket_t *s, char *buf, int *buflen)
 {
     apr_status_t e;
-    int socketsRead = 1;
+    apr_int32_t socketsRead;
 
-    e = apr_poll(s->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+    e = apr_poll(&s->read_pollset, 1, &socketsRead, LOCAL_SOCKET_TIMEOUT);
     if (e != APR_SUCCESS)
         return e;
     return apr_recv(s->socket, buf, buflen);
@@ -147,19 +148,18 @@ apr_status_t write_socket(flood_socket_t *s, request_t *r)
 apr_status_t check_socket(flood_socket_t *s, apr_pool_t *pool)
 {
     apr_status_t e;
-    int socketsRead = 1;
-    apr_pollfd_t *pout;
+    apr_int32_t socketsRead;
+    apr_pollfd_t pout;
     apr_int16_t event;
 
-    apr_poll_setup(&pout, 1, pool);
-    apr_poll_socket_add(pout, s->socket, APR_POLLIN | APR_POLLPRI | APR_POLLERR | APR_POLLHUP | APR_POLLNVAL);
-
-    e = apr_poll(pout, &socketsRead, 1000);
-    if (socketsRead) {
-        apr_poll_revents_get(&event, s->socket, pout);
-        if (event) {
-            return APR_EGENERAL;
-        }
+    pout.desc_type = APR_POLL_SOCKET;
+    pout.desc.s = s->socket;
+    pout.reqevents = APR_POLLIN | APR_POLLPRI | APR_POLLERR | APR_POLLHUP | APR_POLLNVAL;
+    pout.p = pool;
+    
+    e = apr_poll(&pout, 1, &socketsRead, 1000);
+    if (socketsRead && pout.rtnevents) {
+        return APR_EGENERAL;
     }
     
     return APR_SUCCESS;

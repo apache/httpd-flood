@@ -1,5 +1,7 @@
 Changes since milestone-03:
 
+* Switch to new apr_poll() API.  [Justin Erenkrantz]
+
 * Stop using the apr_lock.h API and start using apr_thread_mutex.h
   instead.  [Aaron Bannert]
 
