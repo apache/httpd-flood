@@ -77,8 +77,10 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
     apr_pool_t *farmer_pool;
     apr_time_t stop_time;
 
+#ifdef FARMER_DEBUG
     apr_file_printf(local_stderr, "Running farmer '%s'.\n",
                     farmer_name);
+#endif  /* FARMER_DEBUG */
 
     xml_farmer = apr_pstrdup(pool, XML_FARMER);
 
