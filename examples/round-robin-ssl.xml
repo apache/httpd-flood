@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE flood SYSTEM "flood.dtd">
-<flood>
+<flood configversion="1">
   <urllist>
     <name>Test Hosts</name>
     <description>A bunch of hosts we want to hit</description>

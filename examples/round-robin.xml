@@ -32,7 +32,7 @@
      ./examples/analyze-relative my-output
      
 -->
-<flood>
+<flood configversion="1">
   <!-- A urllist describes which hosts and which methods we want to hit. -->
   <urllist>
     <name>Test Hosts</name>

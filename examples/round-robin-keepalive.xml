@@ -2,7 +2,7 @@
 <!DOCTYPE flood SYSTEM "flood.dtd">
 <!-- Hi, I'm a flood config file.  
      This is a keepalive-enabled profile.  -->
-<flood>
+<flood configversion="1">
   <!-- A urllist describes which hosts and which methods we want to hit. -->
   <urllist>
     <name>Test Hosts</name>
