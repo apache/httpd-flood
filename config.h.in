@@ -47,7 +47,7 @@
 /* The delimiter (used above) between XML elements */
 #define XML_ELEM_DELIM "."
 
-#define FLOOD_VERSION "0.4-dev"
+#define FLOOD_VERSION "1.0"
 
 #define CRLF "\r\n"
 
