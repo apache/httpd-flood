@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/11/17 00:16:47 $]
+Last modified at [$Date: 2001/11/17 01:29:03 $]
 
 Release:
 
@@ -31,10 +31,6 @@ Other bugs that need fixing:
     * OpenSSL 0.9.6
       Segfaults under high load.  Upgrade to OpenSSL 0.9.6b.
        Aaron says: I'll bump the required version number after I upgrade. :)
-
-    * FLOOD_HAS_OPENSSL is now a CPP defined symbol. Use it to optionally
-      compile OpenSSL code so that we don't have to require OpenSSL any
-      longer.
 
     * SEGVs when /tmp/.rnd doesn't exist are bad. Make it configurable
       and at least bomb with a good error message.
