@@ -55,7 +55,7 @@
 /* FIXME: replace the apr_recv logic with something sane. */
 #define MAX_DOC_LENGTH 8192
 
-#define LOCAL_SOCKET_TIMEOUT 15 * APR_USEC_PER_SEC
+#define LOCAL_SOCKET_TIMEOUT 120 * APR_USEC_PER_SEC
 
 #define RANDFILE "@RANDFILE@"
 #define CAPATH "@CAPATH@"
