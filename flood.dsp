@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "APR_DECLARE_STATIC" /D "APU_DECLARE_STATIC" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "../../httpd-2.0/srclib/apr/include" /I "../../httpd-2.0/srclib/apr-util/include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "APR_DECLARE_STATIC" /D "APU_DECLARE_STATIC" /Fd"Release/flood" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "$(APRPATH)\include" /I "$(APRUTILPATH)\include" /I "$(OPENSSLPATH)\inc32" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "APR_DECLARE_STATIC" /D "APU_DECLARE_STATIC" /D "WIN32_LEAN_AND_MEAN" /D "NO_IDEA" /D "NO_RC5" /D "NO_MDC2" /Fd"Release/flood" /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -49,7 +49,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib wsock32.lib ws2_32.lib apr.lib aprutil.lib /nologo /subsystem:console /map /machine:I386
-# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib apr.lib aprutil.lib /nologo /subsystem:console /map /machine:I386 /libpath:../../httpd-2.0/srclib/apr/LibR /libpath:../../httpd-2.0/srclib/apr-util/LibR
+# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib apr.lib aprutil.lib pcreposix.lib libeay32.lib ssleay32.lib /nologo /subsystem:console /map /machine:I386 /libpath:"$(APRPATH)\LibR" /libpath:"$(APRUTILPATH)\LibR" /libpath:"$(OPENSSLPATH)\$(SSLBIN)" /libpath:"$(REGEXPATH)\LibR"
 
 !ELSEIF  "$(CFG)" == "flood - Win32 Debug"
 
@@ -65,7 +65,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "APR_DECLARE_STATIC" /D "APU_DECLARE_STATIC" /FD /c
-# ADD CPP /nologo /MDd /W3 /GX /Zi /Od /I "../../httpd-2.0/srclib/apr/include" /I "../../httpd-2.0/srclib/apr-util/include" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "APR_DECLARE_STATIC" /D "APU_DECLARE_STATIC" /Fd"Debug/flood" /FD /c
+# ADD CPP /nologo /MDd /W3 /GX /Zi /Od /I "$(APRPATH)\include" /I "$(APRUTILPATH)\include" /I "$(OPENSSLPATH)\inc32" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "APR_DECLARE_STATIC" /D "APU_DECLARE_STATIC" /D "WIN32_LEAN_AND_MEAN" /D "NO_IDEA" /D "NO_RC5" /D "NO_MDC2" /Fd"Debug/flood" /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -73,7 +73,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib apr.lib aprutil.lib /nologo /subsystem:console /incremental:no /map /debug /machine:I386
-# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib apr.lib aprutil.lib /nologo /subsystem:console /incremental:no /map /debug /machine:I386 /libpath:../../httpd-2.0/srclib/apr/LibD /libpath:../../httpd-2.0/srclib/apr-util/LibD
+# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib apr.lib aprutil.lib pcreposix.lib libeay32.lib ssleay32.lib /nologo /subsystem:console /incremental:no /map /debug /machine:I386 /libpath:"$(APRPATH)\LibD" /libpath:"$(APRUTILPATH)\LibD" /libpath:"$(OPENSSLPATH)\$(SSLBIN)" /libpath:"$(REGEXPATH)\LibD"
 
 !ENDIF 
 
