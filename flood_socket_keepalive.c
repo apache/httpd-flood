@@ -214,7 +214,7 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
             }
 
             /* If blen is 0, we're empty so read more data. */
-            if (!blen)
+            while (!blen)
             {
                 /* Reset and read as much as we can. */
                 blen = bplen;
@@ -251,8 +251,7 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
                     blen = bplen;
                     b = *bp;
                     status = ksock_read_socket(sock, b, &blen);
-                    if (status == APR_EGENERAL || status == APR_EOF || 
-                        status == APR_TIMEUP)
+                    if (status != APR_SUCCESS)
                         return status;
                 }
 
@@ -374,8 +373,17 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     }
 
     /* FIXME: Assume we got the full header for now. */
-
     /* FIXME: Make case-insensitive */
+
+    /* If this exists, we aren't keepalive anymore. */
+    cl = strstr(new_resp->rbuf, "Connection: Close" CRLF);
+    if (cl) {
+        new_resp->keepalive = 0; 
+    }
+    else {
+        new_resp->keepalive = 1; 
+    }
+ 
     cl = strstr(new_resp->rbuf, "Transfer-Encoding: Chunked" CRLF);
     if (cl)
     {
@@ -389,8 +397,8 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
             cl += 4;
         }
 
-        /* We have a partial chunk. */
-        if (cl && *cl) {
+        /* We have a partial chunk and we aren't at the end. */
+        if (cl && *cl && (cl - (char*)new_resp->rbuf) < new_resp->rbufsize) {
             int remaining;
     
             do {
@@ -411,17 +419,20 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
                     new_resp->chunk = cl;
                 }
 
-                if (*new_resp->chunk) {
+                if ((new_resp->chunk - (char*)new_resp->rbuf) <
+                     new_resp->rbufsize && *new_resp->chunk) {
+                    char *foo;
                     chunk_length = keepalive_read_chunk_size(new_resp->chunk);
                     /* Search for the beginning of the chunk. */
-                    new_resp->chunk = strstr(new_resp->chunk, CRLF);
-                    assert(new_resp->chunk);
-                    new_resp->chunk += 2;
+                    foo = strstr(new_resp->chunk, CRLF);
+                    assert(foo);
+                    new_resp->chunk = foo + 2;
                     remaining = new_resp->rbufsize - 
                                     (int)(new_resp->chunk - 
                                           (char*)new_resp->rbuf);
                 }
                 else {
+                    new_resp->chunk = NULL;
                     remaining = 0;
                 }
             }
@@ -432,52 +443,43 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     }
     else
     {
-        /* If this exists, we aren't keepalive anymore. */
-        cl = strstr(new_resp->rbuf, "Connection: Close" CRLF);
-        if (cl)
-            new_resp->keepalive = 0; 
-        else
+        cl = strstr(new_resp->rbuf, "Content-Length: ");
+        if (!cl)
         {
-            new_resp->keepalive = 1; 
-    
-            cl = strstr(new_resp->rbuf, "Content-Length: ");
+            /* Netscape sends this.  It is technically correct as the header
+             * may be mixed-case - we should be case-insensitive.  But,
+             * that gets mighty expensive. */
+            cl = strstr(new_resp->rbuf, "Content-length: "); 
             if (!cl)
+                new_resp->keepalive = 0; 
+        }
+
+        if (cl)
+        {
+            cl += sizeof("Content-Length: ") - 1;
+            ecl = strstr(cl, CRLF);
+            if (ecl && ecl - cl < 16)
             {
-                /* Netscape sends this.  It is technically correct as the header
-                 * may be mixed-case - we should be case-insensitive.  But,
-                 * that gets mighty expensive. */
-                cl = strstr(new_resp->rbuf, "Content-length: "); 
-                if (!cl)
+                strncpy(cls, cl, ecl - cl);
+                cls[ecl-cl] = '\0';
+                content_length = strtol(cls, &ecl, 10);
+                if (*ecl != '\0')
                     new_resp->keepalive = 0; 
             }
+        }
 
-            if (cl)
+        if (new_resp->keepalive)
+        {
+            /* Find where we ended */
+            ecl = strstr(new_resp->rbuf, CRLF CRLF);
+
+            /* We didn't get full headers.  Crap. */
+            if (!ecl)
+                new_resp->keepalive = 0; 
             {
-                cl += sizeof("Content-Length: ") - 1;
-                ecl = strstr(cl, CRLF);
-                if (ecl && ecl - cl < 16)
-                {
-                    strncpy(cls, cl, ecl - cl);
-                    cls[ecl-cl] = '\0';
-                    content_length = strtol(cls, &ecl, 10);
-                    if (*ecl != '\0')
-                        new_resp->keepalive = 0; 
-                }
-            }
-
-            if (new_resp->keepalive)
-            {
-                /* Find where we ended */
-                ecl = strstr(new_resp->rbuf, CRLF CRLF);
-
-                /* We didn't get full headers.  Crap. */
-                if (!ecl)
-                    new_resp->keepalive = 0; 
-                {
-                    ecl += sizeof(CRLF CRLF) - 1;
-                    content_length -= new_resp->rbufsize - (ecl - (char*)new_resp->rbuf);
-                } 
-            }
+                ecl += sizeof(CRLF CRLF) - 1;
+                content_length -= new_resp->rbufsize - (ecl - (char*)new_resp->rbuf);
+            } 
         }
     }
    
