@@ -1,6 +1,13 @@
 
 Changes since milestone-0-1:
 
+* Added delay support for urllist. A urllist entry can now be
+  given a delay (in seconds) that happens each time that URL
+  is used in a request. [Justin Erenkrantz]
+
+* Changed "simple" and "easy" reporting systems to both print
+  out the URL for each request. [Aaron Bannert]
+
 * Now using strncasecmp() instead of strncmp() to compare XML
   identifiers. [Aaron Bannert]
 
