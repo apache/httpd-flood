@@ -1,7 +1,7 @@
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
- * Copyright (c) 2000-2001 The Apache Software Foundation.  All rights
+ * Copyright (c) 2001 The Apache Software Foundation.  All rights
  * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,9 @@
  * information on the Apache Software Foundation, please see
  * <http://www.apache.org/>.
  *
+ * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
+
 #ifndef __FLOOD_ROUND_ROBIN_H
 #define __FLOOD_ROUND_ROBIN_H
 
