@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Fix Win32 crash resulting from strtoll() macro
+  [Phi-Long Tran <ptran@pobox.com>]
+
 * Catch some badly formed URLs and exit instead of later crashing.
   [Jacek Prucia <jacek.prucia@7bulls.com>]
 
