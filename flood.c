@@ -68,7 +68,10 @@
 #include "flood_farm.h"
 #include "flood_farmer.h"
 #include "flood_config.h"
+
+#if FLOOD_HAS_OPENSSL
 #include "flood_net_ssl.h" /* For ssl_init_socket */
+#endif /* FLOOD_HAS_OPENSSL */
 
 /* Win32 doesn't have stdout or stderr. */
 apr_file_t *local_stdin, *local_stdout, *local_stderr;
@@ -132,9 +135,11 @@ int main(int argc, char** argv)
 
     apr_pool_create(&local_pool, NULL);
 
+#if FLOOD_HAS_OPENSSL
     /* FIXME: HHAAAAAAAAAAAAAAACCCCCCCCCCCKKKKKKKKKKK! */
     /* Should be a run-time option with SSL, but Justin hates singleton. */
     ssl_init_socket(local_pool);
+#endif /* FLOOD_HAS_OPENSSL */
    
     if (argc == 1)
         apr_file_open_stdin(&local_stdin, local_pool);
