@@ -169,7 +169,7 @@ static apr_status_t generic_verify_resp(int *verified, profile_t *profile, reque
 /**
  * Generic implementation for process_stats.
  */
-static apr_status_t generic_process_stats(report_t *report, int verified)
+static apr_status_t generic_process_stats(report_t *report, int verified, request_t *req, response_t *resp)
 {
     /* by default report nothing */
     return APR_SUCCESS;
@@ -637,7 +637,7 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
 
         /* sample timer "full_resp" */
 
-        if ((stat = events->process_stats(report, verified)) != APR_SUCCESS) {
+        if ((stat = events->process_stats(report, verified, req, resp)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "Unable to process statistics.\n");
             return stat;
         }

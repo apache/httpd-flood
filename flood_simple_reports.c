@@ -78,7 +78,7 @@ apr_status_t simple_report_init(report_t **report, config_t *config, const char 
     return APR_SUCCESS;
 }
 
-apr_status_t simple_process_stats(report_t *report, int verified)
+apr_status_t simple_process_stats(report_t *report, int verified, request_t *req, response_t *resp)
 {
     simple_report_t *sr = (simple_report_t*)report;
 
@@ -86,10 +86,10 @@ apr_status_t simple_process_stats(report_t *report, int verified)
 
     if (verified == FLOOD_VALID) {
         sr->successes++;
-        apr_file_printf(local_stdout, "OK\n");
+        apr_file_printf(local_stdout, "OK %s", req->uri);
     } else if (verified == FLOOD_INVALID) {
         sr->failures++;
-        apr_file_printf(local_stdout, "FAIL\n");
+        apr_file_printf(local_stdout, "FAIL %s", req->uri);
     } else {
         apr_file_printf(local_stderr, "simple_process_stats(): 'verified' was an invalid value.\n");
     }

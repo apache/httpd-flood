@@ -70,17 +70,17 @@ apr_status_t easy_report_init(report_t **report, config_t *config,
     return APR_SUCCESS;
 }
 
-apr_status_t easy_process_stats(report_t *report, int verified)
+apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, response_t *resp)
 {
     if (verified == FLOOD_VALID) {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " OK\n", 
-                        apr_time_now());
+        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " OK %s\n", 
+                        apr_time_now(), req->uri);
     } else if (verified == FLOOD_INVALID) {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " FAIL\n", 
-                        apr_time_now());
+        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " FAIL %s\n", 
+                        apr_time_now(), req->uri);
     } else {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %d\n", 
-                        apr_time_now(), verified);
+        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %d %s\n", 
+                        apr_time_now(), verified, req->uri);
     }
 
     return APR_SUCCESS;

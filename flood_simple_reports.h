@@ -64,7 +64,7 @@
 
 apr_status_t simple_report_init(report_t **report, config_t *config, const char *profile_name, apr_pool_t *pool);
 
-apr_status_t simple_process_stats(report_t *report, int verified);
+apr_status_t simple_process_stats(report_t *report, int verified, request_t *req, response_t *resp);
 
 apr_status_t simple_report_stats(report_t *report);
 

@@ -214,7 +214,7 @@ struct profile_events_t {
      * per HTTP transaction, and immediatly after "verify_resp" is called.
      * Returns: boolean status of this function.
      */
-    apr_status_t (*process_stats)(report_t *report, int verified);
+    apr_status_t (*process_stats)(report_t *report, int verified, request_t *req, response_t *resp);
 
     /**
      * Test to see if this test profile will continue with further tests or 
