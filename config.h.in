@@ -54,7 +54,6 @@
 
 #define LOCAL_SOCKET_TIMEOUT 120 * APR_USEC_PER_SEC
 
-#define RANDFILE "@RANDFILE@"
 #define CAPATH "@CAPATH@"
 
 #define FLOOD_USE_RAND      @prngrand@

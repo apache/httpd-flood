@@ -33,6 +33,17 @@ else
   LDFLAGS="-L${fl_openssl_prefix}/lib $LDFLAGS -R${fl_openssl_prefix}/lib"
 fi])
 
+dnl If the OS provides random support, use it.  Otherwise, we'll be 
+dnl cheesy.
+if test -c "/dev/random"; then
+  flood_has_devrand=1
+else if test -c "/dev/urandom"; then
+  flood_has_devrand=1
+else
+  flood_has_devrand=0
+fi
+fi
+
 dnl SSL is disabled by default
 dnl "Export and import restrictions in some countries require that it be
 dnl  disabled by default." See: <20011116151249.B1943@waka.ebuilt.net>
@@ -42,7 +53,6 @@ AC_ARG_ENABLE(ssl,
 [enable_ssl=no])
 
 flood_has_openssl=0
-flood_has_devrand=0
 if test "$enable_ssl" = "yes"; then
   AC_CHECK_HEADERS(openssl/ssl.h openssl/opensslv.h,,
     AC_MSG_ERROR('OpenSSL Headers not found at patch specified'))
@@ -67,19 +77,6 @@ if test "$enable_ssl" = "yes"; then
         CAPATH="/usr/lib/ssl/certs"
      else
         AC_MSG_ERROR('option --with-capath must be specified')
-     fi
-     fi
-    ])
-
-  AC_ARG_WITH(randfile,
-    [  --with-randfile=PATH    Path to a random file used by OpenSSL],
-    [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-randfile requires a path'); else RANDFILE="$withval"; fi],
-    [if test -c "/dev/random"; then
-        flood_has_devrand=1
-     else if test -c "/dev/urandom"; then
-        flood_has_devrand=1
-     else
-        AC_MSG_ERROR(option --with-randfile must be specified to point at a random file used to seed OpenSSL)
      fi
      fi
     ])

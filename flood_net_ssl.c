@@ -67,6 +67,8 @@
 #include <openssl/rand.h>
 
 #include <apr_portable.h>
+#include <apr_strings.h>
+#include <unistd.h>
 
 #define USE_RW_LOCK_FOR_SSL
 
@@ -149,6 +151,40 @@ static unsigned long ssl_id(void)
 }
 #endif
 
+/* borrowed from mod_ssl */
+static int ssl_rand_choosenum(int l, int h)
+{
+    int i;
+    char buf[50];
+
+    srand((unsigned int)time(NULL));
+    apr_snprintf(buf, sizeof(buf), "%.0f",
+                (((double)(rand()%RAND_MAX)/RAND_MAX)*(h-l)));
+    i = atoi(buf)+1;
+    if (i < l) i = l;
+    if (i > h) i = h;
+    return i;
+}
+
+static void load_rand(void)
+{
+    unsigned char stackdata[256];
+    time_t tt;
+    pid_t pid;
+    int l, n;
+
+    tt = time(NULL);
+    l = sizeof(time_t);
+    RAND_seed((unsigned char *)&tt, l);
+
+    pid = (pid_t)getpid();
+    l = sizeof(pid_t);
+    RAND_seed((unsigned char *)&pid, l);
+
+    n = ssl_rand_choosenum(0, sizeof(stackdata)-128-1);
+    RAND_seed(stackdata+n, 128);
+}
+
 apr_status_t ssl_init_socket(apr_pool_t *pool)
 {
 #if APR_HAS_THREADS
@@ -162,7 +198,7 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
     SSL_load_error_strings();
     ERR_load_crypto_strings();
 #if !FLOOD_HAS_DEVRAND
-    RAND_load_file(RANDFILE, -1);
+    load_rand();
 #endif
 
 #if APR_HAS_THREADS

@@ -1,5 +1,8 @@
 Changes since milestone-02:
 
+* Allow OpenSSL to seed from memory rather than a file if we don't
+  have random support.  [Doug MacEachern]
+
 * Allow better detection of randfile and capath options when SSL is 
   enabled.  [Justin Erenkrantz]
 
