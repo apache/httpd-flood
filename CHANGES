@@ -1,5 +1,7 @@
 Changes since 1.0:
 
+* Remove .deps code that is just broken for now.  [Justin Erenkrantz]
+
 * Added configversion attribute (root element <flood>) which ties config
   file structure with certain flood version and warns user if there is a
   conflict.  [Jacek Prucia]
