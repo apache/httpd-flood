@@ -1,11 +1,18 @@
 Changes since 1.0:
 
+* Added configversion attribute (root element <flood>) which ties config
+  file structure with certain flood version and warns user if there is a
+  conflict.  [Jacek Prucia]
+
+* Added attribute responsescript (element <url>), which allows flood to
+  delegate response processing to external script.  [Jacek Prucia]
+
 * Change open_socket prototype to return errors.  [Justin Erenkrantz]
   
 * Fix HEAD responses with Content-Length specified being handled incorrectly.
   [Justin Erenkrantz]
 
-* Flood manual (DocBook based). [Jacek Prucia]
+* Flood manual (DocBook based).  [Jacek Prucia]
 
 * Added <baseurl> element. When present, it's contents are copied in front
   of every <url> element, which makes relative urllist's possible.
