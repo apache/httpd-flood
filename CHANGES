@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Added the "content-type" parameter for URLs using the POST method.
+  [Philippe Marzouk <phil@ozigo.org>]
+
 * Remove .deps code that is just broken for now.  [Justin Erenkrantz]
 
 * Added configversion attribute (root element <flood>) which ties config
