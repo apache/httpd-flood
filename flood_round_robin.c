@@ -747,7 +747,8 @@ apr_status_t round_robin_postprocess(profile_t *profile,
         if (!endfirsthalf)
             return APR_EGENERAL;
 
-        apr_cpystrn(firsthalf, c, endfirsthalf - c);
+        firsthalf = apr_palloc(rp->pool, endfirsthalf - c + 1);
+        apr_cpystrn(firsthalf, c, endfirsthalf - c + 1);
         firsthalf = expand_param_string(rp, firsthalf);
         firsthalflen = strlen(firsthalf);
 
