@@ -54,8 +54,8 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
-#ifndef __flood_socket_ssl_h
-#define __flood_socket_ssl_h
+#ifndef __flood_net_ssl_h
+#define __flood_net_ssl_h
 
 #include <apr_network_io.h> /* apr_socket_t */
 #include <apr_pools.h>      /* apr_pool_t */
@@ -68,4 +68,4 @@ void ssl_close_socket(ssl_socket_t *s);
 apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r);
 apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen);
 
-#endif  /* __flood_socket_h */
+#endif  /* __flood_net_socket_h */
