@@ -1,5 +1,7 @@
 Changes since milestone-03:
 
+* Properly detect and use APR's libtool.  [Justin Erenkrantz]
+
 * Reworked build system to ease integration with APR/apr-util.
   [Justin Erenkrantz]
 

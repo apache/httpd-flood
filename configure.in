@@ -108,13 +108,8 @@ fi
 CFLAGS="$CFLAGS `$apr_config --cflags`"
 CPPFLAGS="$CPPFLAGS `$apr_config --cppflags --includes`"
 LDFLAGS="$LDFLAGS `$apr_config --ldflags`"
+LIBTOOL="`$apr_config --apr-libtool`"
 LIBTOOL_LIBS="$LIBTOOL_LIBS `$apr_config --link-libtool --libs`"
-
-if test -x "`$apr_config --prefix`/build/libtool"; then
-  LIBTOOL_PATH="`$apr_config --prefix`/build/libtool"
-else
-  AC_ERROR([flood requires a libtool-enabled APR.])
-fi
 
 APR_FIND_APU(./apr-util)
 
@@ -160,7 +155,7 @@ AC_SUBST(OPENSSL_PREFIX)
 AC_SUBST(RANDFILE)
 AC_SUBST(CAPATH)
 AC_SUBST(FLOOD_SUBDIRS)
-AC_SUBST(LIBTOOL_PATH)
+AC_SUBST(LIBTOOL)
 AC_SUBST(LIBTOOL_LDFLAGS)
 AC_SUBST(LIBTOOL_LIBS)
 AC_SUBST(prngrand)
