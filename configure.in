@@ -37,6 +37,7 @@ else
         LDFLAGS="$LDFLAGS -R${fl_openssl_prefix}/lib"
         ;;
     *linux*)
+        LDFLAGS="$LDFLAGS -rpath ${fl_openssl_prefix}/lib"
         ;;
   esac
 
@@ -117,6 +118,11 @@ else if $hasrand = "1"; then
 fi
 fi
 fi
+
+EXTRA_CFLAGS="$CFLAGS"
+EXTRA_CPPFLAGS="$CPPFLAGS"
+EXTRA_LDFLAGS="$LDFLAGS"
+EXTRA_LIBS="$LIBS"
 
 AC_SUBST(OPENSSL_PREFIX)
 AC_SUBST(RANDFILE)
