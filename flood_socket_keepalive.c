@@ -168,10 +168,10 @@ static long keepalive_read_chunk_size(char *begin_chunk)
 static apr_status_t keepalive_read_chunk(response_t *resp,
                                          keepalive_socket_t *sock,
                                          int chunk_length,
-                                         char **bp, int blen)
+                                         char **bp, int bplen)
 {
     apr_status_t status = APR_SUCCESS;
-    int old_length;
+    int old_length = 0;
 
     if (!chunk_length) {
         return status;
@@ -188,7 +188,7 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
 
     do {
         /* Sentinel value */
-        int i = 0;
+        int blen = 0;
         char *start_chunk, *end_chunk, *b;
 
         /* Always reset the b. */
@@ -201,19 +201,25 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
         while (!chunk_length)
         {
             /* We are reading the next chunk and see a CRLF. */
-            if (i >= 2 && b[0] == '\r' && b[1] == '\n') {
-                b += 2;
-                i -= 2;
+            if (blen >= 1 && b[0] == '\r') {
+                b++;
+                blen--;
+                if (blen >= 1 && b[0] == '\n') {
+                    b++;
+                    blen--;
+                }
+                else {
+                    old_length = -1;
+                }
             }
 
-            /* Do we need to read? */
-            /* FIXME: We *could* miss a chunk. */
-            if (!i)
+            /* If blen is 0, we're empty so read more data. */
+            if (!blen)
             {
-                /* Read as much as we can. */
-                i = blen - 1;
+                /* Reset and read as much as we can. */
+                blen = bplen;
                 b = *bp;
-                status = ksock_read_socket(sock, b, &i);
+                status = ksock_read_socket(sock, b, &blen);
                 if (status != APR_SUCCESS) {
                     return status;
                 }
@@ -221,13 +227,13 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
                 /* We got caught in the middle of a chunk last time. */ 
                 if (old_length < 0) {
                     b -= old_length;
-                    i += old_length;
+                    blen += old_length;
                     old_length = 0;
                 }
                 /* We are reading the next chunk and see a CRLF. */
-                if (i >= 2 && b[0] == '\r' && b[1] == '\n') {
+                if (blen >= 2 && b[0] == '\r' && b[1] == '\n') {
                     b += 2;
-                    i -= 2;
+                    blen -= 2;
                 }
             }
 
@@ -242,9 +248,9 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
                 if (!end_chunk)
                 {
                     /* Read as much as we can. */
-                    i = blen - 1;
+                    blen = bplen;
                     b = *bp;
-                    status = ksock_read_socket(sock, b, &i);
+                    status = ksock_read_socket(sock, b, &blen);
                     if (status == APR_EGENERAL || status == APR_EOF || 
                         status == APR_TIMEUP)
                         return status;
@@ -252,36 +258,35 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
 
                 /* FIXME: If we add pipelining, we need to put
                  * the remainder back so that it can be read. */
-                i -= end_chunk - b + 4;
+                blen -= end_chunk - b + 4;
 
                 return APR_SUCCESS;
             }
 
             /* If this fails, we're very unlikely to have read a chunk! */
             end_chunk = strstr(start_chunk, CRLF) + 2;
-            i -= end_chunk - b;
+            blen -= end_chunk - b;
 
             /* Oh no, we read more than one chunk this go-around! */
-            if (chunk_length <= i) {
+            if (chunk_length <= blen) {
                 b += chunk_length + (end_chunk - b);
-                i -= chunk_length;
+                blen -= chunk_length;
                 chunk_length = 0;
             }
             else
-                chunk_length -= i;
+                chunk_length -= blen;
         }
 
-        if (chunk_length > blen)
-            i = blen;
+        if (chunk_length > bplen)
+            blen = bplen;
         else
-            i = chunk_length;
+            blen = chunk_length;
 
-        status = ksock_read_socket(sock, b, &i);
+        status = ksock_read_socket(sock, b, &blen);
 
-        chunk_length -= i;
+        chunk_length -= blen;
     }
-    while (status != APR_EGENERAL && status != APR_EOF && 
-           status != APR_TIMEUP);
+    while (status == APR_SUCCESS);
 
     return APR_SUCCESS;
 }
@@ -375,34 +380,28 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     if (cl)
     {
         new_resp->chunked = 1;
+        new_resp->chunk = NULL;
         /* Find where headers ended */
         cl = strstr(new_resp->rbuf, CRLF CRLF);
-        if (cl)
-        {
-            char *buf = NULL;
-            int bufsize, remaining;
+
+        if (cl) {
             /* Skip over the CRLF chars */
             cl += 4;
-            if (!*cl) {
-                /* We got only the headers in our first read.  */
-                assert(ksock->wantresponse == 0);
-                bufsize = MAX_DOC_LENGTH - 1;
-                buf = apr_palloc(pool, bufsize);
-                status = ksock_read_socket(ksock, buf, &bufsize);
-                if (status != APR_SUCCESS && status != APR_EOF) {
-                    return status;
-                }
-                cl = buf;
-            }
+        }
 
+        /* We have a partial chunk. */
+        if (cl && *cl) {
+            int remaining;
+    
             do {
                 if (new_resp->chunk) {
-                    /* Check if we're unlucky to not have the CRLF ending. */
+                    /* If we have enough space to skip over the ending CRLF,
+                     * do so. */
                     if (chunk_length + 2 <= remaining) {
                         new_resp->chunk += chunk_length + 2;
                     }
                     else {
-                        /* Special value */
+                        /* We got more than a chunk, but not the full CRLF. */
                         chunk_length = -(remaining - chunk_length);
                         remaining = 0;
                         break;
@@ -415,15 +414,12 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
                 if (*new_resp->chunk) {
                     chunk_length = keepalive_read_chunk_size(new_resp->chunk);
                     /* Search for the beginning of the chunk. */
-                    new_resp->chunk = strstr(new_resp->chunk, CRLF) + 2;
-                    if (!buf) {
-                        remaining = new_resp->rbufsize - 
+                    new_resp->chunk = strstr(new_resp->chunk, CRLF);
+                    assert(new_resp->chunk);
+                    new_resp->chunk += 2;
+                    remaining = new_resp->rbufsize - 
                                     (int)(new_resp->chunk - 
                                           (char*)new_resp->rbuf);
-                    }
-                    else {
-                        remaining = bufsize - (int)(new_resp->chunk - buf);
-                    }
                 }
                 else {
                     remaining = 0;
