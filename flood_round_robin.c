@@ -74,6 +74,7 @@ typedef struct {
     char *url;
     method_e method;
     char *payload;
+    apr_int64_t delay;
 } url_t;
 
 typedef struct cookie_t {
@@ -289,6 +290,19 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                                      FLOOD_STRLEN_MAX) == 0) {
                         p->url[i].payload = (char*)attr->value;
                     }
+                    else if (strncasecmp(attr->name, XML_URLLIST_DELAY,
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        char *endptr;
+                        p->url[i].delay = strtoll(attr->value, &endptr, 10);
+                        if (*endptr != '\0')
+                        {
+                            apr_file_printf(local_stderr, 
+                                        "Attribute %s has invalid value %s.\n",
+                                        XML_URLLIST_DELAY, attr->value);
+                            return APR_EGENERAL;
+                        }
+                        p->url[i].delay *= APR_USEC_PER_SEC;
+                    }
                     attr = attr->next;
                 }
             }
@@ -329,6 +343,11 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
         r->payload = rp->url[rp->current_url].payload;
         r->payloadsize = strlen(rp->url[rp->current_url].payload);
     }
+
+    /* If they want a sleep, do it now. */
+    if (rp->url[rp->current_url].delay)
+        apr_sleep(rp->url[rp->current_url].delay);
+
     rp->current_url++;
 
     r->parsed_uri = apr_pcalloc(rp->pool, sizeof(apr_uri_components));

@@ -18,6 +18,7 @@
 #define XML_URLLIST_METHOD_HEAD "head"
 #define XML_URLLIST_PAYLOAD "payload"
 #define XML_URLLIST_PROXY "proxy"
+#define XML_URLLIST_DELAY "delay"
 #define XML_URLLIST_NAME "name"
 #define XML_PROFILE "profile"
 #define XML_PROFILE_COUNT "count"
