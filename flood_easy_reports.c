@@ -109,10 +109,10 @@ apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, 
     }
 
 #if APR_HAS_THREADS
-    foo = apr_psprintf(easy->pool, "%s %d %s", foo, apr_os_thread_current(), 
+    foo = apr_psprintf(easy->pool, "%s %ld %s", foo, apr_os_thread_current(), 
                        req->uri);
 #else
-    foo = apr_psprintf(easy->pool, "%s %d %s", foo, getpid(), req->uri);
+    foo = apr_psprintf(easy->pool, "%s %ld %s", foo, getpid(), req->uri);
 #endif
 
     apr_file_printf(local_stdout, "%s\n", foo);

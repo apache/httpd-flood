@@ -89,7 +89,7 @@ typedef struct farmer_worker_info_t farmer_worker_info_t;
  * Worker function that is assigned to a thread. Each worker is
  * called a farmer in our system.
  */
-void * APR_THREAD_FUNC farmer_worker(apr_thread_t *thd, void *data)
+static void * APR_THREAD_FUNC farmer_worker(apr_thread_t *thd, void *data)
 {
     apr_status_t stat;
     apr_pool_t *pool;
@@ -119,7 +119,7 @@ void * APR_THREAD_FUNC farmer_worker(apr_thread_t *thd, void *data)
     return NULL;
 }
 #else
-void *farmer_worker(void *data)
+static void *farmer_worker(void *data)
 {
     apr_status_t stat;
     apr_pool_t *pool;
@@ -154,7 +154,7 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
 #endif
     apr_status_t stat;
     int usefarmer_count, i, j;
-    long farmer_start_count;
+    long farmer_start_count = 1;
     apr_time_t farmer_start_delay;
     char *xml_farm, **usefarmer_names;
     struct apr_xml_elem *e, *root_elem, *farm_elem;

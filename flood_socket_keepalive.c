@@ -197,7 +197,7 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     int i;
     response_t *new_resp;
     apr_status_t status;
-    long content_length;
+    long content_length = 0;
 
     new_resp = apr_pcalloc(pool, sizeof(response_t));
     new_resp->rbuftype = POOL;
