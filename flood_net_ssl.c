@@ -93,9 +93,9 @@ static CRYPTO_dynlock_value *ssl_dyn_create(const char* file, int line)
 
     l = apr_palloc(ssl_pool, sizeof(CRYPTO_dynlock_value));
 #ifdef USE_RW_LOCK_FOR_SSL 
-    apr_lock_create(&l->lock, APR_MUTEX, APR_INTRAPROCESS, NULL, ssl_pool);
-#else
     apr_lock_create(&l->lock, APR_READWRITE, APR_INTRAPROCESS, NULL, ssl_pool);
+#else
+    apr_lock_create(&l->lock, APR_MUTEX, APR_INTRAPROCESS, NULL, ssl_pool);
 #endif
     return l;
 }
