@@ -70,8 +70,6 @@
 #include <apr_strings.h>
 #include <unistd.h>
 
-#define USE_RW_LOCK_FOR_SSL
-
 struct ssl_socket_t {
     SSL_CTX *ssl_context;
     SSL *ssl_connection;
@@ -81,26 +79,22 @@ struct ssl_socket_t {
 apr_pool_t *ssl_pool;
 
 #if APR_HAS_THREADS
-apr_lock_t **ssl_locks;
+apr_thread_mutex_t **ssl_locks;
 
 typedef struct CRYPTO_dynlock_value { 
-    apr_lock_t *lock; 
+    apr_thread_mutex_t *lock; 
 } CRYPTO_dynlock_value;
 
 static CRYPTO_dynlock_value *ssl_dyn_create(const char* file, int line)
 {
     CRYPTO_dynlock_value *l;
+    apr_status_t rv;
 
     l = apr_palloc(ssl_pool, sizeof(CRYPTO_dynlock_value));
-#ifdef USE_RW_LOCK_FOR_SSL 
-    /* Intraprocess locks don't /need/ a filename... */
-    apr_lock_create(&l->lock, APR_READWRITE, APR_INTRAPROCESS,
-                    APR_LOCK_DEFAULT, NULL, ssl_pool);
-#else
-    /* Intraprocess locks don't /need/ a filename... */
-    apr_lock_create(&l->lock, APR_MUTEX, APR_INTRAPROCESS,
-                    APR_LOCK_DEFAULT, NULL, ssl_pool);
-#endif
+    rv = apr_thread_mutex_create(&l->lock, APR_THREAD_MUTEX_DEFAULT, ssl_pool);
+    if (rv != APR_SUCCESS) {
+        /* FIXME: return error here */
+    }
     return l;
 }
 
@@ -108,44 +102,27 @@ static void ssl_dyn_lock(int mode, CRYPTO_dynlock_value *l, const char *file,
                          int line)
 {
     if (mode & CRYPTO_LOCK) {
-#ifdef USE_RW_LOCK_FOR_SSL 
-        if (mode & CRYPTO_READ) {
-            apr_lock_acquire_rw(l->lock, APR_READER);
-        }
-        else if (mode & CRYPTO_WRITE) {
-            apr_lock_acquire_rw(l->lock, APR_WRITER);
-        }
-#else
-        apr_lock_acquire(l->lock);
-#endif
+        apr_thread_mutex_lock(l->lock);
     }
     else if (mode & CRYPTO_UNLOCK) {
-        apr_lock_release(l->lock);
+        apr_thread_mutex_unlock(l->lock);
     }
 }
 
 static void ssl_dyn_destroy(CRYPTO_dynlock_value *l, const char *file,
                             int line)
 {
-    apr_lock_destroy(l->lock);
+    apr_thread_mutex_destroy(l->lock);
 }
 
 static void ssl_lock(int mode, int n, const char *file, int line)
 {
     if (mode & CRYPTO_LOCK) {
-#ifdef USE_RW_LOCK_FOR_SSL 
-        if (mode & CRYPTO_READ) {
-            apr_lock_acquire_rw(ssl_locks[n], APR_READER);
-        }
-        else if (mode & CRYPTO_WRITE) {
-            apr_lock_acquire_rw(ssl_locks[n], APR_WRITER);
-        }
-#else
-        apr_lock_acquire(ssl_locks[n]);
-#endif
+        apr_thread_mutex_lock(ssl_locks[n]);
     }
-    else if (mode & CRYPTO_UNLOCK)
-        apr_lock_release(ssl_locks[n]);
+    else if (mode & CRYPTO_UNLOCK) {
+        apr_thread_mutex_unlock(ssl_locks[n]);
+    }
 }
 
 static unsigned long ssl_id(void)
@@ -207,18 +184,16 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
 
 #if APR_HAS_THREADS
     numlocks = CRYPTO_num_locks();
-    ssl_locks = apr_palloc(pool, sizeof(apr_lock_t*)*numlocks);
-    for (i = 0; i < numlocks; i++)
-    {
-#ifdef USE_RW_LOCK_FOR_SSL 
+    ssl_locks = apr_palloc(pool, sizeof(apr_thread_mutex_t*)*numlocks);
+    for (i = 0; i < numlocks; i++) {
+        apr_status_t rv;
+
         /* Intraprocess locks don't /need/ a filename... */
-        apr_lock_create(&ssl_locks[i], APR_READWRITE, APR_INTRAPROCESS,
-                        APR_LOCK_DEFAULT, NULL, ssl_pool);
-#else
-        /* Intraprocess locks don't /need/ a filename... */
-        apr_lock_create(&ssl_locks[i], APR_MUTEX, APR_INTRAPROCESS,
-                        APR_LOCK_DEFAULT, NULL, ssl_pool);
-#endif
+        rv = apr_thread_mutex_create(&ssl_locks[i], APR_THREAD_MUTEX_DEFAULT,
+                                     ssl_pool);
+        if (rv != APR_SUCCESS) {
+            /* FIXME: error out here */
+        }
     }
 
     CRYPTO_set_locking_callback(ssl_lock);
