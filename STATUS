@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/11/17 02:34:45 $]
+Last modified at [$Date: 2001/11/20 22:56:34 $]
 
 Release:
 
@@ -48,6 +48,9 @@ Other bugs that need fixing:
       farm, farmer, profile, url/request-cycle, etc.
 
 Other features that need writing:
+
+    * Maybe we should make randfile and capath runtime directives that
+      come out of the XML, instead of autoconf parameters.
 
     * Migrate all locks to APRs new lock api.
 
