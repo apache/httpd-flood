@@ -1,5 +1,8 @@
 Changes since milestone-03:
 
+* Reworked build system to ease integration with APR/apr-util.
+  [Justin Erenkrantz]
+
 Changes since milestone-02:
 
 * Updated apr_lock_create to reflect the API change in APR.
