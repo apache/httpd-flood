@@ -23,6 +23,7 @@
 #define XML_URLLIST_PAYLOAD_TEMPLATE "payloadtemplate"
 #define XML_URLLIST_REQUEST_TEMPLATE "requesttemplate"
 #define XML_URLLIST_RESPONSE_TEMPLATE "responsetemplate"
+#define XML_URLLIST_RESPONSE_SCRIPT "responsescript"
 #define XML_URLLIST_RESPONSE_NAME "responsename"
 #define XML_URLLIST_PROXY "proxy"
 #define XML_URLLIST_PREDELAY "predelay"

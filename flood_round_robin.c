@@ -61,6 +61,8 @@
 #include <apr_lib.h>
 #include <apr_hash.h>
 #include <apr_base64.h>
+#include <apr_poll.h>
+#include <apr_thread_proc.h>
 
 #if APR_HAVE_STRINGS_H
 #include <strings.h>    /* strncasecmp */
@@ -114,6 +116,7 @@ typedef struct {
     char *payloadtemplate;
     char *requesttemplate;
     char *responsetemplate;
+    char *responsescript;
     char *responsename;
     int responselen;
     char *user;
@@ -494,6 +497,11 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
                                  XML_URLLIST_RESPONSE_TEMPLATE, 
                                  FLOOD_STRLEN_MAX) == 0) {
                 url->responsetemplate = (char*)attr->value;
+            }
+            else if (strncasecmp(attr->name, 
+                                 XML_URLLIST_RESPONSE_SCRIPT, 
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->responsescript = (char*)attr->value;
             }
             else if (strncasecmp(attr->name, 
                                  XML_URLLIST_RESPONSE_NAME,
@@ -951,6 +959,123 @@ apr_status_t round_robin_postprocess(profile_t *profile,
         apr_hash_set(rp->state, rp->url[rp->current_url].responsename,
                      rp->url[rp->current_url].responselen, newValue);
         regfree(&re);
+    }
+    if (rp->url[rp->current_url].responsescript)
+    {
+        int exitcode = 0;
+        apr_status_t rv;
+        apr_proc_t *proc;
+        apr_pollfd_t pipeout;
+        apr_pollset_t *pollset;
+        apr_procattr_t *procattr;
+        apr_size_t nbytes, wbytes;
+
+        char **args;
+        const char *progname;
+        
+
+        if (apr_procattr_create(&procattr, rp->pool) != APR_SUCCESS) {
+            apr_file_printf(local_stderr,
+                            "apr_procattr_create failed for '%s'\n",
+                            rp->url[rp->current_url].responsescript);
+            return APR_EGENERAL;
+        }
+
+        if (apr_procattr_io_set(procattr, APR_FULL_BLOCK, APR_NO_PIPE,
+                                  APR_NO_PIPE) != APR_SUCCESS) {
+            apr_file_printf(local_stderr,
+                            "apr_procattr_io_set failed for '%s'\n",
+                            rp->url[rp->current_url].responsescript);
+            return APR_EGENERAL;
+        }
+
+        if (apr_procattr_error_check_set(procattr, 1)) {
+            apr_file_printf(local_stderr,
+                            "apr_procattr_error_check_set failed for '%s'\n",
+                            rp->url[rp->current_url].responsescript);
+            return APR_EGENERAL;
+        }
+
+        apr_tokenize_to_argv(rp->url[rp->current_url].responsescript, &args,
+                                rp->pool);
+        progname = apr_pstrdup(rp->pool, args[0]);
+
+        proc = (apr_proc_t *)apr_pcalloc(rp->pool, sizeof(*proc));
+
+        /* create process */
+        if (apr_proc_create(proc, progname, (const char * const *)args, NULL,
+                                procattr, rp->pool) != APR_SUCCESS) {
+            apr_file_printf(local_stderr,
+                            "Can't spawn postprocess script '%s'\n",
+                            rp->url[rp->current_url].responsescript);
+            return APR_EGENERAL;
+        }
+
+        if (apr_file_pipe_timeout_set(proc->in, apr_time_from_sec(10))
+                                != APR_SUCCESS) {
+            apr_file_printf(local_stderr,
+                            "apr_file_pipe_timeout_set failed for '%s'\n",
+                            rp->url[rp->current_url].responsescript);
+            return APR_EGENERAL;
+        }
+
+        apr_pollset_create(&pollset, 1, rp->pool, 0);
+
+        pipeout.desc_type = APR_POLL_FILE;
+        pipeout.reqevents = APR_POLLOUT;
+        pipeout.desc.f = proc->in;
+        pipeout.client_data = NULL;
+
+        apr_pollset_add(pollset, &pipeout);
+
+        wbytes = 0;
+        nbytes = strlen(resp->rbuf);
+
+        while (wbytes < nbytes) {
+
+            int bytes;
+            apr_int32_t nrdes;
+            const apr_pollfd_t *ardes = NULL;
+
+            apr_pollset_poll(pollset, apr_time_from_sec(10), &nrdes, &ardes);
+
+            if (!nrdes) {
+                apr_file_printf(local_stderr,
+                                "timeout writing data to script '%s'\n",
+                                rp->url[rp->current_url].responsescript);
+                return APR_EGENERAL;
+            }
+
+            /* there can be only one descriptor... */
+            const apr_pollfd_t *rdes = &(ardes[0]);
+
+            bytes = nbytes;
+            apr_file_write(rdes->desc.f, resp->rbuf, &bytes);
+
+            wbytes += bytes;
+
+        }
+
+        apr_pollset_remove(pollset, &pipeout);
+        apr_file_close(proc->in);
+
+        rv = apr_proc_wait(proc, &exitcode, NULL, APR_WAIT);
+
+        /* child may be gone already... */
+        if (!rv & (APR_CHILD_DONE | APR_SUCCESS)) {
+            apr_file_printf(local_stderr,
+                            "apr_proc_wait failed for '%s'\n",
+                            rp->url[rp->current_url].responsescript);
+            return APR_EGENERAL;
+        }
+
+        if (exitcode != 0) {
+            apr_file_printf(local_stderr,
+                            "Postprocess script '%s' failed, exit code '%i'\n",
+                            rp->url[rp->current_url].responsescript, exitcode);
+            return APR_EGENERAL;
+        }
+
     }
 
     return APR_SUCCESS;
