@@ -41,7 +41,7 @@
   <!-- A farm contains a bunch of farmers - each farmer is a thread.  -->
   <farm>
     <name>Bingo</name>
-    <usefarmer count="1">Joe</usefarmer>
+    <usefarmer count="5" startdelay="5" startcount="2">Joe</usefarmer>
   </farm>
 
   <!-- Set the seed to a known value so we can reproduce the same tests -->
