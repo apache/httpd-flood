@@ -95,8 +95,11 @@ if test "$enable_ssl" = "yes"; then
         CAPATH="$fl_openssl_prefix/ssl/certs"
      else if test -d "/usr/lib/ssl/certs"; then
         CAPATH="/usr/lib/ssl/certs"
+     else if test -d "/usr/share/ssl/certs"; then
+        CAPATH="/usr/share/ssl/certs"
      else
         AC_MSG_ERROR('option --with-capath must be specified')
+     fi
      fi
      fi
      fi
