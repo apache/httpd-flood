@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/24 06:45:19 $]
+Last modified at [$Date: 2001/07/25 00:14:31 $]
 
 Release:
 
@@ -151,3 +151,8 @@ Open issues:
       We're not sure how to handle reporting quite yet. We'd like to keep
       it open ended and flexible, but that will be difficult to do while
       maintaining the ability to run a huge variety of tests.
+
+    * WebLogic 5.10 Service Pack 9
+      No one told BEA how to make an HTTP server.  Send it Connection: Close
+      and a cookie, and it'll respond with Connection: Keep-Alive (no cookie
+      and it honors Connection: Close).  That's wrong.
