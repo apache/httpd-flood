@@ -1,0 +1,76 @@
+Flood Configuration Design
+----------------------------------------
+
+
+Multitplicity Configuration:
+
+This includes remote invocation, and parallel instantiation (forking
+and threading).
+
+
+Example XML:
+
+<host>
+  <hostname>foo.ebuilt.net</hostname>
+  <proto>ssh</proto>
+  <username>foouser</username>
+  <password>l33th4x0r</password>
+  <worker>
+    <workercount>10</workercount>
+    <repeatcount>100</repeatcount>
+    <profilename>Bob</profilename>
+  </worker>
+</host>
+
+<host>
+  <hostname>bar.ebuilt.net</hostname>
+  <description>Some FreeBSD Box</description>
+  <proto>rsh</proto>
+  <worker>
+    <workercount>10</workercount>
+    <profilename>Alice</profilename>
+  </worker>
+</host>
+
+
+User Profile Definition:
+
+A User Profile is a model of a a particular user or type of user.
+It can also be seen as a Use Case.
+
+Example XML:
+
+<profile>
+  <name>Bob</name>
+  <description>Bob likes yahoo</description>
+  <url>
+     <uri>http://foo.com/</uri>
+     <verify>
+       <module>libgrep.so</module>
+       <expect>die bill gates</expect>
+     </verify>
+  </url>
+  <url>http://foo.net/</url>
+  <url>http://foo.org/</url>
+  <url>http://bar.com/</url>
+  <url>http://bar.net/</url>
+  <url>http://bar.org/</url>
+  <logfile>bob.log</logfile>
+  <proxy>http://netcrash:3128</proxy>
+  <enablecookies>
+  <roundrobin> (or <sequence>, <random>, <randomweighted>)
+  <delay>
+    <random>
+      <min>5 seconds</min>
+      <max>10 seconds</max>
+    </random>
+  </delay>
+  <verify>
+    <module>lib200ok.so</module>
+  </verify>
+</profile>
+
+<profile>
+  <name>Alice</name>
+  <description>Alice visits ebay</description>
+  <cernlog>alice.common_log</cernlog>

@@ -1,0 +1,46 @@
+#ifndef __config_h
+#define __config_h
+
+#define FLOOD_USE_THREADS @FLOOD_USE_THREADS@
+
+/* optimal buffer size on this platform, set this from autoconf later */
+#define FLOOD_IOBUF 8192
+
+/* maximum number of characters we'll allow in a typical string, hack */
+#define FLOOD_STRLEN_MAX 256
+
+/* XML symbolic roots to the various objects we define. */
+#define XML_URLLIST "urllist"
+#define XML_URLLIST_URL "url"
+#define XML_URLLIST_METHOD "method"
+#define XML_URLLIST_METHOD_GET "get"
+#define XML_URLLIST_METHOD_POST "post"
+#define XML_URLLIST_METHOD_HEAD "head"
+#define XML_URLLIST_PAYLOAD "payload"
+#define XML_URLLIST_PROXY "proxy"
+#define XML_URLLIST_NAME "name"
+#define XML_PROFILE "profile"
+#define XML_PROFILE_COUNT "count"
+#define XML_PROFILE_USEURLLIST "useurllist"
+#define XML_FARMER "farmer"
+#define XML_FARMER_NAME "name"
+#define XML_FARMER_COUNT "count"
+#define XML_FARMER_USEPROFILE "useprofile"
+#define XML_FARM "farm"
+#define XML_FARM_NAME "name"
+#define XML_FARM_USEFARMER "usefarmer"
+
+/* The delimiter (used above) between XML elements */
+#define XML_ELEM_DELIM "."
+
+/* FIXME: Base this on RCS ID? */
+#define FLOOD_VERSION ".001"
+
+#define CRLF "\r\n"
+
+/* FIXME: replace the apr_recv logic with something sane. */
+#define MAX_DOC_LENGTH 8192
+
+#define LOCAL_SOCKET_TIMEOUT 30 * APR_USEC_PER_SEC
+
+#endif  /* __config_h */

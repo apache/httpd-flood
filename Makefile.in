@@ -1,0 +1,34 @@
+top_srcdir   = @HTTPD_SOURCE@
+top_builddir = @HTTPD_SOURCE@
+srcdir       = $(shell pwd)
+builddir     = $(shell pwd)
+VPATH        = $(shell pwd)
+
+# no targets: we don't want to build anything by default. if you want the
+# test programs, then "make test"
+targets =
+
+PROGRAMS = flood
+
+PROGRAM_LDADD        = $(EXTRA_LDFLAGS) $(PROGRAM_DEPENDENCIES) $(EXTRA_LIBS)
+PROGRAM_DEPENDENCIES = @APU_SOURCE@/libaprutil.la \
+	@APR_SOURCE@/libapr.la @APU_SOURCE@/xml/expat/lib/libexpat.la
+
+include $(top_srcdir)/build/rules.mk
+
+APR_OSDIR=@APR_SOURCE@/include/arch/unix
+EXTRA_LDFLAGS=@EXTRA_LDFLAGS@
+EXTRA_CPPFLAGS=@EXTRA_CPPFLAGS@ -I${APR_OSDIR}
+EXTRA_CFLAGS=@EXTRA_CFLAGS@
+EXTRA_LIBS=@EXTRA_LIBS@ @LIBS@
+
+all: $(PROGRAMS)
+FLOOD_OBJS = flood_round_robin.lo flood_profile.lo flood_config.lo \
+	flood_net.lo flood_net_ssl.lo \
+	flood_farmer.lo flood_simple_reports.lo flood_easy_reports.lo \
+	flood_farm.lo
+
+flood_OBJECTS = flood.lo $(FLOOD_OBJS)
+flood: $(flood_OBJECTS)
+	$(LINK) $(flood_OBJECTS) $(PROGRAM_LDADD)
+

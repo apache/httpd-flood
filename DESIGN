@@ -1,0 +1,191 @@
+Flood Design Document
+----------------------------------------
+
+Flood is an experimental multi-purpose HTTP load-testing tool.
+The design of flood is intended to be modular in the extreme to
+support testing of a wide variety of website applications.
+Flood is also intended to be scalable and accurate.
+
+------------------------------
+Functional Requirements:
+------------------------------
+
+The following is a list of functions we intend to incorporate into flood:
+
+1) Timing Metrics
+ a) TCP connect() time
+ b) Time to send request (time to fill local buffers)
+ c) Time until first response chunk was received
+    (tests network latency at the application layer (HTTP))
+ d) Time to receive a full response
+ e) (optional) Local Processing times, such as time to generate the Request
+2) Simple response error detection
+3) Load testing a set of URLs:
+ a) Random
+ b) Round-Robin
+ c) Sequenced (with cookie propogation)
+ d) Chaining of the above strategies
+4) Distributed load generation (using rsh/ssh)
+5) Complex response validation
+ a) grep/regexp matching
+ b) higher-level validation?
+6) Complex request generation
+ a) Spider a site to generate a list of URLs
+ b) Read a CERN log to generate URL paths from real users
+   (could also add weights to the URLs depending on the occurance in the logs)
+ c) Read a tcpdump/sniff packet trace to generate URL paths
+
+------------------------------
+Functional Specifications:
+------------------------------
+
+With the above functional goals in mind, the following components will have
+to be designed and implemented:
+
+1) Request/Response framework
+ - Every hit to the site passes through this sequence of calls.
+2) Timer hooks in the framework as well as a generic timer facility
+ - Hooks are placed to properly gauge request generation time, network
+   I/O time, round-trip time, network latency as well as bandwidth,
+   local processing time, etc...
+ - Hook facilities also allow module authors to time various aspects of
+   their processes, and aggregate them into the final report.
+3) Simple distributed processing environment:
+ - Patterned after distributed models like cvs or rsync that use
+   rsh/ssh to invoke a remote process. Statistics from this remote
+   process must be regular and should ideally follow a standardized
+   reporting format.
+4) Simple Reporting Format (? might be overengineering ?)
+ - A simple format used to report statistics between modules, may they
+   be remote processes or otherwise out-of-process.
+ - I envision this being some really simple XML schema that all processes
+   use to report data back to the terminal, where the originating process
+   collects this data, processes, and reports in various formats (XML,
+   human-readable, etc...)
+
+(more to come)
+
+------------------------------
+Design Specifications:
+------------------------------
+
+------------------------------
+Modular Test Framework
+
+Flood provides the control logic that will invoke a test procedure and
+collect reported statistics. Tests are modular, and conform to this
+simple invocation interface. In order to simplify the task of a module
+developer, flood also provides an extensive support library.
+
+------------------------------
+Test Invocation:
+
+Tests are invoked with a standard interface.
+
+[ proposal:
+
+  typedef unsigned int testid_t; /* unique test id across this invocation of flood
+                                    (including fork()s and remote invocations */
+
+  apr_status_t invoke_test(config_t * config, /* to be defined */
+                           testid_t testid);
+
+  
+]
+
+------------------------------
+Transaction Reporting:
+
+All tests will collect and process operating statistics and report these
+back to the controlling process via standard calls. The following statistics
+are required from every module and for each HTTP transaction:
+
+- TCP Handshake time ( time spent in connect() )
+- Application-layer latency (Time to receive first HTTP bytes)
+- Idle time (total time spent waiting for data)
+- Response time (total time to receive the HTTP Response)
+? - Total Transaction Time
+
+[ proposal:
+
+  apr_status_t report_stats(const char * test_name,   /* short name/description */
+                            int test_number,          /* unique to this test */
+                            apr_status_t test_result, /* success, failure */
+                            apr_interval_t tcp,
+                            apr_interval_t first_resp,
+                            apr_interval_t idle,
+                            apr_interval_t total_resp,
+                            apr_interval_t total);
+]
+
+------------------------------
+Module Configuration:
+
+[ mentioned above in "config_t", needs to be elaborated here.
+
+  - what is the config syntax?
+  - what is the definition of config_t?
+  - what support functions do modules use to retrieve config values?
+  - what if a needed key/value is missing?
+]
+
+------------------------------
+Flood Support Library:
+
+The support library provides many of the functions necessary to write
+a conforming test module.
+
+[ define this more, or move documentation to another file...
+  I hate to suggest it, but maybe preparsed XML (apr supports it, no?)
+]
+
+------------------------------
+Local Parallel Tests:
+
+Given the above scenarios, one may wish to perform many tests in parallel.
+Flood provides two major way to accomplish this: Threaded and Forked.
+These two methods can actually be performed at the same time, allowing
+for fine-grain control of local resources to maximize test throughput.
+
+Threaded:
+
+The process is instructed to make a number of user-space threads,
+each of which will perform a complex event chain as described above. For
+the purpose of this document, each thread that performs an actual test
+is called a "worker".
+
+Forked:
+
+The process is instructed to make multiple duplicate copies of itself
+using the fork() system command, each of which can run one test
+or can run a threaded/parallelized group of tests. For the purpose
+of this document, each fork()ed process is called a "child".
+
+------------------------------
+Distributed Tests:
+
+Further parallelization of the tests is possible, given access to a number
+of remote machines. Flood can invoke a remote instance of itself with
+either the "rsh" or "ssh" remote shell commands. These instances of flood
+are special, in that they do not report directly back to the user, but
+instead communicate their statistical information back to the main
+flood process, which aggregates the information and generates a human
+readable report.
+
+------------------------------
+Interprocess Communication:
+
+In such a largely scalable and distributable system, one of the larger
+hurdles will be interprocess communication. One can imagine scenarios
+where a main flood process has spawned many remote instances, each of
+which (including the original) will fork into many children processes,
+each of which will run multiple parallelized testing event chains.
+When this massive invocation has completed, the user will be presented
+with a single unified report. To deal with this communication, a
+protocol must be designed to facilitate IPC.
+
+[ propose a protocol here, perhaps XML? ]
+
+----------------------------------------
+$Id: DESIGN,v 1.1 2001/07/18 03:33:36 jerenkrantz Exp $
+

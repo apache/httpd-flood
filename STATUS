@@ -1,0 +1,134 @@
+flood STATUS:							-*-text-*-
+Last modified at [$Date: 2001/07/18 03:33:36 $]
+
+Release:
+
+    milestone-0-1 : Tagged July 11, 2000
+
+RELEASE SHOWSTOPPERS:
+
+    * "Everything needs to work perfectly"
+
+Other bugs that need fixing:
+
+    * DNS lookup failures in any <urllist> cause segfault.
+       Justin says: Wow.  Why?
+
+    * We're cheating a bit at the network level.  read_socket only
+      reads what is available at that point in time.  It probably
+      needs to read until we hit EOF (we're specifing Connection: Close).
+      But, what do we do with the intermediate data?  Store only the first 
+      X KB (8KB?) bytes of the response?  This starts to lead into bucket 
+      brigades.  Consider as you read from the socket bucket, it morphs and
+      does a read into to a char*/heap bucket (what's available now) and 
+      the original socket bucket is preserved if we are not at EOS 
+      (remember EOS for keepalive isn't signaled with EOF).  
+       Status: We need to figure out what to do for Interplan testing.  I 
+               think we can just hack at read_socket or recv_resp to read 
+               from the socket until it hits EOF.  Roy needs to guide us
+               in the right direction here...
+
+Bugs and features that have been fixed:
+    Aaron says: "We delete these fixes from STATUS when they are 'verified'."
+
+    * When parsing XML identifiers, we should be using strncasecmp()
+      instead of strncmp().
+       Status: Aaron says "fixed, please verify".
+
+    * Cookies
+       Status: Aaron says "Justin did this for Round Robin, hurray!"
+
+    * Can only use one farmer named "Joe".
+       Status: Aaron says "fixed when threads are enabled, please verify".
+
+    * Farm (Single-process, multiple farmers)
+       Status: Justin says "Aaron did this."
+
+Other features that need writing:
+
+    * Validation of responses (known C-L, specific strings in response)
+       Status: Justin volunteers
+
+    * HTTP Keepalive
+       Justin says: We'll try and get this to work by 7/13, but this is
+                    pushing it.  There's a lot of stuff to getting
+                    keepalive right (edge cases).  May try to push this
+                    off until we've had some real-world experience with 
+                    the flood code.  I'm still not sure how this will
+                    work.
+
+    * HTTP/SSL Keepalive
+       Justin says: This is more important than HTTP Keepalive.
+
+    * HTTP error codes (ie. teach it about 302s)
+       Justin says: Yeah, this won't be with round_robin as implemented.  
+                    Need a linked list-based profile where we can insert 
+                    new URLs into the sequence.
+
+    * Farmer (Single-thread, multiple profiles)
+       Status: Aaron volunteers. Aaron says there is support for a single
+       farmer named "Joe" right now.
+
+    * Timed Farmer
+      A type of farmer that runs for a specified amount of time,
+      instead of a number of iterations. Assumedly it will have to
+      report the number of iterations it ran within that timeframe.
+       Status: Aaron volunteers.
+
+    * Collective (Single-host, multiple farms)
+
+    * Megaconglomerate (Multiple hosts each running a collective)
+
+    * Timers
+      Metrics include:
+        a) TCP connect() time
+        b) Time to send request (time to fill local outbound buffers)
+        c) Time until first response chunk was received
+           (tests network latency at the application layer (HTTP))
+        d) Time to receive a full response
+        e) (optional) Local processing time, such as time to generate
+           a request.
+      Status: Aaron is interested, but won't volunteer until he's done
+        with the other things on his plate.
+
+    * Other types of urllists
+        a) Random / Random-weighted
+        b) Sequenced (useful with cookie propogation)
+        c) Round-robin
+        d) Chaining of the above strategies
+      Status: Round-robin is complete.
+
+    * Other types of reports
+      Status: Aaron says: "simple" reports are functional. Justin added
+              a new type that simply prints the approx. timestamp when
+              the test was run, and the result as OK/FAIL; it is called
+              "easy reports" (see flood_easy_reports.h).
+
+Documentation that needs writing:
+
+    * Documentation?  What documentation? RTFS?
+
+    * Feature set
+      We'll have to eventually write down all the features we support,
+      which will most likely come out to be the various XML parameters
+      we support.
+
+Available Patches:
+
+Open issues:
+
+    * Validating XML Parser?
+  
+    * Supporting use of installed APR / APR-util
+       Justin says: Requires changes to APR/APR-util.
+
+    * Mandrake Linux 8.0 and OpenSSL 0.9.6a just aren't coexisting at all.
+      The problem seems to be that OpenSSL is refusing to initialize the
+      PRNG.  Go figure.  I give up on this for now, but it is a big nasty
+      bug in something somewhere.  This code works on Solaris/Intel.
+      That's all I'll say on the matter for now.
+
+    * Report Aggregation
+      We're not sure how to handle reporting quite yet. We'd like to keep
+      it open ended and flexible, but that will be difficult to do while
+      maintaining the ability to run a huge variety of tests.
