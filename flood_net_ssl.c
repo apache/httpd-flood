@@ -59,6 +59,8 @@
 #include "flood_net.h"
 #include "flood_net_ssl.h"
 
+#if FLOOD_HAS_OPENSSL
+
 #define OPENSSL_THREAD_DEFINES
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -83,7 +85,7 @@ typedef struct CRYPTO_dynlock_value {
     apr_lock_t *lock; 
 } CRYPTO_dynlock_value;
 
-CRYPTO_dynlock_value * ssl_dyn_create(const char* file, int line)
+static CRYPTO_dynlock_value *ssl_dyn_create(const char* file, int line)
 {
     CRYPTO_dynlock_value *l;
 
@@ -96,38 +98,42 @@ CRYPTO_dynlock_value * ssl_dyn_create(const char* file, int line)
     return l;
 }
 
-void ssl_dyn_lock(int mode, CRYPTO_dynlock_value *l, const char *file, 
-                  int line)
+static void ssl_dyn_lock(int mode, CRYPTO_dynlock_value *l, const char *file, 
+                         int line)
 {
-    if (mode & CRYPTO_LOCK)
-    {
+    if (mode & CRYPTO_LOCK) {
 #ifdef USE_RW_LOCK_FOR_SSL 
-        if (mode & CRYPTO_READ)
+        if (mode & CRYPTO_READ) {
             apr_lock_acquire_rw(l->lock, APR_READER);
-        else if (mode & CRYPTO_WRITE)
+        }
+        else if (mode & CRYPTO_WRITE) {
             apr_lock_acquire_rw(l->lock, APR_WRITER);
+        }
 #else
         apr_lock_acquire(l->lock);
 #endif
     }
-    else if (mode & CRYPTO_UNLOCK)
+    else if (mode & CRYPTO_UNLOCK) {
         apr_lock_release(l->lock);
+    }
 }
 
-void ssl_dyn_destroy(CRYPTO_dynlock_value *l, const char *file, int line)
+static void ssl_dyn_destroy(CRYPTO_dynlock_value *l, const char *file,
+                            int line)
 {
     apr_lock_destroy(l->lock);
 }
 
-void ssl_lock(int mode, int n, const char *file, int line)
+static void ssl_lock(int mode, int n, const char *file, int line)
 {
-    if (mode & CRYPTO_LOCK)
-    {
+    if (mode & CRYPTO_LOCK) {
 #ifdef USE_RW_LOCK_FOR_SSL 
-        if (mode & CRYPTO_READ)
+        if (mode & CRYPTO_READ) {
             apr_lock_acquire_rw(ssl_locks[n], APR_READER);
-        else if (mode & CRYPTO_WRITE)
+        }
+        else if (mode & CRYPTO_WRITE) {
             apr_lock_acquire_rw(ssl_locks[n], APR_WRITER);
+        }
 #else
         apr_lock_acquire(ssl_locks[n]);
 #endif
@@ -136,8 +142,9 @@ void ssl_lock(int mode, int n, const char *file, int line)
         apr_lock_release(ssl_locks[n]);
 }
 
-unsigned long ssl_id(void)
+static unsigned long ssl_id(void)
 {
+    /* FIXME: This is lame and nor portable. -aaron */
     return (unsigned long) apr_os_thread_current(); 
 }
 #endif
@@ -323,3 +330,6 @@ apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r)
 
     return APR_SUCCESS;     
 }
+
+#endif /* FLOOD_HAS_OPENSSL */
+
