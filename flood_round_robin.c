@@ -70,11 +70,22 @@
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
 
+/* Allowable mechanisms for payload template generation. */
+enum payload_e {
+    RANDOM_DATA,
+    SEQUENTIAL_DATA,
+    FILE_DATA
+};
+typedef enum payload_e payload_e;
+
 typedef struct {
     char *url;
     method_e method;
     char *payload;
     apr_int64_t delay;
+    payload_e payloadtype;
+    int payloadparamcount;
+    char *payloadtemplate;
 } url_t;
 
 typedef struct cookie_t {
@@ -297,6 +308,41 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                                      FLOOD_STRLEN_MAX) == 0) {
                         p->url[i].payload = (char*)attr->value;
                     }
+                    else if (strncasecmp(attr->name, XML_URLLIST_PAYLOAD_PARAM, 
+                                     FLOOD_STRLEN_MAX) == 0) {
+                        if (strncasecmp(attr->value, "random", 6) == 0)
+                            p->url[i].payloadtype = RANDOM_DATA;
+                        else if (strncasecmp(attr->value, "seq", 3) == 0)
+                            p->url[i].payloadtype = SEQUENTIAL_DATA;
+                        else if (strncasecmp(attr->value, "file", 3) == 0)
+                            p->url[i].payloadtype = FILE_DATA;
+                        else {
+                            apr_file_printf(local_stderr, 
+                                         "Attribute %s has invalid value %s.\n",
+                                         XML_URLLIST_PAYLOAD_PARAM, 
+                                         attr->value);
+                            return APR_EGENERAL;
+                        }
+                    }
+                    else if (strncasecmp(attr->name, 
+                                         XML_URLLIST_PAYLOAD_PARAM_COUNT, 
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        char *endptr;
+                        p->url[i].payloadparamcount = strtoll(attr->value, 
+                                                              &endptr, 10);
+                        if (*endptr != '\0')
+                        {
+                            apr_file_printf(local_stderr, 
+                                        "Attribute %s has invalid value %s.\n",
+                                        XML_URLLIST_DELAY, attr->value);
+                            return APR_EGENERAL;
+                        }
+                    }
+                    else if (strncasecmp(attr->name, 
+                                         XML_URLLIST_PAYLOAD_TEMPLATE, 
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        p->url[i].payloadtemplate = (char*)attr->value;
+                    }
                     else if (strncasecmp(attr->name, XML_URLLIST_DELAY,
                                          FLOOD_STRLEN_MAX) == 0) {
                         char *endptr;
@@ -349,6 +395,38 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     {
         r->payload = rp->url[rp->current_url].payload;
         r->payloadsize = strlen(rp->url[rp->current_url].payload);
+    }
+    else if (rp->url[rp->current_url].payloadtemplate)
+    {
+        int i;
+        char *cpy, *cur, *prev, *data;
+         
+        prev = rp->url[rp->current_url].payloadtemplate;
+        r->payload = '\0';
+        for (i = 0; i < rp->url[rp->current_url].payloadparamcount; i++)
+        {
+            cur = strstr(prev, "$$");
+            cpy = apr_pmemdup(rp->pool, prev, cur - prev);
+            switch (rp->url[rp->current_url].payloadtype) {
+            case RANDOM_DATA:
+                data = apr_psprintf(rp->pool, "%d", rand());
+                break;
+            case SEQUENTIAL_DATA:
+                break;
+            case FILE_DATA:
+                break;
+            }
+            if (!r->payload) 
+                r->payload = apr_pstrcat(r->pool, cpy, data, NULL);
+            else
+                r->payload = apr_pstrcat(r->pool, r->payload, cpy, data, NULL);
+            prev = cur + 2;
+        }
+        if (!r->payload) 
+            r->payload = apr_pstrcat(r->pool, prev, NULL);
+        else
+            r->payload = apr_pstrcat(r->pool, r->payload, prev, NULL);
+        r->payloadsize = strlen(r->payload);
     }
 
     /* If they want a sleep, do it now. */
