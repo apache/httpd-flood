@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Include correct header to import defintion of apr_pstrmemdup in
+  flood_socket_keepalive.c.  [Phi-Long Tran <ptran@pobox.com>]
+
 * Namespace protect expand_param_e enum values to not conflict with Win32
   headers.  [Phi-Long Tran <ptran@pobox.com>]
 

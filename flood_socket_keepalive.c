@@ -53,6 +53,7 @@
  */
 
 #include <apr.h>
+#include <apr_strings.h>
 
 #if APR_HAVE_STDLIB_H
 #include <stdlib.h>     /* rand/strtol */
