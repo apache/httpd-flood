@@ -792,6 +792,19 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
         apr_file_printf (local_stderr, "Misformed URL '%s'\n", r->uri);
         exit (APR_EGENERAL);
     }                                                                          
+    if (r->parsed_uri->hostname[0] == '\0') {
+        apr_file_printf (local_stderr, "Misformed URL '%s' -- can't find valid hostname.\n", r->uri);
+        exit (APR_EGENERAL);
+    }
+    /* this schouldn't be hardcoded, but... :) */
+    if (apr_strnatcmp (r->parsed_uri->scheme, "http") != APR_SUCCESS && apr_strnatcmp (r->parsed_uri->scheme, "https") != APR_SUCCESS) {
+        apr_file_printf (local_stderr, "Wrong URL scheme '%s' -- only 'http' and 'https' schemes are supported.\n", r->parsed_uri->scheme);
+        exit (APR_EGENERAL);
+    }
+    if (r->parsed_uri->user != NULL || r->parsed_uri->password != NULL) {
+        apr_file_printf (local_stderr, "Misformed URL -- auth data schould be outside URL -- please see docs.\n");
+        exit (APR_EGENERAL);
+    }
     if (!r->parsed_uri->port)
     {
         r->parsed_uri->port = 
