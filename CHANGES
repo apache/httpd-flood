@@ -1,5 +1,8 @@
 Changes since milestone-0-1:
 
+* Add pseudo-random data to a POST payload via the $$ character in the
+  new payloadtemplate parameter for a URL.  [Justin Erenkrantz]
+
 * Add group shortcuts when defining a profile.  The following syntaxes are
   now valid:
     <report>easy</report>,<report>simple</report>
