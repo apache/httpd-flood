@@ -84,7 +84,7 @@ static apr_status_t keepalive_load_resp(response_t *resp,
 
     do
     {
-        if (remain)
+        if (!remain)
             i = MAX_DOC_LENGTH - 1;
         else
         {
@@ -181,11 +181,16 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
         }
     }
    
-    if (new_resp->keepalive)
+    if (ksock->wantresponse)
     {
-        if (ksock->wantresponse)
+        if (new_resp->keepalive)
             status = keepalive_load_resp(new_resp, ksock, content_length, pool);
         else
+            status = keepalive_load_resp(new_resp, ksock, 0, pool);
+    }
+    else
+    {
+        if (new_resp->keepalive)
         {
             while (content_length && 
                    status != APR_EOF && status != APR_TIMEUP) {
@@ -199,12 +204,12 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
                 content_length -= i;
             }
         }
-    }
-    else
-    {
-        while (status != APR_EOF && status != APR_TIMEUP) {
-            i = MAX_DOC_LENGTH - 1;
-            status = read_socket(ksock->s, b, &i);
+        else
+        {
+            while (status != APR_EOF && status != APR_TIMEUP) {
+                i = MAX_DOC_LENGTH - 1;
+                status = read_socket(ksock->s, b, &i);
+            }
         }
     }
 
