@@ -1,5 +1,8 @@
 Changes since milestone-03:
 
+* Fix linking problems due to misordering of libraries on Solaris.
+  [Justin Erenkrantz]
+
 * Add config.nice support from apr_common.m4.  [Justin Erenkrantz]
 
 * Add apr_common.m4 and fix up building/configuration of source
