@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/25 00:14:31 $]
+Last modified at [$Date: 2001/07/25 00:38:35 $]
 
 Release:
 
@@ -67,8 +67,11 @@ Other features that need writing:
                     new URLs into the sequence.
 
     * Farmer (Single-thread, multiple profiles)
-       Status: Aaron volunteers. Aaron says there is support for a single
-       farmer named "Joe" right now.
+       Status: Aaron says: If you have threads, then any Farmer can be
+       run as part of any Farm. If you don't have threads, you can
+       currently only run one Farmer named "Joe" right now (this will
+       be changed so that if you don't have threads, flood will attempt
+       to run all Farmers in serial under one process).
 
     * Timed Farmer
       A type of farmer that runs for a specified amount of time,
@@ -107,6 +110,8 @@ Other features that need writing:
               a new type that simply prints the approx. timestamp when
               the test was run, and the result as OK/FAIL; it is called
               "easy reports" (see flood_easy_reports.h).
+              Furthermore, simple_reports and easy_reports both print
+              out the current requesting URI line.
 
 Documentation that needs writing:
 
