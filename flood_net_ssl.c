@@ -60,12 +60,13 @@
 #include "flood_net_ssl.h"
 
 #define OPENSSL_THREAD_DEFINES
-#define NO_BIO
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
 #include <apr_portable.h>
+
+#define USE_RW_LOCK_FOR_SSL
 
 struct ssl_socket_t {
     SSL_CTX *ssl_context;
@@ -74,6 +75,7 @@ struct ssl_socket_t {
 };
 
 apr_pool_t *ssl_pool;
+apr_lock_t **ssl_locks;
 
 typedef struct CRYPTO_dynlock_value { 
     apr_lock_t *lock; 
@@ -84,7 +86,11 @@ CRYPTO_dynlock_value * ssl_dyn_create(const char* file, int line)
     CRYPTO_dynlock_value *l;
 
     l = apr_palloc(ssl_pool, sizeof(CRYPTO_dynlock_value));
+#ifdef USE_RW_LOCK_FOR_SSL 
     apr_lock_create(&l->lock, APR_MUTEX, APR_INTRAPROCESS, NULL, ssl_pool);
+#else
+    apr_lock_create(&l->lock, APR_READWRITE, APR_INTRAPROCESS, NULL, ssl_pool);
+#endif
     return l;
 }
 
@@ -92,7 +98,16 @@ void ssl_dyn_lock(int mode, CRYPTO_dynlock_value *l, const char *file,
                   int line)
 {
     if (mode & CRYPTO_LOCK)
+    {
+#ifdef USE_RW_LOCK_FOR_SSL 
+        if (mode & CRYPTO_READ)
+            apr_lock_acquire_rw(l->lock, APR_READER);
+        else if (mode & CRYPTO_WRITE)
+            apr_lock_acquire_rw(l->lock, APR_WRITER);
+#else
         apr_lock_acquire(l->lock);
+#endif
+    }
     else if (mode & CRYPTO_UNLOCK)
         apr_lock_release(l->lock);
 }
@@ -102,19 +117,59 @@ void ssl_dyn_destroy(CRYPTO_dynlock_value *l, const char *file, int line)
     apr_lock_destroy(l->lock);
 }
 
+void ssl_lock(int mode, int n, const char *file, int line)
+{
+    if (mode & CRYPTO_LOCK)
+    {
+#ifdef USE_RW_LOCK_FOR_SSL 
+        if (mode & CRYPTO_READ)
+            apr_lock_acquire_rw(ssl_locks[n], APR_READER);
+        else if (mode & CRYPTO_WRITE)
+            apr_lock_acquire_rw(ssl_locks[n], APR_WRITER);
+#else
+        apr_lock_acquire(ssl_locks[n]);
+#endif
+    }
+    else if (mode & CRYPTO_UNLOCK)
+        apr_lock_release(ssl_locks[n]);
+}
+
+unsigned long ssl_id(void)
+{
+    return (unsigned long) apr_os_thread_current(); 
+}
+
 apr_status_t ssl_init_socket(apr_pool_t *pool)
 {
+    int i, numlocks;
+
+    ssl_pool = pool;
+
     SSL_library_init();
     OpenSSL_add_ssl_algorithms();
     SSL_load_error_strings();
     ERR_load_crypto_strings();
     RAND_load_file(RANDFILE, -1);
 
+    numlocks = CRYPTO_num_locks();
+    ssl_locks = apr_palloc(pool, sizeof(apr_lock_t*)*numlocks);
+    for (i = 0; i < numlocks; i++)
+    {
+#ifdef USE_RW_LOCK_FOR_SSL 
+        apr_lock_create(&ssl_locks[i], APR_READWRITE, APR_INTRAPROCESS, NULL, 
+                        ssl_pool);
+#else
+        apr_lock_create(&ssl_locks[i], APR_MUTEX, APR_INTRAPROCESS, NULL, 
+                        ssl_pool);
+#endif
+    }
+
+    CRYPTO_set_locking_callback(ssl_lock);
+    CRYPTO_set_id_callback(ssl_id);
+
     CRYPTO_set_dynlock_create_callback(ssl_dyn_create);
     CRYPTO_set_dynlock_lock_callback(ssl_dyn_lock);
     CRYPTO_set_dynlock_destroy_callback(ssl_dyn_destroy);
-
-    ssl_pool = pool;
 
     return APR_SUCCESS;
 }
