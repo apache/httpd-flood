@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/08/24 05:19:55 $]
+Last modified at [$Date: 2001/08/24 07:11:13 $]
 
 Release:
 
@@ -28,6 +28,15 @@ Other bugs that need fixing:
     * Autoconf should check that OpenSSL is version 0.9.6a or greater.
 
 Other features that need writing:
+
+    * We are using apr_os_thread_current() and getpid() in some places
+      when what we really want is a GUID. The GUID will be used to
+      correlate raw output data with each farmer. We may wish to print
+      a unique ID for each of farm, farmer, profile, and url to help in
+      postprocessing.
+
+    * We are using strtol() in some places and strtoll() in others.
+      Pick one (Aaron says strtol(), but he's not sure).
 
     * Validation of responses (known C-L, specific strings in response)
        Status: Justin volunteers
