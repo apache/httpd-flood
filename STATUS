@@ -1,9 +1,9 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/11/20 22:56:34 $]
+Last modified at [$Date: 2001/12/03 21:40:38 $]
 
 Release:
 
-    ASF-transfer:   Released July 17, 2001
+    ASF-transfer:  Released July 17, 2001
     milestone-02:  Tagged August 13, 2001
     milestone-01:  Tagged July 11, 2001 (tag lost during transfer)
 
@@ -12,6 +12,7 @@ RELEASE SHOWSTOPPERS:
     * "Everything needs to work perfectly"
 
     * Need to be able to build without SSL.
+        Status: Complete?
 
 Other bugs that need fixing:
 
@@ -48,6 +49,16 @@ Other bugs that need fixing:
       farm, farmer, profile, url/request-cycle, etc.
 
 Other features that need writing:
+
+    * Write robust tool (using tethereal perhaps) to take network dumps 
+      and convert them to flood's XML format.
+        Status: Justin volunteers.  Aaron had a script somewhere that is
+                a start.
+
+    * Get chunked encoding support working.
+        Status: Justin volunteers.  He got sidetracked by the httpd
+                implementation of input filtering and never finished 
+                this.  This is a stopgap until apr-serf is completed.
 
     * Maybe we should make randfile and capath runtime directives that
       come out of the XML, instead of autoconf parameters.
@@ -103,6 +114,8 @@ Other features that need writing:
 Documentation that needs writing:
 
     * Documentation?  What documentation? RTFS?
+        Status: Justin volunteers.  He'll probably use Anakia for user
+                docs and doxygen for source code comments.
 
     * Feature set
       We'll have to eventually write down all the features we support,
@@ -117,6 +130,12 @@ Available Patches:
       Message-ID: <Pine.LNX.4.21.0111161644250.22233-100000@localhost>
 
 Open issues:
+
+    * Ponder using apr-serf in flood
+        Status: This requires apr-serf to be written.  Chicken and egg.
+                Ideally, apr-serf would handle buckets, filters, and
+                other cool stuff.  However, this isn't the highest of
+                priorities.
 
     * Validating XML Parser?
        Justin says: I don't think we want this.  We want a standalone 
