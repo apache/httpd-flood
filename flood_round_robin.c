@@ -465,6 +465,141 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
     }
 }
         
+static apr_status_t parse_xml_seq_info(apr_xml_elem *e,
+                                       round_robin_profile_t *p,
+                                       apr_pool_t *pool)
+{
+    char *seqname, **seqlist;
+    int seqnamelen, seqcount, curseq;
+    struct apr_xml_elem *child_url_elem;
+    apr_status_t rv;
+
+    if (e->attr) {
+        apr_xml_attr *attr = e->attr;
+        while (attr) {
+            if (strncasecmp(attr->name, XML_URLLIST_SEQUENCE_NAME,
+                            FLOOD_STRLEN_MAX) == 0) {
+                seqname = (char*)attr->value;
+                seqnamelen = strlen(seqname);
+            }             
+            else if (strncasecmp(attr->name, 
+                         XML_URLLIST_SEQUENCE_LIST,
+                         FLOOD_STRLEN_MAX) == 0) {
+                /* FIXME: ap_getword needs to be in apr-util! */
+                char *end, *cur;
+                int count = 1, num = 0;
+                end = (char*)attr->value;
+                while (*end && (end = strchr(end, ','))) {
+                    count++;
+                    end++;
+                } 
+                seqlist = apr_palloc(pool, sizeof(char*) * count);
+                seqcount = count;
+
+                cur = (char*)attr->value;
+                end = strchr(cur, ',');
+                for (num = 0; num < count; num++) {
+                    while (apr_isspace(*cur)) { 
+                        cur++;
+                    }
+                    if (end) {
+                        seqlist[num] = apr_pstrmemdup(pool, cur,
+                                                      end - cur);
+                        cur = ++end;
+                        end = strchr(cur, ',');
+                    }
+                    else {
+                        seqlist[num] = apr_pstrdup(pool, cur);
+                    }
+                }
+            } 
+            attr = attr->next; 
+        }
+    }             
+    for (curseq = 0; curseq < seqcount; curseq++) {
+        apr_hash_set(p->state, seqname, seqnamelen, seqlist[curseq]);
+        for (child_url_elem = e->first_child; child_url_elem;
+             child_url_elem = child_url_elem->next) {
+            if (strncasecmp(child_url_elem->name, XML_URLLIST_SEQUENCE,
+                            FLOOD_STRLEN_MAX) == 0) {
+                rv = parse_xml_seq_info(child_url_elem, p, pool);
+                if (rv != APR_SUCCESS) {
+                    return rv;
+                }
+            }
+            else if (strncasecmp(child_url_elem->name, XML_URLLIST_URL,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                rv = parse_xml_url_info(child_url_elem,
+                                        &p->url[p->current_url],
+                                        pool);
+                if (rv != APR_SUCCESS) {
+                    return rv;
+                }
+                /* Expand them. */
+                if (p->url[p->current_url].payloadtemplate) {
+                    p->url[p->current_url].payloadtemplate = 
+                        handle_param_string(p,
+                                        p->url[p->current_url].payloadtemplate,
+                                        PASSTHROUGH);
+                }
+                if (p->url[p->current_url].requesttemplate) {
+                    p->url[p->current_url].requesttemplate = 
+                        handle_param_string(p,
+                                        p->url[p->current_url].requesttemplate,
+                                        PASSTHROUGH);
+                }
+                if (p->url[p->current_url].responsetemplate) {
+                    p->url[p->current_url].responsetemplate = 
+                        handle_param_string(p,
+                                        p->url[p->current_url].responsetemplate,
+                                        PASSTHROUGH);
+                }
+                p->current_url++;
+            }
+        }
+    }
+    return APR_SUCCESS;
+}
+
+static int count_xml_seq_child(apr_xml_elem *urllist_elem)
+{
+    struct apr_xml_elem *e;
+    int items = 0;
+
+    for (e = urllist_elem->first_child; e; e = e->next) {
+        if (strncasecmp(e->name, XML_URLLIST_SEQUENCE, FLOOD_STRLEN_MAX) == 0) {
+            apr_xml_elem *child_url_elem;
+            int children_urls, list_count;
+            list_count = 0;
+            if (e->attr) {
+                apr_xml_attr *attr = e->attr;
+                while (attr) {
+                    if (strncasecmp(attr->name, 
+                                    XML_URLLIST_SEQUENCE_LIST,
+                                    FLOOD_STRLEN_MAX) == 0) {
+                        char *end = (char*)attr->value;
+                        list_count++;
+                        while (*end && (end = strchr(end, ','))) {
+                            list_count++;
+                            end++;
+                        }
+                    }
+                    attr = attr->next;
+                }
+            }
+            if (!list_count) {
+                apr_file_printf(local_stderr,
+                                "Sequence doesn't have any items!\n");
+                return 0;
+            }
+            children_urls = count_xml_seq_child(e);
+            children_urls += count_xml_elem_child(e, XML_URLLIST_URL);
+            items += list_count * children_urls;
+        }
+    }
+    return items;
+}
+
 apr_status_t round_robin_profile_init(profile_t **profile,
                                       config_t *config,
                                       const char *profile_name,
@@ -543,39 +678,11 @@ apr_status_t round_robin_profile_init(profile_t **profile,
 
     p->urls = 0;
     /* Include sequences.  We'll expand them later. */
-    for (e = urllist_elem->first_child; e; e = e->next) {
-        if (strncasecmp(e->name, XML_URLLIST_SEQUENCE, FLOOD_STRLEN_MAX) == 0) {
-            int items = 0;
-            if (e->attr) {
-                apr_xml_attr *attr = e->attr;
-                while (attr) {
-                    if (strncasecmp(attr->name, 
-                                    XML_URLLIST_SEQUENCE_LIST,
-                                    FLOOD_STRLEN_MAX) == 0) {
-                        char *end = (char*)attr->value;
-                        items++;
-                        while (*end && (end = strchr(end, ','))) {
-                            items++;
-                            end++;
-                        }
-                    }
-                    attr = attr->next;
-                }
-            }
-            if (!items) {
-                apr_file_printf(local_stderr,
-                                "Sequence doesn't have any items!\n");
-            }
-            if ((items *= count_xml_elem_child(e, XML_URLLIST_URL)) <= 0) {
-                apr_file_printf(local_stderr, 
-                                "Sequence doesn't have any urls!\n");
-            }
-            p->urls += items;
-        }
-    }
+    p->urls = count_xml_seq_child(urllist_elem);
+    /* find the urls for this profile, put 'em in this list */
+    p->urls += count_xml_elem_child(urllist_elem, XML_URLLIST_URL);
 
-    /* find the urllist for this profile, put 'em in this list */
-    if ((p->urls += count_xml_elem_child(urllist_elem, XML_URLLIST_URL)) <= 0) {
+    if (p->urls <= 0) {
         apr_file_printf(local_stderr, "Urllist '%s' doesn't have any urls!\n", urllist_name);
         return APR_EGENERAL;
     }
@@ -584,93 +691,21 @@ apr_status_t round_robin_profile_init(profile_t **profile,
     i = 0;
     for (e = urllist_elem->first_child; e; e = e->next) {
         if (strncasecmp(e->name, XML_URLLIST_SEQUENCE, FLOOD_STRLEN_MAX) == 0) {
-            char *seqname, **seqlist;
-            int seqnamelen, seqcount, curseq;
-            struct apr_xml_elem *child_url_elem;
-            if (e->attr) {
-                apr_xml_attr *attr = e->attr;
-                while (attr) {
-                    if (strncasecmp(attr->name, XML_URLLIST_SEQUENCE_NAME,
-                                    FLOOD_STRLEN_MAX) == 0) {
-                        seqname = (char*)attr->value;
-                        seqnamelen = strlen(seqname);
-                    }             
-                    else if (strncasecmp(attr->name, 
-                                 XML_URLLIST_SEQUENCE_LIST,
-                                 FLOOD_STRLEN_MAX) == 0) {
-                        /* FIXME: ap_getword needs to be in apr-util! */
-                        char *end, *cur;
-                        int count = 1, num = 0;
-                        end = (char*)attr->value;
-                        while (*end && (end = strchr(end, ','))) {
-                            count++;
-                            end++;
-                        } 
-                        seqlist = apr_palloc(pool, sizeof(char*) * count);
-                        seqcount = count;
-
-                        cur = (char*)attr->value;
-                        end = strchr(cur, ',');
-                        for (num = 0; num < count; num++) {
-                            while (apr_isspace(*cur)) { 
-                                cur++;
-                            }
-                            if (end) {
-                                seqlist[num] = apr_pstrmemdup(pool, cur,
-                                                              end - cur);
-                                cur = ++end;
-                                end = strchr(cur, ',');
-                            }
-                            else {
-                                seqlist[num] = apr_pstrdup(pool, cur);
-                            }
-                        }
-                    } 
-                    attr = attr->next; 
-                }
-            }             
-            for (curseq = 0; curseq < seqcount; curseq++) {
-                apr_hash_set(p->state, seqname, seqnamelen, seqlist[curseq]);
-                for (child_url_elem = e->first_child; child_url_elem;
-                     child_url_elem = child_url_elem->next) {
-                    if (strncasecmp(child_url_elem->name, XML_URLLIST_URL,
-                                    FLOOD_STRLEN_MAX) == 0) {
-                        rv = parse_xml_url_info(child_url_elem, &p->url[i],
-                                                pool);
-                        if (rv != APR_SUCCESS) {
-                            return rv;
-                        }
-                        /* Expand them. */
-                        if (p->url[i].payloadtemplate) {
-                            p->url[i].payloadtemplate = 
-                                handle_param_string(p,
-                                                    p->url[i].payloadtemplate,
-                                                    PASSTHROUGH);
-                        }
-                        if (p->url[i].requesttemplate) {
-                            p->url[i].requesttemplate = 
-                                handle_param_string(p,
-                                                    p->url[i].requesttemplate,
-                                                    PASSTHROUGH);
-                        }
-                        if (p->url[i].responsetemplate) {
-                            p->url[i].responsetemplate = 
-                                handle_param_string(p,
-                                                    p->url[i].responsetemplate,
-                                                    PASSTHROUGH);
-                        }
-                        i++;
-                    }
-                }
+            rv = parse_xml_seq_info(e, p, pool);
+            if (rv != APR_SUCCESS) {
+                return rv;
             }
         }
         if (strncasecmp(e->name, XML_URLLIST_URL, FLOOD_STRLEN_MAX) == 0) {
-            rv = parse_xml_url_info(e, &p->url[i++], pool);
+            rv = parse_xml_url_info(e, &p->url[p->current_url++], pool);
             if (rv != APR_SUCCESS) {
                 return rv;
             }
         }
     }
+
+    /* Reset this back to 0. */
+    p->current_url = 0;
 
     *profile = p;
 
