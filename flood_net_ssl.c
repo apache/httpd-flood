@@ -202,7 +202,8 @@ apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
     case SSL_ERROR_WANT_READ:
         ssl_read_socket(s, buf, buflen);
         break;
-    case SSL_ERROR_ZERO_RETURN: /* Treat as error.  Peer closed connection. */
+    case SSL_ERROR_ZERO_RETURN: /* Peer closed connection. */
+        return APR_EOF; 
     case SSL_ERROR_WANT_WRITE:  /* Technically, not an error. */
     default:
         ERR_print_errors_fp(stderr);
