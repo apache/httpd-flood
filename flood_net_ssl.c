@@ -212,7 +212,8 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
 
 void ssl_read_socket_handshake(ssl_socket_t *s);
 
-ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r) 
+ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r,
+                              apr_status_t *status) 
 {
     apr_os_sock_t ossock;
     int e, sslError;
@@ -220,7 +221,7 @@ ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
     ssl_socket_t *ssl_socket = apr_pcalloc(pool, sizeof(ssl_socket_t));
 
     /* Open our TCP-based connection */
-    ssl_socket->socket = open_socket(pool, r);
+    ssl_socket->socket = open_socket(pool, r, status);
     
     if (!ssl_socket->socket)
         return NULL;
@@ -362,7 +363,8 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
     return APR_ENOTIMPL;
 }
 
-ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
+ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r,
+                              apr_status_t *status)
 {
     return NULL;
 }

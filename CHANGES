@@ -1,5 +1,10 @@
 Changes since 1.0:
 
+* Change open_socket prototype to return errors.  [Justin Erenkrantz]
+  
+* Fix HEAD responses with Content-Length specified being handled incorrectly.
+  [Justin Erenkrantz]
+
 * Flood manual (DocBook based). [Jacek Prucia]
 
 * Added <baseurl> element. When present, it's contents are copied in front

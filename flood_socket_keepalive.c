@@ -82,6 +82,7 @@ typedef struct {
     int reopen_socket; /* A boolean */
     int wantresponse;  /* A boolean */
     int ssl;           /* A boolean */
+    method_e method;   /* The method of the request. */
 } keepalive_socket_t;
 
 /**
@@ -119,6 +120,7 @@ apr_status_t keepalive_begin_conn(socket_t *sock, request_t *req, apr_pool_t *po
         }
     }
     if (ksock->reopen_socket || ksock->s == NULL) {
+        apr_status_t rv;
         if (strcasecmp(req->parsed_uri->scheme, "https") == 0) {
         /* If we don't have SSL, error out. */
 #if FLOOD_HAS_OPENSSL
@@ -134,12 +136,12 @@ apr_status_t keepalive_begin_conn(socket_t *sock, request_t *req, apr_pool_t *po
         /* The return types are not identical, so it can't be a ternary
          * operation. */
         if (ksock->ssl)
-            ksock->s = ssl_open_socket(pool, req);
+            ksock->s = ssl_open_socket(pool, req, &rv);
         else
-            ksock->s = open_socket(pool, req);
+            ksock->s = open_socket(pool, req, &rv);
 
         if (ksock->s == NULL)
-            return APR_EGENERAL;
+            return rv;
 
         ksock->reopen_socket = 0; /* we just opened it */
     }
@@ -154,6 +156,7 @@ apr_status_t keepalive_send_req(socket_t *sock, request_t *req, apr_pool_t *pool
 {
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
     ksock->wantresponse = req->wantresponse;
+    ksock->method = req->method;
     return ksock->ssl ? ssl_write_socket(ksock->s, req) :
                         write_socket(ksock->s, req);
 }
@@ -422,7 +425,14 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     else {
         new_resp->keepalive = 1; 
     }
- 
+
+    /* If we have a HEAD request, we shouldn't be receiving a body. */
+    if (ksock->method == HEAD) {
+        *resp = new_resp;
+
+        return APR_SUCCESS;
+    }
+
     header = apr_table_get(new_resp->headers, "Transfer-Encoding");
     if (header && !strcasecmp(header, "Chunked"))
     {

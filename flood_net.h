@@ -68,7 +68,8 @@ typedef struct flood_socket_t {
     apr_pollfd_t read_pollset;
 } flood_socket_t;
 
-flood_socket_t* open_socket(apr_pool_t *pool, request_t *r);
+flood_socket_t* open_socket(apr_pool_t *pool, request_t *r,
+                            apr_status_t *status);
 void close_socket(flood_socket_t *s);
 apr_status_t write_socket(flood_socket_t *s, request_t *r);
 apr_status_t read_socket(flood_socket_t *s, char *buf, int *buflen);

@@ -59,7 +59,8 @@
 #include "flood_net.h"
 
 /* Open the TCP connection to the server */
-flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
+flood_socket_t* open_socket(apr_pool_t *pool, request_t *r,
+                            apr_status_t *status)
 {
     apr_status_t rv = 0;
     apr_sockaddr_t *destsa;
@@ -70,11 +71,17 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
     if ((rv = apr_sockaddr_info_get(&destsa, r->parsed_uri->hostname, APR_INET, 
                                     r->parsed_uri->port, 0, pool)) 
                                     != APR_SUCCESS) {
+        if (status) {
+            *status = rv;
+        }
         return NULL;
     }
 
     if ((rv = apr_socket_create(&fs->socket, APR_INET, SOCK_STREAM,
                                 pool)) != APR_SUCCESS) {
+        if (status) {
+            *status = rv;
+        }
         return NULL;
     }
 
@@ -82,6 +89,9 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
         if (APR_STATUS_IS_EINPROGRESS(rv)) {
             /* FIXME: Handle better */
             close_socket(fs);
+            if (status) {
+                *status = rv;
+            }
             return NULL;
         }
         else if (APR_STATUS_IS_EAGAIN(rv))
@@ -92,12 +102,15 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
              * XXX: Then APR'IZE THIS ALREADY
              */
             apr_sleep(4 * 60 * APR_USEC_PER_SEC);
-            return open_socket(pool, r);
+            return open_socket(pool, r, status);
         }
         else
         {
             /* FIXME: Handle */
             close_socket(fs);
+            if (status) {
+                *status = rv;
+            }
             return NULL;
         }
     }
