@@ -1,548 +1,590 @@
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                          "file:///usr/share/sgml/docbook/xml-dtd-4.1.2/docbookx.dtd">
+
 <book>
 
-   <bookinfo>
-      <title>Flood manual</title>
-      <author>
-         <firstname>Jacek</firstname>
-	 <surname>Prucia</surname>
-      </author>
-      <copyright>
-         <year>2003</year>
-	 <holder>Apache Software Foundation</holder>
-	 </copyright>
-   </bookinfo>
+    <bookinfo>
+        <title>Flood manual</title>
+        <author>
+            <firstname>Jacek</firstname>
+            <surname>Prucia</surname>
+        </author>
+        <copyright>
+            <year>2003</year>
+            <holder>Apache Software Foundation</holder>
+        </copyright>
+    </bookinfo>
 
-   <preface>
-      <title>Foreword</title>
-      This manual describes Flood. A software developed by Apache
-      Software Foundation.
-   </preface>
+    <preface>
+        <title>Foreword</title>
+        This manual describes Flood. A software developed by Apache
+        Software Foundation.
+    </preface>
 
 <!-- Introduction to Flood -->
 
-   <chapter>
-      <title>Introduction to Flood</title>
-      <para>
-      Flood is a profile-driven HTTP load tester. It is a software that is
-      capable of generating large amount of web traffic, so you can measure
-      performance of your web application. Flood can also postprocess web
-      server responses, so you also can check your web application for correct
-      behaviour.
-      </para>
-      <para>
-      Being profile-driven means, that nearly all actions related to creating
-      and performing a request, are controlled by a set of rules. Those rules
-      together create a profile. By using different profiles and the same set
-      of URLs, you might get quite different results. Moreover, particular
-      profiles are usefull in conjunction with different types of tests. As far
-      as web applications are concerned, we can distinguish three types of
-      tests. These are: 
-      </para>
+    <chapter>
+        <title>Introduction to Flood</title>
+        <para>
+        Flood is a profile-driven HTTP load tester. It is a software that is
+        capable of generating large amount of web traffic, so you can measure
+        performance of your web application. Flood can also postprocess web
+        server responses, so you also can check your web application for
+        correct behaviour.
+        </para>
+        <para>
+        Being profile-driven means, that nearly all actions related to creating
+        and performing a request, are controlled by a set of rules. Those rules
+        together create a profile. By using different profiles and the same set
+        of URLs, you might get quite different results. Moreover, particular
+        profiles are usefull in conjunction with different types of tests. As
+        far as web applications are concerned, we can distinguish three types
+        of tests. These are: 
+        </para>
 
-      <orderedlist>
-         <listitem>
-         Performance test. This test measures response time of web server.
-	 Desired result is usually a Requests Per Second for given resource or
-	 average for all pages hit.
-         </listitem>
-         <listitem>
-         Regression test. This test doublechecks behaviour of web application,
-	 by simulating several user actions (so called URL paths). It is
-	 supposed to give answer to question: Is my web application working
-	 correctly?
-         </listitem>
-         <listitem>
-         Web capacity test. This test performs numerous parallel requests,
-	 simulating really heavy ussage of web application. It is supposed to
-	 answer question: does my web application and web server handle
-	 given load?
-         </listitem>
-      </orderedlist>
+        <orderedlist>
+            <listitem>
+            Performance test. This test measures response time of web server.
+            Desired result is usually a Requests Per Second for given resource
+            or average for all pages hit.
+            </listitem>
+            <listitem>
+            Regression test. This test doublechecks behaviour of web
+            application, by simulating several user actions (so called URL
+            paths). It is supposed to give answer to question: Is my web
+            application working correctly?
+            </listitem>
+            <listitem>
+            Web capacity test. This test performs numerous parallel requests,
+            simulating really heavy ussage of web application. It is supposed
+            to answer question: does my web application and web server handle
+            given load?
+            </listitem>
+        </orderedlist>
 
-      <para>
-      With a little bit of tweaking flood can be useful, regardless of which
-      type of test you are going to perform.
-      </para>
+        <para>
+        With a little bit of tweaking flood can be useful, regardless of which
+        type of test you are going to perform.
+        </para>
 
-      <para>
-      Flood aims to be modular and extensible. It is fairly easy to write flood
-      extension providing new functionality. Hence flood can be easily extended
-      to suit just about everybody needs. Right now it can be used in most
-      enviroments without the need for writting external modules. Current
-      flood feature list follows:
-      </para>
+        <para>
+        Flood aims to be modular and extensible. It is fairly easy to write
+        flood extension providing new functionality. Hence flood can be easily
+        extended to suit just about everybody needs. Right now it can be used
+        in most enviroments without the need for writting external modules.
+        Current flood feature list follows:
+        </para>
 
-      <itemizedlist>
-         <listitem>HTTP/1.0 and HTTP/1.1 support</listitem>
-         <listitem>HTTPS support</listitem>
-         <listitem>GET/POST/HEAD support</listitem>
-         <listitem>reponse postprocessing</listitem>
-         <listitem>basic support for AUTH and Cookies</listitem>
-         <listitem>different report modules (different presentation of results) </listitem>
-      </itemizedlist>
+        <itemizedlist>
+            <listitem>HTTP/1.0 and HTTP/1.1 support</listitem>
+            <listitem>HTTPS support</listitem>
+            <listitem>GET/POST/HEAD support</listitem>
+            <listitem>reponse postprocessing</listitem>
+            <listitem>basic support for AUTH and Cookies</listitem>
+            <listitem>different report modules (different presentation of
+                results) </listitem>
+        </itemizedlist>
 
-      <para>
-      Flood has a homepage available: <ulink url="http://httpd.apache.org/test/flood/">
-      http://httpd.apache.org/test/flood</ulink>. Be sure to check it often for
-      news and releases. If you have a burning question, or would like to report
-      a problem (patches welcome), then please subscribe to flood developemnt
-      mailing list: test-dev@httpd.apache.org, by sending an empty e-mail to
-      adress: <email>test-dev-subscribe@httpd.apache.org</email> and
-      following instructions in response.
-      </para>
+        <para>
+        Flood has a homepage available:
+        <ulink url="http://httpd.apache.org/test/flood/">
+        http://httpd.apache.org/test/flood</ulink>. Be sure to check it often
+        for news and releases. If you have a burning question, or would like
+        to report a problem (patches welcome), then please subscribe to flood
+        developemnt mailing list: test-dev@httpd.apache.org, by sending an
+        empty e-mail to adress:
+        <email>test-dev-subscribe@httpd.apache.org</email>
+        and following instructions in response.
+        </para>
 
-   </chapter>
+    </chapter>
 
 <!-- Getting Flood -->
 
-   <chapter>
-      <title>Getting Flood</title>
-      <para>There are three ways in which you can get flood software.</para>
+    <chapter>
+        <title>Getting Flood</title>
+        <para>There are three ways in which you can get flood software.</para>
 
-      <section>
-         <title>Source Tarball</title>
-	 <para>
-         This is the official way of obtaining flood source. Current flood
-	 release can be found here:
-	 </para>
-	 <ulink url="http://www.apache.org/dist/httpd/flood/">
-	 http://www.apache.org/dist/httpd/flood/
-	 </ulink>
-	 <para>
-         Alternativelly, you can pick up a nearby mirror using this list:
-	 </para>
-	 <ulink url="http://www.apache.org/dyn/closer.cgi">
-	 http://www.apache.org/dyn/closer.cgi
-	 </ulink>
-	 <para>
-         Every official release schould be acompanied by everything you need
-	 to build and use flood. That includes all external libraries (except
-	 for SSL which is due to cryptography export restrictions) and
-	 documentation.
-	 </para>
-      </section>
+        <section>
+            <title>Source Tarball</title>
+            <para>
+            This is the official way of obtaining flood source. Current flood
+            release can be found here:
+            </para>
+            <ulink url="http://www.apache.org/dist/httpd/flood/">
+            http://www.apache.org/dist/httpd/flood/
+            </ulink>
+            <para>
+            Alternativelly, you can pick up a nearby mirror using this list:
+            </para>
+            <ulink url="http://www.apache.org/dyn/closer.cgi">
+            http://www.apache.org/dyn/closer.cgi
+            </ulink>
+            <para>
+            Every official release schould be acompanied by everything you need
+            to build and use flood. That includes all external libraries
+            (except for SSL which is due to cryptography export restrictions)
+            and documentation.
+            </para>
+        </section>
 
-      <section>
-         <title>CVS Repository</title>
-	 <para>
-         You can get flood source code directly from CVS repository. All you
-	 have to do (besides getting CVS software itself) is to issue following
-	 commands:
-	 </para>
-	 <screen>
+        <section>
+            <title>CVS Repository</title>
+            <para>
+            You can get flood source code directly from CVS repository. All you
+            have to do (besides getting CVS software itself) is to issue
+            following commands:
+            </para>
+            <screen>
 $ cvs -d :pserver:anoncvs@cvs.apache.org:/home/cvspublic login
 $ cvs -d :pserver:anoncvs@cvs.apache.org:/home/cvspublic co httpd-test/flood
-	 </screen>
-	 <para>
-         Note, that with CVS repository you're basically on your own with
-	 meeting build dependencies. So you'll have to get apr libraries as well:
-	 </para>
-	 <screen>
+            </screen>
+            <para>
+            Note, that with CVS repository you're basically on your own with
+            meeting build dependencies. So you'll have to get apr libraries
+            as well:
+            </para>
+            <screen>
 $ cd httpd-test/flood
 $ cvs -d :pserver:anoncvs@cvs.apache.org:/home/cvspublic co apr
 $ cvs -d :pserver:anoncvs@cvs.apache.org:/home/cvspublic co apr-util
-	 </screen>
-	 <para>
-         Please note that source code from CVS might not compile under certain
-         circumstances, so don't expect it to be as stable as official releases.
-         On the other hand, you schould try CVS repository before reporting a
-	 problem. There is a huge chance, that your bug is already fixed.
-	 </para>
-      </section>
+            </screen>
+            <para>
+            Please note that source code from CVS might not compile under
+            certain circumstances, so don't expect it to be as stable as
+            official releases. On the other hand, you schould try CVS
+            repository before reporting a problem. There is a huge chance,
+            that your bug is already fixed.
+            </para>
+        </section>
 
-      <section>
-         <title>Flood binaries</title>
-	 <para>
-         Additionally, when flood developers will have some free time, binary
-         versions of flood official releases may show up on main flood site:
-	 </para>
-	 <ulink url="http://www.apache.org/dist/httpd/flood/">
-	 http://www.apache.org/dist/httpd/flood/
-	 </ulink>
-	 <para>
-	 If you find binary release that matches your platform, please consult
-	 file <filename>README.binary</filename> located in the root directory
-	 of binary packages, for information how flood was compiled for your
-	 platform, and what features are available.
-	 </para>
-      </section>
+        <section>
+            <title>Flood binaries</title>
+            <para>
+            Additionally, when flood developers will have some free time,
+            binary versions of flood official releases may show up on main
+            flood site:
+            </para>
+            <ulink url="http://www.apache.org/dist/httpd/flood/">
+            http://www.apache.org/dist/httpd/flood/
+            </ulink>
+            <para>
+            If you find binary release that matches your platform, please
+            consult file <filename>README.binary</filename> located in the
+            root directory of binary packages, for information how flood was
+            compiled for your platform, and what features are available.
+            </para>
+        </section>
 
-   </chapter>
+    </chapter>
 
 <!-- Compiling and installing -->
 
-   <chapter>
-      <title>Compiling and installing</title>
-      <para>
-      There are two scenarios for compillation and installation of flood.
-      </para>
+    <chapter>
+        <title>Compiling and installing</title>
+        <para>
+        There are two scenarios for compillation and installation of flood.
+        </para>
 
-      <section>
-         <title>Unix</title>
-	 <para>
-         Flood is build around apr and apr-util, so most Unix platforms will
-         work out of the box. Currently flood is developed on Linux and
-	 Solaris, but FreeBSD is also known to work. 
-	 </para>
-	 <para>
-         Before compilation we have to configure source tree for your particular
-	 platform and personal requirements. You can do that using
-         <command>configure</command> script which is located in the root
-	 directory of the flood source distribution. If you have obtained flood
-	 sources from CVS, then you'll need to run <command>buildconf</command>
-	 first (note that this requires recent versions of
-	 <application>autoconf</application> and <application>libtool</application>
-	 installed). <command>configure</command> script recognizes following
-	 options: 
-	 </para>
+        <section>
+            <title>Unix</title>
+            <para>
+            Flood is build around apr and apr-util, so most Unix platforms
+            will work out of the box. Currently flood is developed on Linux
+            and Solaris, but FreeBSD is also known to work. 
+            </para>
+            <para>
+            Before compilation we have to configure source tree for your
+            particular platform and personal requirements. You can do that
+            using <command>configure</command> script which is located in the
+            root directory of the flood source distribution. If you have
+            obtained flood sources from CVS, then you'll need to run
+            <command>buildconf</command> first (note that this requires recent
+            versions of <application>autoconf</application> and
+            <application>libtool</application> installed).
+            <command>configure</command> script recognizes following options: 
+            </para>
 
-	 <itemizedlist>
-	 <listitem>
-	    <option>--prefix=PREFIX</option>
-	    <para>
-            Specifies target directory, which will contain all installed files.
-	    Defaults to <filename class="directory">/usr/local/flood</filename>.
-	    </para>
-	 </listitem>
-	 <listitem>
-	    <option>--enable-ssl</option>
-	    <para>
-	    This switch will cause flood to be built with SSL support, which is
-	    disabled by default because of cryptography export restrictions.
-	    </para>
-	 </listitem>
-	 <listitem>
-	    <option>--with-openssl=PATH</option>
-	    <para>Path to directory containing OpenSSL installation.</para>
-	 </listitem>
-	 <listitem>
-	    <option>--with-capath=PREFIX</option>
-	    <para>
-	    Path to a directory with c_rehash'd CA files used by OpenSSL.
-	    Defaults to <filename class="directory">/certs</filename>.
-	    </para>
-	 </listitem>
-	 <listitem>
-	    <option>--with-apr=DIR|FILE</option>
-	    <para>
-	    Prefix for installed APR, path to APR build tree, or the full
-	    path to <command>apr-config</command>.
-	    </para>
-	 </listitem>
-	 <listitem>
-	    <option>--with-apr-util=DIR</option>
-	    <para>Prefix for installed APU, or path to APU build tree.</para>  
-	 </listitem>
-	 </itemizedlist>
+            <itemizedlist>
+                <listitem>
+                    <option>--prefix=PREFIX</option>
+                    <para>
+                    Specifies target directory, which will contain all
+                    installed files. Defaults to <filename class="directory">
+                    /usr/local/flood</filename>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <option>--enable-ssl</option>
+                    <para>
+                    This switch will cause flood to be built with SSL support,
+                    which is disabled by default because of cryptography
+                    export restrictions.
+                    </para>
+                </listitem>
+                <listitem>
+                    <option>--with-openssl=PATH</option>
+                    <para>
+                    Path to directory containing OpenSSL installation.
+                    </para>
+                </listitem>
+                <listitem>
+                    <option>--with-capath=PREFIX</option>
+                    <para>
+                    Path to a directory with c_rehash'd CA files used by
+                    OpenSSL. Defaults to
+                    <filename class="directory">/certs</filename>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <option>--with-apr=DIR|FILE</option>
+                    <para>
+                    Prefix for installed APR, path to APR build tree, or the
+                    full path to <command>apr-config</command>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <option>--with-apr-util=DIR</option>
+                    <para>
+                    Prefix for installed APU, or path to APU build tree.
+                    </para>
+                </listitem>
+            </itemizedlist>
 
-	 <para>
-	 A typical example of relevant command line:
-	 </para>
+            <para>
+            A typical example of relevant command line:
+            </para>
 
-	 <screen>
+            <screen>
 ./configure --enable-ssl
-	 </screen>
+            </screen>
 
-	 <para>
-	 When flood source tree is configured you can start compilation by
-	 typing make at command prompt:
-	 </para>
+            <para>
+            When flood source tree is configured you can start compilation by
+            typing make at command prompt:
+            </para>
 
-	 <screen>
+            <screen>
 make
-	 </screen>
+            </screen>
 
-	 <para>
-	 When compilation finishes, you'll have to perform last step
-	 -- installation. This is done by typing make install at command
-	 prompt:
-	 </para>
+            <para>
+            When compilation finishes, you'll have to perform last step
+            -- installation. This is done by typing make install at command
+            prompt:
+            </para>
 
-	 <screen>
+            <screen>
 make install
-	 </screen>
+            </screen>
 
-	 <para>
-	 Please note, that you will need write permissions for install
-	 directory. This may require you to obtain root privileges.
-	 </para>
-	 
-	 <para>
-	 If you have followed those instructions carefully, but still
-	 couldn't get flood sources to compile, then please send e-mail to
-	 <email>test-dev@httpd.apache.org</email> mailing list, with
-	 description of your problem.
-	 </para>
-	 
-      </section>
+            <para>
+            Please note, that you will need write permissions for install
+            directory. This may require you to obtain root privileges.
+            </para>
+         
+            <para>
+            If you have followed those instructions carefully, but still
+            couldn't get flood sources to compile, then please send e-mail to
+            <email>test-dev@httpd.apache.org</email> mailing list, with
+            description of your problem.
+            </para>
+         
+        </section>
 
-      <section>
-         <title>Windows</title>
-	 <para>
-	 This section needs to be written. If there are no Win32 GURU to help,
-	 I'll try to play around <filename>flood.dsp</filename> a bit -- jacekp.
-	 </para>
-      </section>
-   </chapter>
+        <section>
+            <!--
+            This section needs to be written. If there are no Win32 GURU to
+            help, I'll try to play around <filename>flood.dsp</filename> a
+            bit. [jacekp]
+            -->
+            <title>Windows</title>
+            <para>
+            No information available at this time.
+            </para>
+        </section>
+    </chapter>
 
 <!-- Running Flood -->
 
-   <chapter>
-      <title>Running Flood</title>
-      <para>
-   Flood is a command line software. You can run it from Unix shell, MS-DOS prompt
-   or simmilar facility of your operating system. Flood accepts only one argument,
-   and that is a path to configuration file. Example:
-      </para>
-      <screen>
+    <chapter>
+        <title>Running Flood</title>
+        <para>
+        Flood is a command line software. You can run it from Unix shell,
+        MS-DOS prompt or simmilar facility of your operating system. Flood
+        accepts only one argument, and that is a path to configuration file.
+        Example:
+        </para>
+        <screen>
 $ flood /home/jacekp/tests/simple-test.xml
-      </screen>
-      <para>
-   If no argument is given, then flood uses standard input stream 
-   (<filename>stdin</filename>), so you can use flood in pipe processing:
-      </para>
-      <screen>
-$ get_urls.py /var/log/apache/access.log | flood
-      </screen>
-      <para>
-   Flood outputs results to standard output stream (<filename>stdout</filename>)
-   and errors (if any) to standard error stream (<filename>stderr</filename>).
-   You can save result to file, or pipe it to flood processing script, like
-   this:
-      </para>
-      <screen>
+        </screen>
+        <para>
+        If no argument is given, then flood uses standard input stream 
+        (<filename>stdin</filename>), so you can use flood in pipe processing:
+        </para>
+        <screen>
+$ get_urls.py /usr/local/apache/logs/access.log | flood
+        </screen>
+        <para>
+        Flood outputs results to standard output stream
+        (<filename>stdout</filename>) and errors (if any) to standard error
+        stream (<filename>stderr</filename>). You can save result to file, or
+        pipe it to flood processing script, like this:
+        </para>
+        <screen>
 $ flood /home/jacekp/tests/simple-test.xml > /home/jacekp/tests/simple-test.out
 $ flood /home/jacekp/tests/simple-test.xml | analize-relative
-      </screen>
-      <para>
-   If flood is used in shell scripts, then you can test $? variable for flood return
-   code. If the code is 0, then flood has performed a successful test. Other value
-   (usually greater than 0) means, that there was error during test.
-      </para>
-      <para>
-   There's ongoing development of GUI application for flood. When usable, such application
-   will make working with flood much easier.
-      </para>
-   </chapter>
+        </screen>
+        <para>
+        If flood is used in shell scripts, then you can test <envar>$?</envar>
+        variable for flood return code. If the code is 0, then flood has
+        performed a successful test. Other value (usually greater than 0)
+        means, that there was error during test.
+        </para>
+        <para>
+        There's ongoing development of GUI application for flood. When usable,
+        such application will make working with flood much easier.
+        </para>
+    </chapter>
 
 <!-- Flood Configuration File -->
 
-   <chapter>
-      <title>Flood Configuration File</title>
-      <para>This sections discusses flood configuration file.</para>
+    <chapter>
+        <title>Flood Configuration File</title>
+        <para>This sections discusses flood configuration file.</para>
 
-      <section>
-         <title>About File format</title>
-	 <para>
-   Flood XML parsing is built around apr-util XML capabilities, which in turn are
-   based on tweaked version of James Clark's marvelous expat library. Because of
-   that flood understands XML v1.0, so you schould start your configuration file
-   with following processing instruction (PI for short):
-	 </para>
-	 <screen>
+        <section>
+            <title>About File format</title>
+            <para>
+            Flood XML parsing is built around apr-util XML capabilities, which
+            in turn are based on tweaked version of James Clark's marvelous
+            expat library. Because of that flood understands XML v1.0, so you
+            schould start your configuration file with following processing
+            instruction (PI for short):
+            </para>
+            <screen>
 &lt;?xml version="1.0"?&gt;
-	 </screen>
-	 <para>
-   It is not required by flood, but it's good practice and may be useful if you
-   decide to use other XML tools for additional processing. Please note, that expat
-   support for different encodings is rather limited. In particular it understands
-   only UTF-8 and ISO-8859-1 encodings, so processing of your configuration may fail
-   if you specify different encoding in your configuration file, like this:
-	 </para>
-	 <screen>
+            </screen>
+            <para>
+            It is not required by flood, but it's good practice and may be
+            useful if you decide to use other XML tools for additional
+            processing. Please note, that expat support for different
+            encodings is rather limited. In particular it understands only
+            UTF-8 and ISO-8859-1 encodings, so processing of your
+            configuration may fail if you specify different encoding in your
+            configuration file, like this:
+            </para>
+            <screen>
 &lt;?xml version="1.0" encoding="iso-8859-2"?&gt;
-	 </screen>
-	 <para>
-   Please note, that you can get around that limitation, by converting you national
-   characters to UTF-8. Flood itself only checks XML file for well-formdess, which
-   means checking if it is formed after basic XML rules. If you want to do full validation
-   of flood configuration file, you may want to include following line right next to
-   XML processing instruction:
-	 </para>
-	 <screen>
-&lt;!DOCTYPE configuration SYSTEM "file://path/to/flood.dtd"&gt;
-         </screen>
-	 <para>
-   Of course, you have to substitute <filename>/path/to/flood.dtd</filename> with a
-   real path to flood DTD. With this declaration you can use software with validating
-   XML parser (like ASF's Xalan) and validate your configuration before actually
-   processing it with flood. That way you can ensure, that flood.xml file is valid
-   and obeys flood configuration rules.
-	 </para>
-	 <para>
-   Please note that all configure elements in flood aren't using their own dedicated
-   XML namespace, so if you (for some reason) intend to mix flood configuration file
-   with other XML, you may experience tag name collision.
-	 </para>
-      </section>
+            </screen>
+            <para>
+            Please note, that you can get around that limitation, by converting
+            you national characters to UTF-8. Flood itself only checks XML file
+            for well-formdess, which means checking if it is formed after basic
+            XML rules. If you want to do full validation of flood configuration
+            file, you may want to include following line right next to XML
+            processing instruction:
+            </para>
+            <screen>
+&lt;!DOCTYPE configuration SYSTEM "flood.dtd"&gt;
+            </screen>
+            <para>
+            With this declaration you can use software with validating XML
+            parser (like ASF's Xalan) and validate your configuration before
+            actually processing it with flood. That way you can ensure, that
+            flood.xml file is valid and obeys flood configuration rules. You
+            can find <filename>flood.dtd</filename> in 
+            <filename class="directory">examples/</filename>directory relative
+            to package root directory.
+            </para>
+            <para>
+            Please note that all configure elements in flood aren't using
+            their own dedicated XML namespace, so if you (for some reason)
+            intend to mix flood configuration file with other XML, you may
+            experience tag name collision.
+            </para>
+        </section>
 
-      <section>
-         <title>XML Survival Guide</title>
+        <section>
+            <title>XML Survival Guide</title>
 
-	 <para>
-         Preparing flood configuration file can be a little troublesome. At the
-	 time of writting this manual there are no external tools, that could
-	 aid in this process (although there are plans to develop those -- see
-	 next chapter). So you have to pick up editor that has some sort of
-	 XML support. For various Unix systems <application>vi</application> and
-	 <application>emacs</application> seems to be reasonable choices. You'll
-	 get colored syntax, possibly run-time (that is -- as you type) DTD
-	 checking and maybe other switches to help you work with XML files. 
-	 </para>
+            <para>
+            Preparing flood configuration file can be a little troublesome.
+            At the time of writting this manual there are no external tools,
+            that could aid in this process (although there are plans to
+            develop those -- see next section). So you have to pick up editor
+            that has some sort of XML support. For various Unix systems
+            <application>vi</application> and
+            <application>emacs</application> seems to be reasonable choices.
+            You'll get colored syntax, possibly run-time (that is -- as you
+            type) DTD checking and maybe other switches to help you work with
+            XML files. 
+            </para>
 
-	 <para>
-         There are characters that are used by XML markup itself, and you need
-	 a bit of magic when you want to use them as plain text. Everytime you
-	 need such a character, you'll have to reference it by an XML entity.
-	 XML entities start with ampersand (character '&amp;') and end with
-	 semicolon (character ';'). Text between those character must refer to
-	 valid XML entity. Below is a table that lists all 'reserved' XML
-	 characters and their coresponding XML entities. 
-	 </para>
+            <para>
+            There are characters that are used by XML markup itself, and you
+            need a bit of magic when you want to use them as plain text.
+            Everytime you need such a character, you'll have to reference it
+            by an XML entity.  XML entities start with ampersand (character
+            '&amp;') and end with semicolon (character ';'). Text between
+            those character must refer to valid XML entity. Below is a table
+            that lists all 'reserved' XML characters and their coresponding
+            XML entities. 
+            </para>
 
-         <!-- <table frame="all"> -->
-         <informaltable frame="all">
+            <informaltable frame="all">
 
-            <!-- <title>Predefined character entities</title> -->
+                <tgroup cols="3" align="center">
 
-            <tgroup cols="3" align="center">
-	    <thead>
-	    <row>
-	       <entry>character name</entry>
-	       <entry>character glyph</entry>
-	       <entry>entity</entry>
-	    </row>
-	    </thead>
-	 
-	    <tbody>
-	    <row>
-	       <entry>ampersand</entry>
-	       <entry>&amp;</entry>
-	       <entry>&amp;amp;</entry>
-	    </row>
-	    <row>
-	       <entry>less than</entry>
-	       <entry>&lt;</entry>
-	       <entry>&amp;lt;</entry>
-	    </row>
-	    <row>
-	       <entry>greater than</entry>
-	       <entry>&gt;</entry>
-	       <entry>&amp;gt;</entry>
-	    </row>
-	    <row>
-	       <entry>apostrophe</entry>
-	       <entry>&apos;</entry>
-	       <entry>&amp;apos;</entry>
-	    </row>
-	    <row>
-	       <entry>quotation mark</entry>
-	       <entry>&quot;</entry>
-	       <entry>&amp;quot;</entry>
-	    </row>
-	    </tbody>
-	    </tgroup>
-	    
-	 <!-- </table> -->
-	 </informaltable>
-	 
-         <para>
-         If you intend to use international characters in your flood
-	 configuration file, and you don't have Unicode enabled editor, you'll
-	 have to encode those characters. XML has special entity for including
-	 just about any UTF-8 character. Basically it is &amp;#XXX; for decimal
-	 and &amp;#xXXX for hex where XXX is a Unicode character position. For
-	 example, polish letter "small letter a with ogonek" can be referenced
-	 as &amp;#261; (decimal) or &amp;#x105; (hex) while german umlaut
-	 (latin small letter u with diaeresis) schould be entered as &amp;#252;
-	 (decimal) or &amp;#xFC (hex). If you intend to use a lot of
-	 international characters, you'd better get Unicode enabled text editor,
-	 since number of XML entities will make your flood configuration file
-	 ugly (not to mention typing hassle).
-	 <!-- maybe a link to: http://skew.org/xml/tutorial/ -->
-	 </para>
+                <thead>
+                    <row>
+                        <entry>character name</entry>
+                        <entry>character glyph</entry>
+                        <entry>entity</entry>
+                    </row>
+                </thead>
+         
+                <tbody>
+                    <row>
+                        <entry>ampersand</entry>
+                        <entry>&amp;</entry>
+                        <entry>&amp;amp;</entry>
+                    </row>
+                    <row>
+                        <entry>less than</entry>
+                        <entry>&lt;</entry>
+                        <entry>&amp;lt;</entry>
+                    </row>
+                    <row>
+                        <entry>greater than</entry>
+                        <entry>&gt;</entry>
+                        <entry>&amp;gt;</entry>
+                    </row>
+                    <row>
+                        <entry>apostrophe</entry>
+                        <entry>&apos;</entry>
+                        <entry>&amp;apos;</entry>
+                    </row>
+                    <row>
+                        <entry>quotation mark</entry>
+                        <entry>&quot;</entry>
+                        <entry>&amp;quot;</entry>
+                    </row>
+                </tbody>
 
-      </section>
+                </tgroup>
+            
+            </informaltable>
+         
+            <para>
+            If you intend to use international characters in your flood
+            configuration file, and you don't have Unicode enabled editor,
+            you'll have to encode those characters. XML has special entity
+            for including just about any UTF-8 character. Basically it is
+            &amp;#XXX; for decimal and &amp;#xXXX for hex where XXX is a
+            Unicode character position. For example, polish letter "small
+            letter a with ogonek" can be referenced as &amp;#261; (decimal)
+            or &amp;#x105; (hex) while german umlaut (latin small letter u
+            with diaeresis) schould be entered as &amp;#252; (decimal) or
+            &amp;#xFC (hex). If you intend to use a lot of international
+            characters, you'd better get Unicode enabled text editor, since
+            number of XML entities will make your flood configuration file
+            less readable (not to mention typing hassle).
+            <!-- maybe a link to: http://skew.org/xml/tutorial/ -->
+            </para>
 
-      <section>
-         <title>Mass URLs retrieval</title>
-	 <para>
-   Basic configuration examples are pretty easy to write, mostly because the contain
-   as little as 5, maybe 10 URLs. When you intend to do serious tests of a large site
-   or web application, you may be unwilling to hand-type, say 600 URLs by hand. Flood
-   is going to help you with several applications under development:
-	 </para>
-	 <orderedlist>
-	    <listitem>mozilla application</listitem>
-	    <listitem>small proxy</listitem>
-	    <listitem>apache module</listitem>
-	    <listitem>log file analizer</listitem>
-	 </orderedlist>
-      </section>
+        </section>
 
-   </chapter>
+        <section>
+            <title>Mass URLs retrieval</title>
+            <para>
+            Basic configuration examples are pretty easy to write, mostly
+            because they contain as little as 5, maybe 10 URLs. When you intend
+            to do serious tests of a large site or web application, you may be
+            unwilling to hand-type, say 600 URLs by hand. Flood is going to
+            help you with several applications under development:
+            </para>
+            <orderedlist>
+                <listitem>mozilla application</listitem>
+                <listitem>small proxy</listitem>
+                <listitem>apache module</listitem>
+                <listitem>log file analizer</listitem>
+            </orderedlist>
+        </section>
 
-   <chapter>
-      <title>Flood Configuration Elements</title>
+    </chapter>
 
-      <para>
-      This section describes flood configuration elements an their meaning. All
-      elements are presented here as a flat list, so please start browsing with
-      root element (which is: <envar>&lt;flood&gt;</envar>) to get idea
-      what elements are available.
-      </para>
+<!-- Flood Configuration Elements -->
 
-      <refentry id="flood">
+    <chapter>
+        <title>Flood Configuration Elements</title>
 
-      <refmeta>
-      <refentrytitle>flood</refentrytitle>
-      </refmeta>
+        <para>
+        This section describes flood configuration elements an their meaning.
+        All elements are presented here as a flat list, so please start
+        browsing with root element (which is:
+        <link linkend="flood">&lt;flood&gt;</link>) to get idea what elements
+        are available.
+        </para>
 
-      <refnamediv>
-      <refname>flood</refname>
-      <refpurpose>root element</refpurpose>
-      </refnamediv>
+        <!-- flood -->
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;flood&gt; ... &lt;/flood&gt;</synopsis>
-      </refsynopsisdiv>
+        <refentry id="flood">
 
-      <refsection>
-         <title>parent elements</title>
-	 <para>none (this is the root element).</para>
-      </refsection>
+            <refmeta>
+                <refentrytitle>flood</refentrytitle>
+            </refmeta>
 
-      <refsection>
-         <title>children elements</title>
-	 <synopsis><link linkend="urllist">&lt;urllist&gt;</link>+ <link linkend="profile">&lt;profile&gt;</link>+ <link linkend="farmer">&lt;farmer&gt;</link>+ <link linkend="farm">&lt;farm&gt;</link>+ [ <link linkend="seed">&lt;seed&gt;</link> ]</synopsis>
-      </refsection>
+            <refnamediv>
+                <refname>flood</refname>
+                <refpurpose>root element</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;flood&gt; ... &lt;/flood&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>character data</title>
-	 <para>ignored.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <para>none (this is the root element).</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This is the top level element for flood configuration file. It schould contain
-at least: one urllist, one profile, one farmer and one farm.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <synopsis>
+                    <link linkend="urllist">&lt;urllist&gt;</link>+ 
+                    <link linkend="profile">&lt;profile&gt;</link>+ 
+                    <link linkend="farmer">&lt;farmer&gt;</link>+ 
+                    <link linkend="farm">&lt;farm&gt;</link>+ 
+                    [ <link linkend="seed">&lt;seed&gt;</link> ]
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <para>bellow is a smallest usable flood configuration file</para>
-	 <screen>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
+
+            <refsection>
+                <title>character data</title>
+                <para>ignored.</para>
+            </refsection>
+
+            <refsection>
+                <title>description</title>
+                <para>
+                This is the top level element for flood configuration file.
+                It schould contain at least: one urllist, one profile, one
+                farmer and one farm.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <para>bellow is a smallest usable flood configuration file</para>
+                <screen>
 &lt;?xml version="1.0"?&gt;
 &lt;flood&gt;
 
@@ -571,589 +613,693 @@ at least: one urllist, one profile, one farmer and one farm.
    &lt;/farm&gt;
 
 &lt;/flood&gt;
-	 </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="urllist">
+        <!-- urllist -->
 
-      <refmeta>
-      <refentrytitle>urllist</refentrytitle>
-      </refmeta>
+        <refentry id="urllist">
 
-      <refnamediv>
-      <refname>urllist</refname>
-      <refpurpose>groups several url adressess</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>urllist</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;urllist&gt; ... &lt;/urllist&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>urllist</refname>
+                <refpurpose>groups several url adressess</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="flood">&lt;flood&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;urllist&gt; ... &lt;/urllist&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <synopsis><link linkend="name">&lt;name&gt;</link> [ <link linkend="description">&lt;description&gt;</link> ] <link linkend="baseurl">&lt;baseurl&gt;</link> <link linkend="url">&lt;url&gt;</link>* <link linkend="sequence">&lt;sequence&gt;</link>*</synopsis>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="flood">&lt;flood&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <synopsis>
+                    <link linkend="name">&lt;name&gt;</link> 
+                    [ <link linkend="description">&lt;description&gt;</link> ] 
+                    [ <link linkend="baseurl">&lt;baseurl&gt;</link> ]
+                    (<link linkend="url">&lt;url&gt;</link> | 
+                    <link linkend="sequence">&lt;sequence&gt;</link>)+
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>ignored.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element is a container for &lt;url&gt; elements, which are basic data
-unit of flood. Every flood configuration file must have at least one urllist
-element. Every urllist must be asociated with name (using &lt;name&gt;
-children element) and optionally with description.
-         </para>
-	 <para>
-When combined with proper profile type, this element allows a creation of url
-paths. That means a sequence of url addresses, that simulate a real human
-behaviour, such as: logon to service, retrieve random (or specified) article,
-logoff.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>ignored.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element is a container for &lt;url&gt; elements, which
+                are basic data unit of flood. Every flood configuration file
+                must have at least one urllist element. Every urllist must be
+                asociated with name (using &lt;name&gt; children element) and
+                optionally with description.
+                </para>
+                <para>
+                When combined with proper profile type, this element allows a
+                creation of url paths. That means a sequence of url addresses,
+                that simulate a real human behaviour, such as: logon to
+                service, retrieve random (or specified) article, logoff.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;urllist&gt;
       &lt;name&gt;single url&lt;/name&gt;
       &lt;url&gt;http://www.example.com/&lt;/url&gt;
    &lt;/urllist&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="name">
+        <!-- name -->
 
-      <refmeta>
-      <refentrytitle>name</refentrytitle>
-      </refmeta>
+        <refentry id="name">
 
-      <refnamediv>
-      <refname>name</refname>
-      <refpurpose>names object referenced by parent element</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>name</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;name&gt;STRING&lt;/name&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>name</refname>
+                <refpurpose>names object referenced by parent element</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis>{ <link linkend="urllist">&lt;urllist&gt;</link> | <link linkend="profile">&lt;profile&gt;</link> | <link linkend="farmer">&lt;farmer&gt;</link> | <link linkend="farm">&lt;farm&gt;</link> }</synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;name&gt;STRING&lt;/name&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    ( <link linkend="urllist">&lt;urllist&gt;</link> | 
+                    <link linkend="profile">&lt;profile&gt;</link> | 
+                    <link linkend="farmer">&lt;farmer&gt;</link> | 
+                    <link linkend="farm">&lt;farm&gt;</link> )
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>specifies name of object referenced by parent element.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element sets name of object identified by parent element. Most of the
-time, this element is mandatory, as it allows to reference objects by their
-names.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>specifies name of object referenced by parent element.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element sets name of object identified by parent element.
+                Most of the time, this element is mandatory, as it allows to
+                reference objects by their names.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;urllist&gt;
       &lt;name&gt;single url&lt;/name&gt;
       &lt;!-- ... --&gt;
    &lt;/urllist&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="description">
+    <!-- description -->
 
-      <refmeta>
-      <refentrytitle>description</refentrytitle>
-      </refmeta>
+        <refentry id="description">
 
-      <refnamediv>
-      <refname>description</refname>
-      <refpurpose>description of object identified by parent element</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>description</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;description&gt;STRING&lt;/description&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>description</refname>
+                <refpurpose>description of object identified by parent element</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis>{ <link linkend="urllist">&lt;urllist&gt;</link> | <link linkend="profile">&lt;profile&gt;</link> | <link linkend="farmer">&lt;farmer&gt;</link> | <link linkend="farm">&lt;farm&gt;</link> }</synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;description&gt;STRING&lt;/description&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    ( <link linkend="urllist">&lt;urllist&gt;</link> |
+                    <link linkend="profile">&lt;profile&gt;</link> |
+                    <link linkend="farmer">&lt;farmer&gt;</link> |
+                    <link linkend="farm">&lt;farm&gt;</link> )
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>description of object identified by parent element</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element allows asociation of description with object identified by
-parent element. It is usually optional and is useful only in conjunction
-with GUI frontend. It isn't used by flood at all.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>description of object identified by parent element</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element allows asociation of description with object
+                identified by parent element. It is usually optional and is
+                useful only in conjunction with GUI frontend. It isn't used
+                by flood at all.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;urllist&gt;
       &lt;name&gt;my urllist&lt;/name&gt;
       &lt;description&gt;a bunch of random pages&lt;/desccription&gt;
       &lt;!-- ... --&gt;
    &lt;/urllist&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="baseurl">
+        <!-- baseurl -->
 
-      <refmeta>
-      <refentrytitle>baseurl</refentrytitle>
-      </refmeta>
+        <refentry id="baseurl">
 
-      <refnamediv>
-      <refname>baseurl</refname>
-      <refpurpose>base URL for all url elements</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>baseurl</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;baseurl&gt;STRING&lt;/baseurl&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>baseurl</refname>
+                <refpurpose>base URL for all url elements</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="urllist">&lt;urllist&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;baseurl&gt;STRING&lt;/baseurl&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="urllist">&lt;urllist&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>base url.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element sets base URL for all url elements in current urllist.
-Every URL is created by concatenating base url and url itself. This
-allows to abstract urllist and move it around easy.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>base url.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element sets base URL for all url elements in current
+                urllist. Every URL is created by concatenating base url and
+                url itself. This allows to abstract urllist and move it around
+                easy.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;urllist&gt;
       &lt;!-- ... --&gt;
       &lt;baseurl&gt;http://www.example.com&lt;/baseurl&gt;
       &lt;url&gt;/foo.html&lt;/url&gt;
       &lt;url&gt;/bar.html&lt;/url&gt;
    &lt;/urllist&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
-   <refentry id="url">
+        </refentry>
 
-      <refmeta>
-      <refentrytitle>url</refentrytitle>
-      </refmeta>
+        <!-- url -->
 
-      <refnamediv>
-      <refname>url</refname>
-      <refpurpose>specifies URL address for retrieval</refpurpose>
-      </refnamediv>
+        <refentry id="url">
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-	 <!-- FIXME: this looks ugly... maybe some sort of tabbing? -->
-         <synopsis>&lt;url [ method="{ GET | POST | HEAD }" ] [ payload="STRING" ] [ payloadparam="STRING" ] [ payloadparamcount="INTEGER" ] [ payloadtemplate="STRING" ] [ responsename="STRING" ] [ responsetemplate="STRING" ] [ requesttemplate="STRING" ] [ requestparamcount="INTEGER" ] [ predelay="INTEGER" ] [ predelayprecision="INTEGER" ] [ postdelay="INTEGER" ] [ postdelayprecision="INTEGER" ] [ user="STRING" ] [ password="STRING" ]&gt; [ STRING&lt;/url&gt; ]</synopsis>
-      </refsynopsisdiv>
+            <refmeta>
+                <refentrytitle>url</refentrytitle>
+            </refmeta>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="urllist">&lt;urllist&gt;</link></synopsis>
-      </refsection>
+            <refnamediv>
+                <refname>url</refname>
+                <refpurpose>specifies URL address for retrieval</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <!-- FIXME: this looks ugly... maybe some sort of tabbing? -->
+                <synopsis>
+                    &lt;url 
+                    [ method="{ GET | POST | HEAD }" ] 
+                    [ payload="STRING" ] 
+                    [ payloadparam="STRING" ] 
+                    [ payloadparamcount="INTEGER" ] 
+                    [ payloadtemplate="STRING" ] 
+                    [ responsename="STRING" ] 
+                    [ responsetemplate="STRING" ] 
+                    [ requesttemplate="STRING" ] 
+                    [ requestparamcount="INTEGER" ] 
+                    [ predelay="INTEGER" ] 
+                    [ predelayprecision="INTEGER" ] 
+                    [ postdelay="INTEGER" ] 
+                    [ postdelayprecision="INTEGER" ] 
+                    [ user="STRING" ] 
+                    [ password="STRING" ]&gt; [ STRING&lt;/url&gt; ]
+                </synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>attributes</title>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="urllist">&lt;urllist&gt;</link>
+                </synopsis>
+            </refsection>
 
-         <informaltable frame="all">
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-            <tgroup cols="4" align="left">
-	    <thead>
-	    <row>
-	       <entry>name</entry>
-	       <entry>type</entry>
-	       <entry>description</entry>
-	       <entry>default value</entry>
-	    </row>
-	    </thead>
-	 
-	    <tbody>
-	    <row>
-	       <entry>method</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute specifies HTTP method used in request. Valid values include:
-GET, POST, HEAD.
-               </entry>
-	       <entry>GET</entry>
-	    </row>
-	    <row>
-	       <entry>payload</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute specifies POST request body. Contents of this attribute are
-sent raw as POST request body, so they need to be properly encoded.
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>payloadparam</entry>
-	       <entry>STRING</entry>
-	       <entry>
-FIXME: need content here.
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>payloadparamcount</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-FIXME: need content here.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>payloadtemplate</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute holds POST request body, that will be searched for variables.
-Every variable found would be expanded to it's value.
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>responsename</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute sets the name of variable, that will be created upon successful
-match of responsetemplate.
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>responsetemplate</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute holds regular expression that will be matched against response.
-If successful, resulting string will be placed in newly created variable,
-whose name is determined by responsename attribute.
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>requesttemplate</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute holds the URL address, that will be searched for variables.
-Every variable found will be expanded to it's value. Presence of this
-attribute makes url an empty element.
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>requestparamcount</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-FIXME: need content here.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>predelay</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-FIXME: need content here.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>predelayprecision</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-FIXME: need content here.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>postdelay</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-FIXME: need content here.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>postdelayprecision</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-FIXME: need content here.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>user</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute holds username for auth (401 header).
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>password</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute holds password for auth (401 header).
-               </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    </tbody>
-	    </tgroup>
-	 </informaltable>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
 
-      <refsection>
-         <title>character data</title>
-	 <para>none | specifies URL address for retrieval.</para>
-      </refsection>
+                <informaltable frame="all">
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element is the basic data unit of flood. It contains detailed description
-of url address scheduled for retrieval. You can specify how to perform request (method, optional payload) and how to postprocess response. 
-	 </para>
-      </refsection>
+                    <tgroup cols="4" align="left">
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+                    <thead>
+                        <row>
+                            <entry>name</entry>
+                            <entry>type</entry>
+                            <entry>description</entry>
+                            <entry>default value</entry>
+                        </row>
+                    </thead>
+         
+                    <tbody>
+                        <row>
+                            <entry>method</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute specifies HTTP method used in
+                            request. Valid values include: GET, POST, HEAD.
+                            </entry>
+                            <entry>GET</entry>
+                        </row>
+                        <row>
+                            <entry>payload</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute specifies POST request body.
+                            Contents of this attribute are sent raw as POST
+                            request body, so they need to be properly encoded.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <!-- FIXME: need description -->
+                        <row>
+                            <entry>payloadparam</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            No information available at this time
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <!-- FIXME: need description -->
+                        <row>
+                            <entry>payloadparamcount</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            No information available at this time
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <row>
+                            <entry>payloadtemplate</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute holds POST request body, that will
+                            be searched for variables. Every variable found
+                            will be expanded to it's value.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <row>
+                            <entry>responsename</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute sets the name of variable, that
+                            will be created upon successful match of
+                            responsetemplate.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <row>
+                            <entry>responsetemplate</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute holds regular expression that will
+                            be matched against response. If successful,
+                            resulting string will be placed in newly created
+                            variable, whose name is determined by responsename
+                            attribute.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <row>
+                            <entry>requesttemplate</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute holds the URL address, that will be
+                            searched for variables. Every variable found will
+                            be expanded to it's value. Presence of this
+                            attribute makes url an empty element, becasue
+                            content of this attribute is used as request URL.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <!-- FIXME: need description -->
+                        <row>
+                            <entry>requestparamcount</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            No information available at this time
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <!-- FIXME: need description -->
+                        <row>
+                            <entry>predelay</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            No information available at this time
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <!-- FIXME: need description -->
+                        <row>
+                            <entry>predelayprecision</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            No information available at this time
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <!-- FIXME: need description -->
+                        <row>
+                            <entry>postdelay</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            No information available at this time
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <!-- FIXME: need description -->
+                        <row>
+                            <entry>postdelayprecision</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            No information available at this time
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <row>
+                            <entry>user</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute holds username for auth (401
+                            header).
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <row>
+                            <entry>password</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute holds password for auth (401
+                            header).
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                    </tbody>
+
+                    </tgroup>
+
+                </informaltable>
+
+            </refsection>
+
+            <refsection>
+                <title>character data</title>
+                <para>none | specifies URL address for retrieval.</para>
+            </refsection>
+
+            <refsection>
+                <title>description</title>
+                <para>
+                This element is the basic data unit of flood. It contains
+                detailed description of url address scheduled for retrieval.
+                You can specify how to perform request (method, optional
+                payload) and how to postprocess response. 
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;urllist&gt;
       &lt;name&gt;check release&lt;/name&gt;
       &lt;url responsename="filename" responsetemplate="href=(.*)"&gt;http://www.example.com/downloads/&lt;/url&gt;
       &lt;url requesttemplate="http://www.example.com/files/${filename}" requestparamcount="1"/&gt;
       &lt;!-- ... --&gt;
    &lt;/urllist&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="sequence">
+        <!-- sequence -->
 
-      <refmeta>
-      <refentrytitle>sequence</refentrytitle>
-      </refmeta>
+        <refentry id="sequence">
 
-      <refnamediv>
-      <refname>sequence</refname>
-      <refpurpose>generates sequence of urls</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>sequence</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;sequence sequencename="STRING" sequencelist="INTEGER"&gt; ... &lt;/sequence&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>sequence</refname>
+                <refpurpose>generates sequence of urls</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="urllist">&lt;urllist&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>
+                    &lt;sequence 
+                    sequencename="STRING" 
+                    sequencelist="INTEGER"&gt; ... &lt;/sequence&gt;
+                </synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <synopsis><link linkend="url">&lt;url&gt;</link>* <link linkend="sequence">&lt;sequence&gt;</link>*</synopsis>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="urllist">&lt;urllist&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-         <informaltable frame="all">
+            <refsection>
+                <title>children elements</title>
+                <synopsis>
+                    <link linkend="url">&lt;url&gt;</link>* 
+                    <link linkend="sequence">&lt;sequence&gt;</link>*
+                </synopsis>
+            </refsection>
 
-            <tgroup cols="4" align="left">
-	    <thead>
-	    <row>
-	       <entry>name</entry>
-	       <entry>type</entry>
-	       <entry>description</entry>
-	       <entry>default value</entry>
-	    </row>
-	    </thead>
-	 
-	    <tbody>
-	    <row>
-	       <entry>sequencename</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute specifies the name of current sequence.
-	       </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    <row>
-	       <entry>sequencelist</entry>
-	       <entry>STRING</entry>
-	       <entry>
-This attribute holds coma separated list of sequence iteration values.
-	       </entry>
-	       <entry>(empty)</entry>
-	    </row>
-	    </tbody>
-	    </tgroup>
-	 </informaltable>
+            <refsection>
+                <title>attributes</title>
 
-      </refsection>
+                <informaltable frame="all">
 
-      <refsection>
-         <title>character data</title>
-	 <para>ignored.</para>
-      </refsection>
+                    <tgroup cols="4" align="left">
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element allows a creation of simple sequence of URLs. This allows certain
-URL patterns to be simplified.
-	 </para>
-      </refsection>
+                    <thead>
+                        <row>
+                            <entry>name</entry>
+                            <entry>type</entry>
+                            <entry>description</entry>
+                            <entry>default value</entry>
+                        </row>
+                    </thead>
+         
+                    <tbody>
+                        <row>
+                            <entry>sequencename</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute specifies the name of current
+                            sequence.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <row>
+                            <entry>sequencelist</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute holds coma separated list of
+                            sequence iteration values.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                    </tbody>
+                    </tgroup>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+                </informaltable>
+
+            </refsection>
+
+             <refsection>
+                <title>character data</title>
+                <para>ignored.</para>
+             </refsection>
+
+            <refsection>
+                <title>description</title>
+                <para>
+                This element allows a creation of simple sequence of URLs.
+                This allows certain URL patterns to be simplified.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;urllist&gt;
       &lt;sequence sequencename="myseq" sequencelist="bob, jane, joe"&gt;
          &lt;url requesttemplate="http://www.you.com/~${myseq}/" /&gt;
          &lt;url requesttemplate="http://www.you.com/~${myseq}/index.html" /&gt;
       &lt;/sequence&gt;
    &lt;/urllist&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="profile">
+        <!-- profile -->
 
-      <refmeta>
-      <refentrytitle>profile</refentrytitle>
-      </refmeta>
+        <refentry id="profile">
 
-      <refnamediv>
-      <refname>profile</refname>
-      <refpurpose>describes farmer profile</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>profile</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;profile&gt; ... &lt;/profile&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>profile</refname>
+                <refpurpose>describes farmer profile</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="flood">&lt;flood&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;profile&gt; ... &lt;/profile&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <synopsis><link linkend="name">&lt;name&gt;</link> [ <link linkend="description">&lt;description&gt;</link> ] <link linkend="useurllist">&lt;useurllist&gt;</link> <link linkend="profiletype">&lt;profiletype&gt;</link> [ <link linkend="socket">&lt;socket&gt;</link> ] <link linkend="verify_resp">&lt;verify_resp&gt;</link> [ <link linkend="report">&lt;report&gt;</link> ]</synopsis>
-	 <!-- FIXME: describe all events in detail? -->
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="flood">&lt;flood&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <synopsis>
+                    <link linkend="name">&lt;name&gt;</link> 
+                    [ <link linkend="description">&lt;description&gt;</link> ] 
+                    <link linkend="useurllist">&lt;useurllist&gt;</link> 
+                    <link linkend="profiletype">&lt;profiletype&gt;</link> 
+                    [ <link linkend="socket">&lt;socket&gt;</link> ] 
+                    <link linkend="verify_resp">&lt;verify_resp&gt;</link> 
+                    [ <link linkend="report">&lt;report&gt;</link> ]
+                </synopsis>
+                <!-- FIXME: describe all events in detail? -->
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>ignored.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element describes profile of a farmer. Profile describes farmer
-behaviour in detail. What farmer does and how he does it.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>ignored.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element describes profile of a farmer. Profile describes
+                farmer behaviour in detail. What farmer does and how he does
+                it.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;profile&gt;
       &lt;name&gt;my profile&lt;/name&gt;
       &lt;profiletype&gt;round_robin&lt;/profiletype&gt;
@@ -1161,58 +1307,63 @@ behaviour in detail. What farmer does and how he does it.
       &lt;verify_resp&gt;verify_200&lt;/verify_resp&gt;
       &lt;report&gt;simple&lt;/report&gt;
    &lt;/profile&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="useurllist">
+        <!-- useurllist -->
 
-      <refmeta>
-      <refentrytitle>useurllist</refentrytitle>
-      </refmeta>
+        <refentry id="useurllist">
 
-      <refnamediv>
-      <refname>useurllist</refname>
-      <refpurpose>urllist to use in profile</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>useurllist</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;useurllist&gt;STRING&lt;/useurllist&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>useurllist</refname>
+                <refpurpose>urllist to use in profile</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="profile">&lt;profile&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;useurllist&gt;STRING&lt;/useurllist&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="profile">&lt;profile&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>name of urllist to use.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element references an exisiting urllist, which will be used in current
-profile. If there's no urllist by that name, flood will report error and exit.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>name of urllist to use.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element references an exisiting urllist, which will be
+                used in current profile. If there's no urllist by that name,
+                flood will report error and exit.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;urllist&gt;
       &lt;name&gt;my urls&lt;/name&gt;
       &lt;-- ... --&gt;
@@ -1225,362 +1376,394 @@ profile. If there's no urllist by that name, flood will report error and exit.
       &lt;useurllist&gt;my urls&lt;/useurllist&gt;
       &lt;-- ... --&gt;
    &lt;/profile&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="profiletype">
+        <!-- profiletype -->
 
-      <refmeta>
-      <refentrytitle>profiletype</refentrytitle>
-      </refmeta>
+        <refentry id="profiletype">
 
-      <refnamediv>
-      <refname>profiletype</refname>
-      <refpurpose>specifies type of profile</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>profiletype</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;profiletype&gt;STRING&lt;/profiletype&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>profiletype</refname>
+                <refpurpose>specifies type of profile</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="profile">&lt;profile&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;profiletype&gt;STRING&lt;/profiletype&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis><link linkend="profile">&lt;profile&gt;</link></synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>name of profile type.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element specifies type of profile. Actually there is only one valid
-profile type -- <synopsis>round_robin</synopsis>.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>name of profile type.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element specifies type of profile. Actually there is only
+                one valid profile type -- <synopsis>round_robin</synopsis>.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;profile&gt;
       &lt;-- ... --&gt;
       &lt;profiletype&gt;round_robin&lt;/profiletype&gt;
       &lt;-- ... --&gt;
    &lt;/profile&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="socket">
+        <!-- socekt -->
 
-      <refmeta>
-      <refentrytitle>socket</refentrytitle>
-      </refmeta>
+        <refentry id="socket">
 
-      <refnamediv>
-      <refname>socket</refname>
-      <refpurpose>specifies profile socket type</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>socket</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;socket&gt;STRING&lt;/socket&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>socket</refname>
+                <refpurpose>specifies profile socket type</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="profile">&lt;profile&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;socket&gt;STRING&lt;/socket&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="profile">&lt;profile&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>profile socket type.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-	 <!-- FIXME: we need verbatim tag instead of envar -->
-This element specifies socket type to be used in conjunction with current
-profile. Valid examples are <envar>generic</envar>,
-<envar>keepalive</envar> and <envar>ssl</envar>. In practice
-<envar>generic</envar> socket allows for one request per
-connection (connection is terminated right after receiving response),
-while <envar>keepalive</envar> allows for more than one request to
-be transmitted over active connection. This difference can have significant
-impact on test results.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>profile socket type.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                <!-- FIXME: envar is wrong, but there's no verbatim element -->
+                This element specifies socket type to be used in conjunction
+                with current profile. Valid examples are
+                <envar>generic</envar>, <envar>keepalive</envar> and
+                <envar>ssl</envar>. In practice <envar>generic</envar> socket
+                allows for one request per connection (connection is
+                terminated right after receiving response), while
+                <envar>keepalive</envar> allows for more than one request to
+                be transmitted over active connection. This difference can
+                have significant impact on test results.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;profile&gt;
       &lt;-- ... --&gt;
       &lt;socket&gt;generic&lt;/socket&gt;
       &lt;-- ... --&gt;
    &lt;/profile&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="verify_resp">
+        <!-- verify_resp -->
 
-      <refmeta>
-      <refentrytitle>verify_resp</refentrytitle>
-      </refmeta>
+        <refentry id="verify_resp">
 
-      <refnamediv>
-      <refname>verify_resp</refname>
-      <refpurpose>specifies response verification type</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>verify_resp</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;verify_resp&gt;STRING&lt;/verify_resp&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>verify_resp</refname>
+                <refpurpose>specifies response verification type</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="profile">&lt;profile&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;verify_resp&gt;STRING&lt;/verify_resp&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="profile">&lt;profile&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>response verification type.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element specifies type of response verification. Valid examples are
-<envar>verify_200</envar> and <envar>verify_http_code</envar>.
-Both types assume 3xx and 2xx responses are valid, and other are not. In
-practice, <envar>verify_200</envar> is very fast, while
-<envar>verify_http_code</envar> is safe with carefull response parsing.
-Please use <envar>verify_http_code</envar> if you experience problems.
-	 </para>
-	 <note>
-	 <para>
-Flood recognizes 3xx type responses (so called redirects) as valid responses,
-but do not follows them. Following 3xx type responses will probably
-become optional in near future.
-	 </para>
-	 </note>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>response verification type.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element specifies type of response verification. Valid
+                examples are <envar>verify_200</envar> and 
+                <envar>verify_http_code</envar>. Both types assume 3xx and 2xx
+                responses are valid, and others are errors. In practice, 
+                <envar>verify_200</envar> is very fast, while 
+                <envar>verify_http_code</envar> is safe with carefull
+                response parsing. Please use <envar>verify_http_code</envar>
+                if you experience problems.
+                </para>
+                <note>
+                <para>
+                Flood recognizes 3xx type responses (so called redirects) as
+                valid responses, but do not follows them. Following 3xx type
+                responses will probably become optional in near future.
+                </para>
+                </note>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;profile&gt;
       &lt;-- ... --&gt;
       &lt;verify_resp&gt;verify_200&lt;/verify_resp&gt;
       &lt;-- ... --&gt;
    &lt;/profile&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="report">
+        <!-- report -->
 
-      <refmeta>
-      <refentrytitle>report</refentrytitle>
-      </refmeta>
+        <refentry id="report">
 
-      <refnamediv>
-      <refname>report</refname>
-      <refpurpose>specifies reporting type</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>report</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;report&gt;STRING&lt;/report&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>report</refname>
+                <refpurpose>specifies reporting type</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="profile">&lt;profile&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;report&gt;STRING&lt;/report&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="profile">&lt;profile&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>report type.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element specifies report type to be used in conjunction with current
-profile. Valid examples are <envar>simple</envar>,
-<envar>easy</envar> and <envar>relative_times</envar>.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>report type.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element specifies report type to be used in conjunction
+                with current profile. Valid examples are <envar>simple</envar>,
+                <envar>easy</envar> and <envar>relative_times</envar>.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;profile&gt;
       &lt;-- ... --&gt;
       &lt;socket&gt;generic&lt;/socket&gt;
       &lt;-- ... --&gt;
    &lt;/profile&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="farmer">
+        <!-- farmer -->
 
-      <refmeta>
-      <refentrytitle>farmer</refentrytitle>
-      </refmeta>
+        <refentry id="farmer">
 
-      <refnamediv>
-      <refname>farmer</refname>
-      <refpurpose>defines a virtual working human</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>farmer</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;farmer&gt; ... &lt;/farmer&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>farmer</refname>
+                <refpurpose>defines a virtual working human</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="flood">&lt;flood&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;farmer&gt; ... &lt;/farmer&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <synopsis><link linkend="name">&lt;name&gt;</link> [ <link linkend="description">&lt;description&gt;</link> ] [ { <link linkend="count">&lt;count&gt;</link> | <link linkend="time">&lt;time&gt;</link> } ] <link linkend="useprofile">&lt;useprofile&gt;</link></synopsis>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="flood">&lt;flood&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <synopsis>
+                    <link linkend="name">&lt;name&gt;</link> 
+                    [ <link linkend="description">&lt;description&gt;</link> ] 
+                    [ ( <link linkend="count">&lt;count&gt;</link> | 
+                    <link linkend="time">&lt;time&gt;</link> ) ] 
+                    <link linkend="useprofile">&lt;useprofile&gt;</link>+
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>ignored.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element defines basic flood work unit. A farmer can be (depending on
-compile-time configuration) a separate process, or a threead withing main
-flood process.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>ignored.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element defines basic flood work unit. A farmer can be
+                (depending on compile-time configuration) a separate process,
+                or a threead withing main flood process.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;farmer&gt;
       &lt;name&gt;john&lt;/name&gt;
       &lt;useprofile&gt;my profile&lt;/useprofile&gt;
    &lt;/farmer&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="useprofile">
+        <!-- useprofile -->
 
-      <refmeta>
-      <refentrytitle>useprofile</refentrytitle>
-      </refmeta>
+        <refentry id="useprofile">
 
-      <refnamediv>
-      <refname>useprofile</refname>
-      <refpurpose>profile to be used by farmer</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>useprofile</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;useprofile&gt;STRING&lt;/useprofile&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>useprofile</refname>
+                <refpurpose>profile to be used by farmer</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="farmer">&lt;farmer&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;useprofile&gt;STRING&lt;/useprofile&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="farmer">&lt;farmer&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>name of profile to be used by farmer.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element references an exisiting profile, which will be used by current
-farmer. If there's no profile by that name, flood will report error and exit.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>name of profile to be used by farmer.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element references an exisiting profile, which will be
+                used by current farmer. If there's no profile by that name,
+                flood will report error and exit.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;profile&gt;
       &lt;name&gt;my profile&lt;/name&gt;
       &lt;!-- ... --&gt;
@@ -1592,439 +1775,489 @@ farmer. If there's no profile by that name, flood will report error and exit.
       &lt;name&gt;john&lt;/name&gt;
       &lt;useprofile&gt;my profile&lt;/useprofile&gt;
    &lt;/farmer&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="count">
+        <!-- count -->
 
-      <refmeta>
-      <refentrytitle>count</refentrytitle>
-      </refmeta>
+        <refentry id="count">
 
-      <refnamediv>
-      <refname>count</refname>
-      <refpurpose>amount of farmer work loops</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>count</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;count&gt;INTEGER&lt;count&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>count</refname>
+                <refpurpose>amount of farmer work loops</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="farmer">&lt;farmer&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;count&gt;INTEGER&lt;count&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="farmer">&lt;farmer&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>amount of full work loops.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element specifies amount of loops that schould be performed by farmer. The
-amount of work in loop depends on profile, but it usually means hitting all
-url's from urllist.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>amount of full work loops.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element specifies amount of loops that schould be
+                performed by farmer. The amount of work in loop depends on
+                profile, but it usually means hitting all url's from urllist.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;farmer&gt;
       &lt;name&gt;john&lt;/name&gt;
       &lt;count&gt;5&lt;/count&gt;
       &lt;useprofile&gt;my profile&lt;/useprofile&gt;
    &lt;/farmer&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="time">
+        <!-- time -->
 
-      <refmeta>
-      <refentrytitle>time</refentrytitle>
-      </refmeta>
+        <refentry id="time">
 
-      <refnamediv>
-      <refname>time</refname>
-      <refpurpose>duration of farmer work</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>time</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;time&gt;INTEGER&lt;time&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>time</refname>
+                <refpurpose>duration of farmer work</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="farmer">&lt;farmer&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;time&gt;INTEGER&lt;time&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="farmer">&lt;farmer&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>duration of farmer work in seconds.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element specifies duration of farmer work in seconds. If specified time
-is greater than time needed to perform full work loop, then farmer starts
-another work loop.
-	 </para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>duration of farmer work in seconds.</para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element specifies duration of farmer work in seconds. If
+                specified time is greater than time needed to perform full work
+                loop, then farmer starts another work loop.
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;farmer&gt;
       &lt;name&gt;john&lt;/name&gt;
       &lt;time&gt;20&lt;/time&gt;
       &lt;useprofile&gt;my profile&lt;/useprofile&gt;
    &lt;/farmer&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="farm">
+        <refentry id="farm">
 
-      <refmeta>
-      <refentrytitle>farm</refentrytitle>
-      </refmeta>
+            <refmeta>
+                <refentrytitle>farm</refentrytitle>
+            </refmeta>
 
-      <refnamediv>
-      <refname>farm</refname>
-      <refpurpose>a group of farmers</refpurpose>
-      </refnamediv>
+            <refnamediv>
+                <refname>farm</refname>
+                <refpurpose>a group of farmers</refpurpose>
+            </refnamediv>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;farm&gt; ... &lt;/farm&gt;</synopsis>
-      </refsynopsisdiv>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;farm&gt; ... &lt;/farm&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="flood">&lt;flood&gt;</link></synopsis>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="flood">&lt;flood&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>children elements</title>
-	 <synopsis><link linkend="name">&lt;name&gt;</link> [ <link linkend="description">&lt;description&gt;</link> ] <link linkend="usefarmer">&lt;usefarmer&gt;</link></synopsis>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <synopsis>
+                    <link linkend="name">&lt;name&gt;</link> 
+                    [ <link linkend="description">&lt;description&gt;</link> ] 
+                    <link linkend="usefarmer">&lt;usefarmer&gt;</link>+
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>ignored.</para>
-      </refsection>
+            <refsection>
+                <title>character data</title>
+                <para>ignored.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element defines a work unit, that is a container for flood basic work
-unit -- farmer. With farm you can easily clone elements.
-	 </para>
-	 <warning>
-	 <para>
-Because there are issues involved in determining how flood starts farm processing (first one? all of them?) currently flood *requires* only one farm with name "Bingo" (case sensitive).
-         </para>
-	 </warning>
-      </refsection>
+            <refsection>
+                <title>description</title>
+                <para>
+                This element defines a unit, that is a container for flood
+                basic work unit -- farmer. With farm you can easily clone
+                farmers and therefore generate massive loads.
+                </para>
+                <warning>
+                <para>
+                Currently flood *requires* only one farm with name "Bingo" (case sensitive).
+                </para>
+                </warning>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;farm&gt;
       &lt;name&gt;Bingo&lt;/name&gt;
       &lt;usefarmer&gt;john&lt;/usefarmer&gt;
    &lt;/farm&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="usefarmer">
+        <!-- usefarmer -->
 
-      <refmeta>
-      <refentrytitle>usefarmer</refentrytitle>
-      </refmeta>
+        <refentry id="usefarmer">
 
-      <refnamediv>
-      <refname>usefarmer</refname>
-      <refpurpose>specifies farmer to use in farm</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>usefarmer</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;usefarmer [ count="INTEGER" ] [ startcount="INTEGER" ] [ startdelay="INTEGER" ]&gt;STRING&lt;/usefarmer&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>usefarmer</refname>
+                <refpurpose>specifies farmer to use in farm</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="farm">&lt;farm&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>
+                    &lt;usefarmer 
+                    [ count="INTEGER" ] 
+                    [ startcount="INTEGER" ] 
+                    [ startdelay="INTEGER" ]&gt;STRING&lt;/usefarmer&gt;
+                </synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="farm">&lt;farm&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-         <informaltable frame="all">
+            <refsection>
+                <title>attributes</title>
 
-            <tgroup cols="4" align="left">
-	    <thead>
-	    <row>
-	       <entry>name</entry>
-	       <entry>type</entry>
-	       <entry>description</entry>
-	       <entry>default value</entry>
-	    </row>
-	    </thead>
-	 
-	    <tbody>
-	    <row>
-	       <entry>count</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-This attribute specifies amount of farmers to "clone".
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>startcount</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-This attribute specifies amount of farmers to start each time.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    <row>
-	       <entry>startdelay</entry>
-	       <entry>INTEGER</entry>
-	       <entry>
-This attribute specifies amount of time (in seconds) between each farmer start.
-               </entry>
-	       <entry>0</entry>
-	    </row>
-	    </tbody>
-	    </tgroup>
-	 </informaltable>
-      </refsection>
+                <informaltable frame="all">
 
-      <refsection>
-         <title>character data</title>
-	 <para>name of farmer to use</para>
-      </refsection>
+                    <tgroup cols="4" align="left">
 
-      <refsection>
-         <title>description</title>
-	 <para>
-This element asociates farmer with farm. In addition, it is possible to
-"clone" farmer -- that is -- to have several separate parallel farmers
-with identical behaviour (profile, urls).
-	 </para>
-      </refsection>
+                    <thead>
+                        <row>
+                            <entry>name</entry>
+                            <entry>type</entry>
+                            <entry>description</entry>
+                            <entry>default value</entry>
+                        </row>
+                    </thead>
+         
+                    <tbody>
+                        <row>
+                            <entry>count</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            This attribute specifies amount of farmers to
+                            "clone".
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <row>
+                            <entry>startcount</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            This attribute specifies amount of farmers to
+                            start each time.
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                        <row>
+                            <entry>startdelay</entry>
+                            <entry>INTEGER</entry>
+                            <entry>
+                            This attribute specifies amount of time (in
+                            seconds) between each farmer start.
+                            </entry>
+                            <entry>0</entry>
+                        </row>
+                    </tbody>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+                    </tgroup>
+
+                </informaltable>
+
+            </refsection>
+
+            <refsection>
+                <title>character data</title>
+                <para>name of farmer to use</para>
+            </refsection>
+
+            <refsection>
+                <title>description</title>
+                <para>
+                This element asociates farmer with farm. In addition, it is
+                possible to "clone" farmer -- that is -- to have several
+                separate parallel farmers with identical behaviour (profile,
+                urls).
+                </para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;farm&gt;
       &lt;name&gt;Bingo&lt;/name&gt;
       &lt;usefarmer count="2"&gt;john&lt;/usefarmer&gt;
    &lt;/farm&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   <refentry id="seed">
+        <!-- seed -->
 
-      <refmeta>
-      <refentrytitle>seed</refentrytitle>
-      </refmeta>
+        <refentry id="seed">
 
-      <refnamediv>
-      <refname>seed</refname>
-      <refpurpose>specifies fixed seed for PRNG</refpurpose>
-      </refnamediv>
+            <refmeta>
+                <refentrytitle>seed</refentrytitle>
+            </refmeta>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;seed&gt;INTEGER&lt;/seed&gt;</synopsis>
-      </refsynopsisdiv>
+            <refnamediv>
+                <refname>seed</refname>
+                <refpurpose>specifies fixed seed for PRNG</refpurpose>
+            </refnamediv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="flood">&lt;flood&gt;</link></synopsis>
-      </refsection>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>&lt;seed&gt;INTEGER&lt;/seed&gt;</synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis>
+                    <link linkend="flood">&lt;flood&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>character data</title>
-	 <para>fixed seed for PRNG.</para>
-      </refsection>
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+            </refsection>
 
-      <refsection>
-         <title>description</title>
-	 <para>
-During tests flood sometimes uses system PRNG (Pseudo Random Number
-Generator). For example, this happens when you use <envar>${=name}</envar>
-construct. Since numbers returned by PRNG are different for every test,
-you can have situation in which the same set of URLS has very different
-results. Consider retrieval of article from database with such url:
-	 </para>
-	 <screen>
+            <refsection>
+                <title>character data</title>
+                <para>fixed seed for PRNG.</para>
+            </refsection>
+
+            <refsection>
+                <title>description</title>
+                <para>
+                During tests flood sometimes uses system PRNG (Pseudo Random
+                Number Generator). For example, this happens when you use 
+                <envar>${=name}</envar> construct. Since numbers returned by
+                PRNG are different for every test, you can have situation in
+                which the same set of URLS has very different results.
+                Consider retrieval of article from database with such url:
+                </para>
+                <screen>
 &lt;url requesttemplate="http://www.example.com/show_art.php?id=${=aid}"/&gt;
-	 </screen>
-	 <para>
-When you run the test for the first time, <envar>aid</envar> evaluates to 6,
-and results in a 20 KB article. However at the second run <envar>aid</envar>
-evaluates to 216 which can trigger a more complex query, or return a larger
-article (say 108 KB). You used the same config, but results are different.
-If you use &lt;seed&gt; element with a fixed value (like 23, 48 or 84) you can
-expect PRNG to generate the same number with every run.
-	 </para>
-      </refsection>
+                </screen>
+                <para>
+                When you run the test for the first time, <envar>aid</envar>
+                evaluates to 6, and results in a 20 KB article. However at the
+                second run <envar>aid</envar> evaluates to 216 which can
+                trigger a more complex query, or return a larger article (say
+                108 KB). You used the same config, but results are different.
+                If you use &lt;seed&gt; element with a fixed value (like 23,
+                48 or 84) you can expect PRNG to generate the same number with
+                every run.
+                </para>
+            </refsection>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;seed&gt;23&lt;/seed&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
 <!-- refentry TEMPLATE, 77 lines
 
-   <refentry id="NAME">
+        <refentry id="NAME">
 
-      <refmeta>
-      <refentrytitle>NAME</refentrytitle>
-      </refmeta>
+            <refmeta>
+                <refentrytitle>NAME</refentrytitle>
+            </refmeta>
 
-      <refnamediv>
-      <refname>NAME</refname>
-      <refpurpose>PURPOSE</refpurpose>
-      </refnamediv>
+            <refnamediv>
+                <refname>NAME</refname>
+                <refpurpose>PURPOSE</refpurpose>
+            </refnamediv>
 
-      <refsynopsisdiv>
-         <title>synopsis</title>
-         <synopsis>&lt;NAME ATTR1="STRING" ATTR2="INTEGER"&gt;</synopsis>
-      </refsynopsisdiv>
+            <refsynopsisdiv>
+                <title>synopsis</title>
+                <synopsis>
+                    &lt;NAME 
+                    ATTR1="STRING" 
+                    ATTR2="INTEGER"&gt;
+                </synopsis>
+            </refsynopsisdiv>
 
-      <refsection>
-         <title>parent elements</title>
-	 <synopsis><link linkend="PARENT">&lt;PARENT&gt;</link></synopsis>
-      </refsection>
+            <refsection>
+                <title>parent elements</title>
+                <synopsis><link linkend="PARENT">&lt;PARENT&gt;</link></synopsis>
+            </refsection>
 
-      <refsection>
-         <title>children elements</title>
-	 <para>none.</para>
-	 OR
-	 <synopsis><link linkend="CHILD">&lt;CHILD&gt;</link></synopsis>
-      </refsection>
+            <refsection>
+                <title>children elements</title>
+                <para>none.</para>
+                OR
+                <synopsis>
+                    <link linkend="CHILD">&lt;CHILD&gt;</link>
+                </synopsis>
+            </refsection>
 
-      <refsection>
-         <title>attributes</title>
-	 <para>none.</para>
-	 OR
-         <informaltable frame="all">
+            <refsection>
+                <title>attributes</title>
+                <para>none.</para>
+                OR
+                <informaltable frame="all">
 
-            <tgroup cols="4" align="left">
-	    <thead>
-	    <row>
-	       <entry>name</entry>
-	       <entry>type</entry>
-	       <entry>description</entry>
-	       <entry>default value</entry>
-	    </row>
-	    </thead>
-	 
-	    <tbody>
-	    <row>
-	       <entry>ATTR</entry>
-	       <entry>TYPE</entry>
-	       <entry>DESCRIPTION</entry>
-	       <entry>VALUE</entry>
-	    </row>
-	    </tbody>
-	    </tgroup>
-	 </informaltable>
+                    <tgroup cols="4" align="left">
 
-      </refsection>
+                    <thead>
+                        <row>
+                            <entry>name</entry>
+                            <entry>type</entry>
+                            <entry>description</entry>
+                            <entry>default value</entry>
+                        </row>
+                    </thead>
+         
+                    <tbody>
+                        <row>
+                            <entry>ATTR</entry>
+                            <entry>TYPE</entry>
+                            <entry>DESCRIPTION</entry>
+                            <entry>VALUE</entry>
+                        </row>
+                    </tbody>
 
-      <refsection>
-         <title>character data</title>
-	 <para>ignored.</para>
-	 OR
-	 <para>DESCRIPTION</para>
-      </refsection>
+                    </tgroup>
 
-      <refsection>
-         <title>description</title>
-	 <para>DESCRIPTION</para>
-      </refsection>
+                </informaltable>
 
-      <refsection>
-         <title>examples</title>
-	 <screen>
+            </refsection>
+
+            <refsection>
+                <title>character data</title>
+                <para>ignored.</para>
+                OR
+                <para>DESCRIPTION</para>
+            </refsection>
+
+            <refsection>
+                <title>description</title>
+                <para>DESCRIPTION</para>
+            </refsection>
+
+            <refsection>
+                <title>examples</title>
+                <screen>
    &lt;NAME&gt;REAL_VALUE&lt;/NAME&gt;
-         </screen>
-      </refsection>
+                </screen>
+            </refsection>
 
-   </refentry>
+        </refentry>
 
-   -->
+-->
 
-   </chapter>
+    </chapter>
 
-   <chapter>
-      <title>Analyzing Flood output</title>
-      <para>This section needs to be written. Volunteers? -- jacekp</para>
-   </chapter>
+    <!-- This section needs to be written. Volunteers? [jacekp] -->
+    <chapter>
+        <title>Analyzing Flood output</title>
+        <para>No information available at this time.</para>
+    </chapter>
 
 </book>
+
