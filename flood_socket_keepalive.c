@@ -96,10 +96,17 @@ apr_status_t keepalive_begin_conn(socket_t *sock, request_t *req, apr_pool_t *po
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
 
     if (ksock->reopen_socket || ksock->s == NULL) {
-        if (strcasecmp(req->parsed_uri->scheme, "https") == 0)
+        if (strcasecmp(req->parsed_uri->scheme, "https") == 0) {
+        /* If we don't have SSL, error out. */
+#if FLOOD_HAS_OPENSSL
             ksock->ssl = 1;
-        else
+#else
+        return APR_ENOTIMPL;
+#endif
+        }
+        else {
             ksock->ssl = 0;
+        }
 
         /* The return types are not identical, so it can't be a ternary
          * operation. */

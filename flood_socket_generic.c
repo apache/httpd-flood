@@ -85,10 +85,17 @@ apr_status_t generic_socket_init(socket_t **sock, apr_pool_t *pool)
 apr_status_t generic_begin_conn(socket_t *sock, request_t *req, apr_pool_t *pool)
 {
     generic_socket_t *gsock = (generic_socket_t *)sock;
-    if (strcasecmp(req->parsed_uri->scheme, "https") == 0)
+    if (strcasecmp(req->parsed_uri->scheme, "https") == 0) {
+        /* If we don't have SSL, error out. */
+#if FLOOD_HAS_OPENSSL
         gsock->ssl = 1;
-    else
+#else
+        return APR_ENOTIMPL;
+#endif
+    }
+    else {
         gsock->ssl = 0;
+    }
 
     /* The return types are not identical, so it can't be a ternary
      * operation. */
