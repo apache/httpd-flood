@@ -829,10 +829,15 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         }
 
         /* Only destroy the socket when we aren't keepalive. */
-        if (!resp->keepalive && 
-            (stat = events->socket_destroy(socket)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "Error cleaning up Socket.\n");
-            return stat;
+        if (!resp->keepalive)
+        {
+            stat = events->socket_destroy(socket);
+            if (stat != APR_SUCCESS)
+            {
+                apr_file_printf(local_stderr, "Error cleaning up Socket.\n");
+                return stat;
+            }
+            socket = NULL;
         }
 
     } while (events->loop_condition(profile));
