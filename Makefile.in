@@ -12,7 +12,7 @@ PROGRAMS = flood
 
 PROGRAM_LDADD        = $(EXTRA_LDFLAGS) $(PROGRAM_DEPENDENCIES) $(EXTRA_LIBS)
 PROGRAM_DEPENDENCIES = @APU_SOURCE@/libaprutil.la \
-	@APR_SOURCE@/libapr.la @APU_SOURCE@/xml/expat/lib/libexpat.la
+	@APR_SOURCE@/libapr.la
 
 include $(top_srcdir)/build/rules.mk
 
