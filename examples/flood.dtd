@@ -1,0 +1,110 @@
+<?xml version="1.0" ?>
+
+<!--
+
+     This is a DTD for flood configuration files.
+     With this file, validating XML software and
+     heading line:
+
+     <!DOCTYPE flood SYSTEM "flood.dtd">
+
+     ...you can make sure your flood configuration
+     is valid (in contrast to just "well-formed").
+
+-->
+
+<!ELEMENT flood (urllist+,profile+,farmer+,farm+,seed?)>
+
+<!-- urllist -->
+<!ELEMENT urllist (name,description?,baseurl?,(url|sequence)+)>
+
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT baseurl (#PCDATA)>
+
+<!ELEMENT url (#PCDATA)>
+
+<!ATTLIST url method (GET | POST | HEAD) #IMPLIED>
+<!ATTLIST url payload CDATA #IMPLIED>
+<!ATTLIST url payloadparam CDATA #IMPLIED>
+<!ATTLIST url payloadparamcount CDATA #IMPLIED>
+<!ATTLIST url payloadtemplate CDATA #IMPLIED>
+<!ATTLIST url responsename CDATA #IMPLIED>
+<!ATTLIST url responsetemplate CDATA #IMPLIED>
+<!ATTLIST url requesttemplate CDATA #IMPLIED>
+<!ATTLIST url requestparamcount CDATA #IMPLIED>
+<!ATTLIST url predelay CDATA #IMPLIED>
+<!ATTLIST url predelayprecision CDATA #IMPLIED>
+<!ATTLIST url postdelay CDATA #IMPLIED>
+<!ATTLIST url postdelayprecision CDATA #IMPLIED>
+<!ATTLIST url user CDATA #IMPLIED>
+<!ATTLIST url password CDATA #IMPLIED>
+
+<!ELEMENT sequence (url+)>
+
+<!ATTLIST sequence sequencename CDATA #REQUIRED>
+<!ATTLIST sequence sequencelist CDATA #REQUIRED>
+
+<!-- profile -->
+
+<!ENTITY % profile.events "(profile_init?,get_next_url?,create_req?,postprocess?,loop_condition?,profile_destroy?)+">
+<!ENTITY % socket.events "(socket_init?,begin_conn?,send_req?,recv_resp?,end_conn?,request_destroy?,response_destroy?,socket_destroy?)+">
+<!ENTITY % report.events "(report_init?,process_stats?,report_stats?,destroy_report?)+">
+
+<!-- FIXME: this declaration doesn't exactly cover the flexibility of profile -->
+
+<!ELEMENT profile (name,(description)?,useurllist,
+                   (profiletype|%profile.events;),
+		   (socket|%socket.events;),
+		   verify_resp,
+		   (report|%report.events;))>
+
+<!ELEMENT useurllist (#PCDATA)>
+<!ELEMENT profiletype (#PCDATA)>
+<!ELEMENT socket (#PCDATA)>
+<!ELEMENT verify_resp (#PCDATA)>
+<!ELEMENT report (#PCDATA)>
+
+<!ELEMENT profile_init (#PCDATA)>
+<!ELEMENT get_next_url (#PCDATA)>
+<!ELEMENT create_req (#PCDATA)>
+<!ELEMENT postprocess (#PCDATA)>
+<!ELEMENT loop_condition (#PCDATA)>
+<!ELEMENT profile_destroy (#PCDATA)>
+
+<!ELEMENT report_init (#PCDATA)>
+<!ELEMENT process_stats (#PCDATA)>
+<!ELEMENT report_stats (#PCDATA)>
+<!ELEMENT destroy_report (#PCDATA)>
+
+<!ELEMENT socket_init (#PCDATA)>
+<!ELEMENT begin_conn (#PCDATA)>
+<!ELEMENT send_req (#PCDATA)>
+<!ELEMENT recv_resp (#PCDATA)>
+<!ELEMENT end_conn (#PCDATA)>
+<!ELEMENT request_destroy (#PCDATA)>
+<!ELEMENT response_destroy (#PCDATA)>
+<!ELEMENT socket_destroy (#PCDATA)>
+
+<!-- farmer -->
+
+<!ELEMENT farmer (name,description?,(count|time),useprofile)>
+
+<!ELEMENT count (#PCDATA)>
+<!ELEMENT time (#PCDATA)>
+<!ELEMENT useprofile (#PCDATA)>
+
+<!-- farm -->
+
+<!ELEMENT farm (name,description?,usefarmer)>
+
+<!ELEMENT usefarmer (#PCDATA)>
+
+<!ATTLIST usefarmer count CDATA #IMPLIED>
+<!ATTLIST usefarmer startcount CDATA #IMPLIED>
+<!ATTLIST usefarmer startdelay CDATA #IMPLIED>
+
+<!-- seed -->
+
+<!ELEMENT seed (#PCDATA)>
+

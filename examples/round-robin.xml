@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE flood SYSTEM "flood.dtd">
 <!-- Hi, I'm a flood config file.  They call me "round-robin.xml"
      I am an example of a "round-robin" configuration.  All of the URLs in
      the urllist "Test Hosts" will be hit in sequential order.  
@@ -63,15 +65,15 @@
          We also have "keepalive" as an option - this option indicates that
          we should attempt to use HTTP Keepalive when available.  -->
     <socket>generic</socket>
+    <!-- Specifies that we will use verify_200 for response verification 
+         This verification step ensures that we received a 2xx or 3xx
+         status code from the server.  -->
+    <verify_resp>verify_200</verify_resp>
     <!-- Specifies that we will use the "relative_times" report generation 
          We also have "easy" - this option is similar to "relative_times",
          but the times posted are absolute instead of relative to the start
          of the request.  -->
     <report>relative_times</report>
-    <!-- Specifies that we will use verify_200 for response verification 
-         This verification step ensures that we received a 2xx or 3xx
-         status code from the server.  -->
-    <verify_resp>verify_200</verify_resp>
 
   </profile>
 

@@ -1,3 +1,5 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE flood SYSTEM "flood.dtd">
 <!-- Hi, I'm a flood config file.  -->
 <flood>
   <!-- A urllist describes which hosts and which methods we want to hit. -->
