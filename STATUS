@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/08/06 23:14:10 $]
+Last modified at [$Date: 2001/08/07 00:25:09 $]
 
 Release:
 
@@ -19,6 +19,10 @@ Other bugs that need fixing:
       make sure to print out a helpful message when this occurs.
       (This is not something that can be detected with a validating
       XML parser, unfortunately.)
+
+    * iPlanet sends "Content-length" - there is a hack in there now
+      to recognize it.  However, all HTTP headers need to be normalized
+      before checking their values.  This isn't easy to do.  Grr.
 
 Other features that need writing:
 
