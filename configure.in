@@ -15,7 +15,7 @@ sinclude(build/find_apr.m4)
 sinclude(build/find_apu.m4)
 
 dnl We need to know our top directory.
-top_builddir=`pwd`
+abs_builddir=`pwd`
 
 dnl Initially, we need no subdirs
 FLOOD_SUBDIRS=""   
@@ -183,7 +183,7 @@ AC_SUBST(hasstrtoll)
 AC_SUBST(hasstrtoq)
 AC_SUBST(flood_has_openssl)
 AC_SUBST(flood_has_devrand)
-AC_SUBST(top_builddir)
+AC_SUBST(abs_builddir)
 
 dnl Required for source compatibility with build/rules.mk of httpd-2.0
 LTFLAGS="--silent"
