@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/29 15:43:07 $]
+Last modified at [$Date: 2001/08/03 04:53:54 $]
 
 Release:
 
@@ -48,12 +48,6 @@ Other features that need writing:
        currently only run one Farmer named "Joe" right now (this will
        be changed so that if you don't have threads, flood will attempt
        to run all Farmers in serial under one process).
-
-    * Timed Farmer
-      A type of farmer that runs for a specified amount of time,
-      instead of a number of iterations. Assumedly it will have to
-      report the number of iterations it ran within that timeframe.
-       Status: Aaron volunteers.
 
     * Collective (Single-host, multiple farms)
       This is a number of Farms that have been fork()ed into child processes.
