@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/08/21 21:08:04 $]
+Last modified at [$Date: 2002/09/06 10:24:42 $]
 
 Release:
 
@@ -15,17 +15,9 @@ RELEASE SHOWSTOPPERS:
 
 Other bugs that need fixing:
 
-    * We get an assertion failure when there is a regexp defined that
-      doesn't match in the response. Instead of relying on assertions,
-      we need to detect this case, print a fatal error message, and quit.
-
     * I get a SIGBUS on Darwin with our examples/round-robin-ssl.xml
       config, on the second URL. I'm using OpenSSL 0.9.6c 21 dec 2001.
       
-    * DNS lookup failures in any <urllist> cause segfault.
-       Justin says: Wow.  Why?
-       Aaron says: Is this still happening? It's been awhile.
-
     * iPlanet sends "Content-length" - there is a hack in there now
       to recognize it.  However, all HTTP headers need to be normalized
       before checking their values.  This isn't easy to do.  Grr.
@@ -59,9 +51,6 @@ Other bugs that need fixing:
       than 5 unique URLs.
 
 Other features that need writing:
-
-    * It would be nice if a url in a urllist could handle basic
-      authentication.
 
     * More analysis and graphing scripts are needed
 
