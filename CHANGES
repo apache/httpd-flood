@@ -1,5 +1,10 @@
 Changes since milestone-02:
 
+* Detect when we have a https URL and don't have SSL support built in.
+  [Justin Erenkrantz]
+
+* Display URL that failed when we get an error.  [Justin Erenkrantz]
+
 * Add support for platforms that do not have threads (or are unusable by APR).
   [Justin Erenkrantz]
 
