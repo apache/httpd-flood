@@ -1,9 +1,10 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/18 03:33:36 $]
+Last modified at [$Date: 2001/07/18 04:27:16 $]
 
 Release:
 
-    milestone-0-1 : Tagged July 11, 2000
+    ASF-transfer:   Released July 17, 2001
+    milestone-0-1:  Tagged July 11, 2001
 
 RELEASE SHOWSTOPPERS:
 
@@ -23,10 +24,10 @@ Other bugs that need fixing:
       does a read into to a char*/heap bucket (what's available now) and 
       the original socket bucket is preserved if we are not at EOS 
       (remember EOS for keepalive isn't signaled with EOF).  
-       Status: We need to figure out what to do for Interplan testing.  I 
-               think we can just hack at read_socket or recv_resp to read 
-               from the socket until it hits EOF.  Roy needs to guide us
-               in the right direction here...
+       Status: We need to figure out what to do for now.  I think we can 
+               just hack at read_socket or recv_resp to read from the 
+               socket until it hits EOF.  Roy needs to guide us in the 
+               right direction here...
 
 Bugs and features that have been fixed:
     Aaron says: "We delete these fixes from STATUS when they are 'verified'."
@@ -118,6 +119,8 @@ Available Patches:
 Open issues:
 
     * Validating XML Parser?
+       Justin says: I don't think we want this.  We want a standalone 
+                    validator.
   
     * Supporting use of installed APR / APR-util
        Justin says: Requires changes to APR/APR-util.
