@@ -1,49 +1,100 @@
-<!-- Hi, I'm a flood config file.  -->
+<!-- Hi, I'm a flood config file.  They call me "round-robin.xml"
+     I am an example of a "round-robin" configuration.  All of the URLs in
+     the urllist "Test Hosts" will be hit in sequential order.  
+     Flood's syntax is XML based.  
+     After compiling flood (./configure && make), you can execute me as:
+     ./flood examples/round-robin.xml
+     (The path to me.)
+     Flood will then output in the format as specified below (relative_times)
+     for each URL that it hits:
+     998951597871780 1389 57420 7960273 7960282 OK  4 http://www.apache.org/
+     The columns are as follows:
+     - Absolute Time in usec that the request was started by flood
+     - Relative Time in usec (to first column) that it took to open the socket
+       to the specified server
+     - Relative Time in usec (to first column) that it took to write the
+       generated request to the server.
+     - Relative Time in usec (to first column) that it took to read the
+       generated response from the server.
+     - Relative Time in usec (to first column) that it took to close the
+       socket.  On a keepalive socket, it may not close the socket.
+     - OK/FAIL indicates what the verification module (in this case, 
+       verify_200) thought of the request.
+     - The thread/process id of the farmer that made the request.
+     - The URL that was hit (without query strings)
+-->
 <flood>
   <!-- A urllist describes which hosts and which methods we want to hit. -->
   <urllist>
     <name>Test Hosts</name>
     <description>A bunch of hosts we want to hit</description>
+    <!-- We first send a POST request to search.apache.org looking for "foo" 
+         Notice the payload attribute - this allows us to specify the POST
+         content.  -->
     <url method="POST" payload="version=2&amp;keyword=foo&amp;results=20&amp;what=apr.apache.org">http://search.apache.org/index.cgi</url>
+    <!-- Then, we perform a HEAD request on www.apache.org -->
     <url method="HEAD">http://www.apache.org/</url>
+    <!-- Then, we retrieve the index page of dev.apache.org -->
     <url method="GET">http://dev.apache.org/</url>
+    <!-- The default method is "GET", so let's get APR's index page. -->
     <url>http://apr.apache.org/</url>
   </urllist>
 
-  <!-- The profile describes how we will hit the urllists. 
+  <!-- The profile describes how we will hit the urllists.  For this
+       example, we execute with the round_robin profile.
        Round robin runs all of the URLs in the urllist in order once. -->
   <profile>
-    <name>RoundRobinProfile</name>
-    <description>Round Robin Configuration</description>
+    <name>Example Profile</name>
+    <description>A Test Round Robin Configuration</description>
 
+    <!-- See above.  This indicates which URLs we will hit.  -->
     <useurllist>Test Hosts</useurllist>
 
     <!-- Specifies that we will use round_robin profile logic -->
     <profiletype>round_robin</profiletype>
-    <!-- Specifies that we will use generic socket logic -->
+    <!-- Specifies that we will use generic socket logic 
+         We also have "keepalive" as an option - this option indicates that
+         we should attempt to use HTTP Keepalive when available.  -->
     <socket>generic</socket>
-    <!-- Specifies that we will use the "easy" report generation -->
-    <report>easy</report>
-    <!-- Specifies that we will use verify_200 for response verification -->
+    <!-- Specifies that we will use the "relative_times" report generation 
+         We also have "easy" - this option is similar to "relative_times",
+         but the times posted are absolute instead of relative to the start
+         of the request.  -->
+    <report>relative_times</report>
+    <!-- Specifies that we will use verify_200 for response verification 
+         This verification step ensures that we received a 2xx or 3xx
+         status code from the server.  -->
     <verify_resp>verify_200</verify_resp>
 
   </profile>
 
-  <!-- A farmer runs one profile a certain number of times.  -->
+  <!-- A farmer runs one profile a certain number of times.  This farmer is
+       called Joe.  -->
   <farmer>
     <name>Joe</name>
-    <!-- run the Joe farmer 5 times -->
+    <!-- We run the Joe farmer 5 times
+         Note that we have the "time" option which indicates for how many
+         seconds a farmer should run.  The "time" and "count" elements are
+         exclusive.  -->
     <count>5</count>
-    <!-- Joe uses this profile -->
-    <useprofile>RoundRobinProfile</useprofile>
+    <!-- Farmer Joe uses this profile -->
+    <useprofile>Example Profile</useprofile>
   </farmer>
 
-  <!-- A farm contains a bunch of farmers - each farmer is a thread.  -->
+  <!-- A farm contains a bunch of farmers - each farmer is an independent 
+       worker (i.e. a thread or child process).  -->
   <farm>
+    <!-- We call our farm "Bingo" - note that the farm must be called Bingo
+         in the current implementation. -->
     <name>Bingo</name>
-    <usefarmer count="5" startdelay="5" startcount="2">Joe</usefarmer>
+    <!-- We will start 5 farmers named Joe.  We will start 2 farmers every 5 
+         seconds.  -->
+    <usefarmer count="5" startcount="2" startdelay="5">Joe</usefarmer>
   </farm>
 
-  <!-- Set the seed to a known value so we can reproduce the same tests -->
-  <seed>23</seed>
+  <!-- Set the seed to a known value so we can reproduce the same tests.
+       Flood uses a seeded PRNG - this allows the tests which use random
+       numbers to be reproduced.  -->
+  <seed>1</seed>
 </flood>
+<!-- That's all folks! -->
