@@ -56,6 +56,7 @@
 
 #include "flood_easy_reports.h"
 #include <apr.h>
+#include <apr_portable.h>
 
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
@@ -73,14 +74,15 @@ apr_status_t easy_report_init(report_t **report, config_t *config,
 apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, response_t *resp)
 {
     if (verified == FLOOD_VALID) {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " OK %s\n", 
-                        apr_time_now(), req->uri);
+        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " OK %d %s\n", 
+                        apr_time_now(), apr_os_thread_current(), req->uri);
     } else if (verified == FLOOD_INVALID) {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " FAIL %s\n", 
-                        apr_time_now(), req->uri);
+        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " FAIL %d %s\n", 
+                        apr_time_now(), apr_os_thread_current(), req->uri);
     } else {
-        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %d %s\n", 
-                        apr_time_now(), verified, req->uri);
+        apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %d %d %s\n", 
+                        apr_time_now(), verified, apr_os_thread_current(), 
+                        req->uri);
     }
 
     return APR_SUCCESS;
@@ -93,6 +95,5 @@ apr_status_t easy_report_stats(report_t *report)
 
 apr_status_t easy_destroy_report(report_t *report)
 {
-    /* FIXME: APR can't free memory, and is lame */
     return APR_SUCCESS;
 }
