@@ -139,7 +139,7 @@ struct response_t {
     /* Raw buffer connection 
      * FIXME: apr_bucket_t? */ 
     buffer_type_e rbuftype;
-    void * rbuf;
+    char *rbuf;
     apr_size_t rbufsize;
 };
 typedef struct response_t response_t;
