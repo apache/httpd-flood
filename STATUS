@@ -1,10 +1,11 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/08/07 00:25:09 $]
+Last modified at [$Date: 2001/08/13 23:47:10 $]
 
 Release:
 
     ASF-transfer:   Released July 17, 2001
-    milestone-0-1:  Tagged July 11, 2001 (tag lost during transfer)
+    milestone-02:  Tagged August 13, 2001
+    milestone-01:  Tagged July 11, 2001 (tag lost during transfer)
 
 RELEASE SHOWSTOPPERS:
 

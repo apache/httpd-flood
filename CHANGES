@@ -1,4 +1,7 @@
-Changes since milestone-0-1:
+Changes since milestone-02:
+
+
+Changes since milestone-01:
 
 * Merge SSL socket code in with the normal socket calls.  flood will
   now determine (based on the protocol scheme) whether it should use
