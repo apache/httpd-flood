@@ -187,6 +187,10 @@ apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
     /* Wait until there is something to read. */
     socketsRead = 1;
     e = apr_poll(s->socket->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+
+    if (socketsRead != 1)
+        return APR_TIMEUP;
+
     e = SSL_read(s->ssl_connection, buf, *buflen);
     sslError = SSL_get_error(s->ssl_connection, e);
 
