@@ -73,27 +73,33 @@ apr_status_t relative_times_report_init(report_t **report, config_t *config,
 
 apr_status_t relative_times_process_stats(report_t *report, int verified, request_t *req, response_t *resp, flood_timer_t *timer)
 {
-    apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %" APR_INT64_T_FMT
-                    " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT,
-                    timer->begin,
-                    timer->connect - timer->begin,
-                    timer->write - timer->begin,
-                    timer->read - timer->begin,
-                    timer->close - timer->begin);
+#define FLOOD_PRINT_BUF 256
+    apr_size_t buflen;
+    char buf[FLOOD_PRINT_BUF];
+
+    buflen = apr_snprintf(buf, FLOOD_PRINT_BUF,
+                          "%" APR_INT64_T_FMT " %" APR_INT64_T_FMT
+                          " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT,
+                          timer->begin,
+                          timer->connect - timer->begin,
+                          timer->write - timer->begin,
+                          timer->read - timer->begin,
+                          timer->close - timer->begin);
 
     switch (verified)
     {
     case FLOOD_VALID:
-        apr_file_printf(local_stdout, " OK ");
+        apr_snprintf(buf+buflen, FLOOD_PRINT_BUF-buflen, " OK ");
         break;
     case FLOOD_INVALID:
-        apr_file_printf(local_stdout, " FAIL ");
+        apr_snprintf(buf+buflen, FLOOD_PRINT_BUF-buflen, " FAIL ");
         break;
     default:
-        apr_file_printf(local_stdout, " %d ", verified);
+        apr_snprintf(buf+buflen, FLOOD_PRINT_BUF-buflen, " %d ", verified);
     }
 
-    apr_file_printf(local_stdout, "%ld %s\n", apr_os_thread_current(), req->uri);
+    /* FIXME: this call may need to be in a critical section */
+    apr_file_printf(local_stdout, "%s %ld %s\n", buf, apr_os_thread_current(), req->uri);
 
     return APR_SUCCESS;
 }
