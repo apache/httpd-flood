@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/06/06 21:06:18 $]
+Last modified at [$Date: 2002/06/08 23:27:50 $]
 
 Release:
 
@@ -15,6 +15,9 @@ RELEASE SHOWSTOPPERS:
 
 Other bugs that need fixing:
 
+    * I get a SIGBUS on Darwin with our examples/round-robin-ssl.xml
+      config, on the second URL. I'm using OpenSSL 0.9.6c 21 dec 2001.
+      
     * DNS lookup failures in any <urllist> cause segfault.
        Justin says: Wow.  Why?
        Aaron says: Is this still happening? It's been awhile.
