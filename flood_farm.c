@@ -294,8 +294,7 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
 #if APR_HAS_THREADS
         if ((stat = apr_thread_join(&child_stat, farm->farmers[i])) != APR_SUCCESS) {
 #else
-        if ((stat = apr_proc_wait(farm->farmers[i],NULL,
-                                  APR_WAIT)) != APR_CHILD_DONE) {
+        if ((stat = apr_proc_wait(farm->farmers[i], NULL, NULL, APR_WAIT)) != APR_CHILD_DONE) {
 #endif
 
             apr_file_printf(local_stderr, "Error joining farmer thread '%d' ('%s').\n",
