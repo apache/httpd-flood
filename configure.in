@@ -14,7 +14,7 @@ AC_PROG_MAKE_SET
 AC_CANONICAL_SYSTEM
 
 AC_ARG_WITH(openssl,
-  [  --with-openssl=PATH     Prefix to openssl],
+  [  --with-openssl=PATH     Path to OpenSSL (eg. /usr/local/ssl)],
 [if test "$withval" = "yes"; then
   AC_MSG_ERROR('option --with-openssl requires a path')
 else
@@ -37,7 +37,7 @@ dnl SSL is disabled by default
 dnl "Export and import restrictions in some countries require that it be
 dnl  disabled by default." See: <20011116151249.B1943@waka.ebuilt.net>
 AC_ARG_ENABLE(ssl,
-  [  --enable-ssl            Disable SSL support (disabled by default)],
+  [  --enable-ssl            Enable SSL support (disabled by default)],
 [enable_ssl=$enableval],
 [enable_ssl=no])
 
