@@ -16,7 +16,7 @@ apr_socket_t* open_socket(apr_pool_t *pool, request_t *r)
         return NULL;
     }
 
-    if ((rv = apr_socket_create(&socket, APR_INET, SOCK_STREAM, APR_INHERIT,
+    if ((rv = apr_socket_create(&socket, APR_INET, SOCK_STREAM,
                                 pool)) != APR_SUCCESS) {
         return NULL;
     }
