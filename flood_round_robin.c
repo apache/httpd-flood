@@ -71,6 +71,7 @@
 
 #include "config.h"
 #include "flood_net.h"
+#include "flood_round_robin.h"
 
 /* On FreeBSD, the return of regexec() is 0 or REG_NOMATCH, and REG_OK is undefined */
 #ifndef REG_OK
@@ -230,7 +231,10 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
     return APR_SUCCESS;
 }
 
-apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, const char *profile_name, apr_pool_t *pool)
+apr_status_t round_robin_profile_init(profile_t **profile,
+                                      config_t *config,
+                                      const char *profile_name,
+                                      apr_pool_t *pool)
 {
     apr_status_t stat;
     int i;
@@ -446,7 +450,7 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
     return APR_SUCCESS;
 }
 
-char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
+static char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
 {
     char *cpy, *cur, *prev, *data, *returnValue, *pattern;
     int size, matchsize;
@@ -481,7 +485,7 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
 #elif FLOOD_USE_RAND48
                 data = apr_psprintf(rp->pool, "%ld", lrand48());
 #elif FLOOD_USE_RANDOM
-                data = apr_psprintf(rp->pool, "%ld", random());
+                data = apr_psprintf(rp->pool, "%ld", (long)random());
 #endif
                 matchsize = match[1].rm_eo - match[1].rm_so - 1;
                 apr_hash_set(rp->state, cur+match[1].rm_so+1, matchsize, data);
@@ -525,12 +529,12 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
     return returnValue;
 }
 
-char *expand_param_string(round_robin_profile_t *rp, char *template)
+static char *expand_param_string(round_robin_profile_t *rp, char *template)
 {
     return handle_param_string(rp, template, 0);
 }
 
-char *parse_param_string(round_robin_profile_t *rp, char *template)
+static char *parse_param_string(round_robin_profile_t *rp, char *template)
 {
     return handle_param_string(rp, template, 1);
 }

@@ -76,7 +76,7 @@ apr_file_t *local_stdin, *local_stdout, *local_stderr;
 /* Should be the new apr_sms_t struct?  Not ready yet.  */
 apr_pool_t *local_pool;
 
-apr_status_t set_seed(config_t *config)
+static apr_status_t set_seed(config_t *config)
 {
     apr_status_t stat;
     struct apr_xml_elem *root_elem, *seed_elem;
@@ -103,6 +103,9 @@ apr_status_t set_seed(config_t *config)
                                 XML_SEED, seed_elem->first_cdata.first->text);
                 return APR_EGENERAL;
             }
+        }
+        else {
+            seed = 1;
         }
     }
 

@@ -519,7 +519,7 @@ static apr_status_t create_profile_events(profile_events_t **events, apr_pool_t 
  * find in the given configuration. Dynamically allocated memory
  * is pulled from the given pool.
  */
-apr_status_t initialize_events(profile_events_t **events, const char * profile_name, config_t *config, apr_pool_t *pool)
+static apr_status_t initialize_events(profile_events_t **events, const char * profile_name, config_t *config, apr_pool_t *pool)
 {
     apr_status_t stat;
     const char **p;
