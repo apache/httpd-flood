@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/08/03 04:53:54 $]
+Last modified at [$Date: 2001/08/06 22:35:38 $]
 
 Release:
 
@@ -14,6 +14,11 @@ Other bugs that need fixing:
 
     * DNS lookup failures in any <urllist> cause segfault.
        Justin says: Wow.  Why?
+
+    * Misformed URLs cause a segfault. When we fix this we should
+      make sure to print out a helpful message when this occurs.
+      (This is not something that can be detected with a validating
+      XML parser, unfortunately.)
 
     * We're cheating a bit at the network level.  read_socket only
       reads what is available at that point in time.  It probably
