@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/08/01 22:28:51 $]
+Last modified at [$Date: 2002/08/21 21:08:04 $]
 
 Release:
 
@@ -14,6 +14,10 @@ RELEASE SHOWSTOPPERS:
     * "Everything needs to work perfectly"
 
 Other bugs that need fixing:
+
+    * We get an assertion failure when there is a regexp defined that
+      doesn't match in the response. Instead of relying on assertions,
+      we need to detect this case, print a fatal error message, and quit.
 
     * I get a SIGBUS on Darwin with our examples/round-robin-ssl.xml
       config, on the second URL. I'm using OpenSSL 0.9.6c 21 dec 2001.
