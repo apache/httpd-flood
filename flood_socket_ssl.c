@@ -74,7 +74,7 @@ apr_status_t ssl_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *pool)
  */
 apr_status_t ssl_end_conn(socket_t *sock, request_t *req, response_t *resp)
 {
-    ssl_socket_state_t *ssock = (ssl_socket_state_t *)socket;
+    ssl_socket_state_t *ssock = (ssl_socket_state_t *)sock;
 
     /* debatable keepalive support */
     ssl_close_socket(ssock->s); 
