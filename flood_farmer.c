@@ -142,18 +142,6 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
 
     /* now run each of the profiles */
     for (i = 0; i < count; i++) {
-        for (j = 0; j < useprofile_count; j++) {
-            if ((stat = run_profile(farmer_pool, config, 
-                                    useprofile_names[j])) != APR_SUCCESS) {
-                return stat;
-            }
-
-            apr_pool_clear(farmer_pool);
-        }
-    }
-
-    /* now run each of the profiles */
-    for (i = 0; i < count; i++) {
         if ((stat = apr_pool_create(&farmer_pool, pool)) != APR_SUCCESS) {
             return stat;
         }
