@@ -9,7 +9,7 @@
     <url method="GET" requesttemplate="${id}" responsetemplate="Prev&lt;/A&gt; &lt;A HREF=&quot;([^&quot;]*)&quot;&gt;" responsename="next" />
     <url method="GET" requestparamcount="1" requesttemplate="http://www.apachelabs.org${next}" />
     <!-- Search google.com for "foo" and go to the first search result. 
-    <url method="GET" responsetemplate="&lt;A HREF=http://([^&quot;]*)&quot;" responsename="foo">http://www.google.com/search?q=foo</url>
+    <url method="GET" responsetemplate="&lt;a href=http://([^&gt;]*)&gt;" responsename="foo">http://www.google.com/search?q=foo</url>
     <url method="GET" requestparamcount="1" requesttemplate="http://${foo}" />
     -->
   </urllist>
