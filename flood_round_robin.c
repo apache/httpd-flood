@@ -788,6 +788,10 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     r->parsed_uri = apr_pcalloc(rp->pool, sizeof(apr_uri_t));
 
     apr_uri_parse(rp->pool, r->uri, r->parsed_uri);
+    if (r->parsed_uri->scheme == NULL || r->parsed_uri->hostname == NULL) {
+        apr_file_printf (local_stderr, "Misformed URL '%s'\n", r->uri);
+        exit (APR_EGENERAL);
+    }                                                                          
     if (!r->parsed_uri->port)
     {
         r->parsed_uri->port = 
