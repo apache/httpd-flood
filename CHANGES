@@ -1,5 +1,8 @@
 Changes since milestone-0-1:
 
+* The seed used for the global pseudo-random number generator
+  can now be set with the <seed>n</seed> tag. [Aaron Bannert]
+
 * Added random pre and post delay. You can also specify a precision
   amount. This means that the actual delay will be:
       actual_delay + (precision * e)

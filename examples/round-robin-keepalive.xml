@@ -59,4 +59,7 @@
     <!-- Create 10 identical Joe farmers executing in parallel. -->
     <usefarmer count="10">Joe</usefarmer>
   </farm>
+
+  <!-- Set the seed to a known value so we can reproduce the same tests -->
+  <seed>23</seed>
 </flood>

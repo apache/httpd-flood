@@ -61,4 +61,7 @@
     <name>Bingo</name>
     <usefarmer count="1">Joe</usefarmer>
   </farm>
+
+  <!-- Set the seed to a known value so we can reproduce the same tests -->
+  <seed>23</seed>
 </flood>

@@ -10,6 +10,7 @@
 #define FLOOD_STRLEN_MAX 256
 
 /* XML symbolic roots to the various objects we define. */
+#define XML_SEED "seed"
 #define XML_URLLIST "urllist"
 #define XML_URLLIST_URL "url"
 #define XML_URLLIST_METHOD "method"

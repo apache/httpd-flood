@@ -55,6 +55,7 @@
  */
 
 #include <stdlib.h>      /* For atexit */
+#include <stdlib.h>      /* For rand()/seed() */
 #include <unistd.h>      /* For pause */
 #include <apr.h>        
 #include <apr_general.h> /* For apr_initialize */
@@ -75,6 +76,41 @@ apr_file_t *local_stdin, *local_stdout, *local_stderr;
 /* Should be the new apr_sms_t struct?  Not ready yet.  */
 apr_pool_t *local_pool;
 
+apr_status_t set_seed(config_t *config)
+{
+    apr_status_t stat;
+    struct apr_xml_elem *root_elem, *seed_elem;
+    char *xml_seed = XML_SEED;
+    unsigned int seed;
+
+    /* get the root config node */
+    if ((stat = retrieve_root_xml_elem(&root_elem, config)) != APR_SUCCESS) {
+        return stat;
+    }
+
+    /* get the seed node from config */
+    if ((stat = retrieve_xml_elem_child(&seed_elem, root_elem, xml_seed)) != APR_SUCCESS) {
+        seed = 1; /* default if not found */
+    }
+    else {
+        if (seed_elem->first_cdata.first && seed_elem->first_cdata.first->text) {
+            char *endptr;
+            seed = (unsigned int) strtoll(seed_elem->first_cdata.first->text,
+                                          &endptr, 10);
+            if (*endptr != '\0') {
+                apr_file_printf(local_stderr,
+                                "XML Node %s has invalid value '%s'.\n",
+                                XML_SEED, seed_elem->first_cdata.first->text);
+                return APR_EGENERAL;
+            }
+        }
+    }
+
+    /* actually set the seed */
+    srand(seed);
+
+    return APR_SUCCESS;
+}
 
 #if HAVE_FORK
 /* FIXME: Add Forking support */
@@ -108,6 +144,14 @@ int main(int argc, char** argv)
 
     /* parse the config */
     config = parse_config(local_stdin, local_pool);
+
+    if ((stat = set_seed(config)) != APR_SUCCESS) {
+        char buf[256];
+        apr_strerror(stat, (char*) &buf, 256);
+        apr_file_printf(local_stderr, "Error running test profile: %s.\n", 
+                        (char*)&buf);
+        exit(-1);
+    }
 
 #if HAVE_FORK
     /* do fork()ing if asked */
