@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/12/03 21:40:38 $]
+Last modified at [$Date: 2001/12/04 09:14:20 $]
 
 Release:
 
@@ -10,9 +10,6 @@ Release:
 RELEASE SHOWSTOPPERS:
 
     * "Everything needs to work perfectly"
-
-    * Need to be able to build without SSL.
-        Status: Complete?
 
 Other bugs that need fixing:
 
