@@ -35,5 +35,5 @@ flood: $(flood_OBJECTS) $(PROGRAM_DEPENDENCIES)
 	$(LINK) $(flood_OBJECTS) $(PROGRAM_LDADD)
 
 # Feel free to add real dependencies. httpd-2.0/build/rules.mk includes $(builddir)/.deps
-.deps:
+$(builddir)/.deps:
 	@touch $@
