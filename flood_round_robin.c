@@ -136,6 +136,7 @@ typedef struct {
 
     int urls;
     url_t *url;
+    char *baseurl;
 
     cookie_t *cookie;
 
@@ -664,7 +665,7 @@ apr_status_t round_robin_profile_init(profile_t **profile,
     apr_status_t rv;
     int i;
     struct apr_xml_elem *root_elem, *profile_elem,
-           *urllist_elem, *count_elem, *useurllist_elem, *e;
+           *urllist_elem, *count_elem, *useurllist_elem, *baseurl_elem, *e;
     round_robin_profile_t *p;
     char *xml_profile, *xml_urllist, *urllist_name;
 
@@ -731,6 +732,15 @@ apr_status_t round_robin_profile_init(profile_t **profile,
              &urllist_elem, root_elem,
              xml_urllist, XML_URLLIST_NAME, urllist_name)) != APR_SUCCESS)
         return rv;
+
+    /* do we have base url? */
+    if ((rv = retrieve_xml_elem_child(
+             &baseurl_elem, urllist_elem, XML_URLLIST_BASE_URL)) == APR_SUCCESS) {
+        /* yes we do */
+        p->baseurl = apr_pstrdup(pool, baseurl_elem->first_cdata.first->text);
+    } else {
+        p->baseurl = NULL;
+    }
 
     p->urls = 0;
     /* Include sequences.  We'll expand them later. */
@@ -827,6 +837,10 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     }
 
     r->parsed_uri = apr_pcalloc(rp->pool, sizeof(apr_uri_t));
+
+    if (rp->baseurl != NULL) {
+        r->uri = apr_pstrcat(rp->pool, rp->baseurl, r->uri, NULL);
+    }
 
     apr_uri_parse(rp->pool, r->uri, r->parsed_uri);
     if (r->parsed_uri->scheme == NULL || r->parsed_uri->hostname == NULL) {
