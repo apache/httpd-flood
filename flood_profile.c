@@ -329,7 +329,7 @@ static apr_status_t assign_profile_event_handler(profile_events_t *events,
 {
     profile_event_handler_t *p;
 
-    for (p = &profile_event_handlers[0]; p; p++) {
+    for (p = &profile_event_handlers[0]; p && (*p).handler_name; p++) {
         /* these are case insensitive (both key and value) for the sake of simplicity */
         if (strncasecmp(impl_name, (*p).impl_name, FLOOD_STRLEN_MAX) == 0) {
             if (strncasecmp(handler_name, (*p).handler_name, FLOOD_STRLEN_MAX) == 0) {
