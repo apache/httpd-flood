@@ -285,10 +285,10 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
             int credlen;
             credtls = apr_pstrcat(r->pool, p->url[p->current_url].user,
                                   ":", p->url[p->current_url].password, NULL);
-            crdlen = strlen(credtls);
+            credlen = strlen(credtls);
             enc_credtls = (char *) apr_palloc(r->pool,
-                                              apr_base64_encode_len(crdlen) + 1);
-            apr_base64_encode(enc_credtls, credtls, crdlen);
+                                              apr_base64_encode_len(credlen) + 1);
+            apr_base64_encode(enc_credtls, credtls, credlen);
             authz_hdr = apr_pstrcat(r->pool, "Authorization: Basic ",
                                     enc_credtls, CRLF, NULL);
         }
