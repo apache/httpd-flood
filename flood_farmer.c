@@ -73,8 +73,9 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
     apr_status_t stat;
     int count, i, j, useprofile_count;
     char *xml_farmer, **useprofile_names;
-    struct apr_xml_elem *e, *root_elem, *farmer_elem, *count_elem;
+    struct apr_xml_elem *e, *root_elem, *farmer_elem, *count_elem, *time_elem;
     apr_pool_t *farmer_pool;
+    apr_time_t stop_time;
 
     apr_file_printf(local_stderr, "Running farmer '%s'.\n",
                     farmer_name);
@@ -112,6 +113,25 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
         }
     }
 
+    /* get timer (optional) */
+    stop_time = -1;
+    stat = retrieve_xml_elem_child(&time_elem, farmer_elem, XML_FARMER_TIME);
+    if (stat == APR_SUCCESS && time_elem->first_cdata.first && 
+        time_elem->first_cdata.first->text) {
+        char *endptr;
+        stop_time = strtoll(time_elem->first_cdata.first->text, 
+                            &endptr, 10);
+        if (*endptr != '\0' || stop_time < 0)
+        {   
+            apr_file_printf(local_stderr,
+                            "Attribute %s has invalid value %s.\n",
+                            XML_FARMER_TIME, 
+                            time_elem->first_cdata.first->text);
+            return APR_EGENERAL;
+        }
+        stop_time *= APR_USEC_PER_SEC;
+    }
+
     /* count the number of "useprofile" children */
     useprofile_count = count_xml_elem_child(farmer_elem, XML_FARMER_USEPROFILE);
 
@@ -136,26 +156,54 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
     }
 
     farmer_pool = pool;
-    if ((stat = apr_pool_create(&farmer_pool, pool)) != APR_SUCCESS) {
-        return stat;
-    }
 
     /* now run each of the profiles */
-    for (i = 0; i < count; i++) {
-        if ((stat = apr_pool_create(&farmer_pool, pool)) != APR_SUCCESS) {
-            return stat;
-        }
-
-        for (j = 0; j < useprofile_count; j++) {
-            if ((stat = run_profile(farmer_pool, config, 
-                                    useprofile_names[j])) != APR_SUCCESS) {
+    if (stop_time == -1)
+    {
+        for (i = 0; i < count; i++) {
+            if ((stat = apr_pool_create(&farmer_pool, pool)) != APR_SUCCESS) {
                 return stat;
             }
 
-            apr_pool_clear(farmer_pool);
-        }
+            for (j = 0; j < useprofile_count; j++) {
+                if ((stat = run_profile(farmer_pool, config, 
+                                        useprofile_names[j])) != APR_SUCCESS) {
+                    return stat;
+                }
 
-        apr_pool_destroy(farmer_pool);
+                apr_pool_clear(farmer_pool);
+            }
+
+            apr_pool_destroy(farmer_pool);
+        }
+    }
+    else
+    {
+        apr_time_t time;
+        time = apr_time_now();
+        stop_time += time;
+        
+        while (1)
+        {
+            time = apr_time_now();
+            if (stop_time <= time || time >= stop_time)
+                break;
+            
+            if ((stat = apr_pool_create(&farmer_pool, pool)) != APR_SUCCESS) {
+                return stat;
+            }
+
+            for (j = 0; j < useprofile_count; j++) {
+                if ((stat = run_profile(farmer_pool, config, 
+                                        useprofile_names[j])) != APR_SUCCESS) {
+                    return stat;
+                }
+
+                apr_pool_clear(farmer_pool);
+            }
+
+            apr_pool_destroy(farmer_pool);
+        }
     }
 
     return APR_SUCCESS;

@@ -1,5 +1,8 @@
 Changes since milestone-0-1:
 
+* A farmer may now be run for an arbitrary amount of time (specified in
+  seconds) rather than a specific number of requests.  [Justin Erenkrantz]
+
 * The seed used for the global pseudo-random number generator
   can now be set with the <seed>n</seed> tag. [Aaron Bannert]
 

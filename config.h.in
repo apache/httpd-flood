@@ -33,6 +33,7 @@
 #define XML_FARMER "farmer"
 #define XML_FARMER_NAME "name"
 #define XML_FARMER_COUNT "count"
+#define XML_FARMER_TIME "time"
 #define XML_FARMER_USEPROFILE "useprofile"
 #define XML_FARM "farm"
 #define XML_FARM_NAME "name"
@@ -50,6 +51,6 @@
 /* FIXME: replace the apr_recv logic with something sane. */
 #define MAX_DOC_LENGTH 8192
 
-#define LOCAL_SOCKET_TIMEOUT 3 * APR_USEC_PER_SEC
+#define LOCAL_SOCKET_TIMEOUT 15 * APR_USEC_PER_SEC
 
 #endif  /* __config_h */
