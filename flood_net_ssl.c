@@ -93,9 +93,13 @@ static CRYPTO_dynlock_value *ssl_dyn_create(const char* file, int line)
 
     l = apr_palloc(ssl_pool, sizeof(CRYPTO_dynlock_value));
 #ifdef USE_RW_LOCK_FOR_SSL 
-    apr_lock_create(&l->lock, APR_READWRITE, APR_INTRAPROCESS, NULL, ssl_pool);
+    /* Intraprocess locks don't /need/ a filename... */
+    apr_lock_create(&l->lock, APR_READWRITE, APR_INTRAPROCESS,
+                    APR_LOCK_DEFAULT, NULL, ssl_pool);
 #else
-    apr_lock_create(&l->lock, APR_MUTEX, APR_INTRAPROCESS, NULL, ssl_pool);
+    /* Intraprocess locks don't /need/ a filename... */
+    apr_lock_create(&l->lock, APR_MUTEX, APR_INTRAPROCESS,
+                    APR_LOCK_DEFAULT, NULL, ssl_pool);
 #endif
     return l;
 }
@@ -197,7 +201,7 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
     OpenSSL_add_ssl_algorithms();
     SSL_load_error_strings();
     ERR_load_crypto_strings();
-#if !FLOOD_HAS_DEVRAND
+#if ! FLOOD_HAS_DEVRAND
     load_rand();
 #endif
 
@@ -207,11 +211,13 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
     for (i = 0; i < numlocks; i++)
     {
 #ifdef USE_RW_LOCK_FOR_SSL 
-        apr_lock_create(&ssl_locks[i], APR_READWRITE, APR_INTRAPROCESS, NULL, 
-                        ssl_pool);
+        /* Intraprocess locks don't /need/ a filename... */
+        apr_lock_create(&ssl_locks[i], APR_READWRITE, APR_INTRAPROCESS,
+                        APR_LOCK_DEFAULT, NULL, ssl_pool);
 #else
-        apr_lock_create(&ssl_locks[i], APR_MUTEX, APR_INTRAPROCESS, NULL, 
-                        ssl_pool);
+        /* Intraprocess locks don't /need/ a filename... */
+        apr_lock_create(&ssl_locks[i], APR_MUTEX, APR_INTRAPROCESS,
+                        APR_LOCK_DEFAULT, NULL, ssl_pool);
 #endif
     }
 
