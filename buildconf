@@ -3,12 +3,12 @@ autoconf
 
 if [ -d ./apr ] ; then
   cd apr
-  buildconf
+  ./buildconf
   cd ..
 fi
 
 if [ -d ./apr-util ] ; then
   cd apr-util
-  buildconf
+  ./buildconf
   cd ..
 fi
