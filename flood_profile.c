@@ -66,6 +66,8 @@ static apr_status_t generic_send_req(socket_t **sock, request_t *req, apr_pool_t
  */
 static apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *pool)
 {
+    char b[MAX_DOC_LENGTH];
+    int i;
     response_t *new_resp;
     apr_status_t status;
 
@@ -73,16 +75,18 @@ static apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_poo
 
     new_resp = apr_pcalloc(pool, sizeof(response_t));
     new_resp->rbuftype = POOL;
-    new_resp->rbufsize = MAX_DOC_LENGTH;
-    new_resp->rbuf = apr_pcalloc(pool, new_resp->rbufsize+1);
-       /* XXX: Why +1? if MAX_DOC_LENGTH is a multiple
-          of this OS's pagesize, then you'll end
-          up triggering an extra page allocation. -aaron */
+    new_resp->rbufsize = MAX_DOC_LENGTH - 1;
+    new_resp->rbuf = apr_pcalloc(pool, new_resp->rbufsize);
 
     status = read_socket(s, new_resp->rbuf, &new_resp->rbufsize);
 
     if (status != APR_SUCCESS && status != APR_EOF) {
         return status;
+    }
+
+    while (status != APR_EOF) {
+        i = MAX_DOC_LENGTH - 1;
+        status = read_socket(s, b, &i);
     }
 
     *resp = new_resp;
