@@ -1,5 +1,13 @@
-
 Changes since milestone-0-1:
+
+* Add group shortcuts when defining a profile.  The following syntaxes are
+  now valid:
+    <report>easy</report>,<report>simple</report>
+    <socket>generic</socket>,<socket>ssl</socket>,<socket>keepalive</socket>
+    <profiletype>round_robin</profiletype>
+  These tags will now setup the functions for this "group."  You do not need
+  to know the function names anymore (although the old syntax is still valid).
+  [Justin Erenkrantz]
 
 * Profile events are now split into logical "groups". A "group"
   is a bunch of functions that all need to be overriden together

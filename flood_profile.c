@@ -83,6 +83,13 @@ struct profile_event_handler_t {
 };
 typedef struct profile_event_handler_t profile_event_handler_t;
 
+struct profile_group_handler_t {
+    const char *class;
+    const char *group_name;
+    const char **handlers;
+};
+typedef struct profile_group_handler_t profile_group_handler_t;
+
 /**
  * Generic implementation for profile_init.
  */
@@ -191,8 +198,6 @@ static apr_status_t generic_profile_destroy(profile_t *p)
     return APR_SUCCESS;
 }
 
-
-
 const char * profile_event_handler_names[] = {
     "profile_init",
     "report_init",
@@ -281,6 +286,30 @@ profile_event_handler_t profile_event_handlers[] = {
     {NULL} /* sentinel value */
 };
 
+const char * profile_group_handler_names[] = {
+    "report",
+    "socket",
+    "profiletype",
+    NULL
+};
+
+const char * report_easy_group[] = { "easy_report_init", "easy_process_stats", "easy_report_stats", "easy_destroy_report", NULL };
+const char * report_simple_group[] = { "simple_report_init", "simple_process_stats", "simple_report_stats", "simple_destroy_report", NULL };
+const char * socket_generic_group[] = { "generic_socket_init", "generic_begin_conn", "generic_send_req", "generic_recv_resp", "generic_end_conn", "generic_socket_destroy", NULL };
+const char * socket_ssl_group[] = { "ssl_socket_init", "ssl_begin_conn", "ssl_send_req", "ssl_recv_resp", "ssl_end_conn", "ssl_socket_destroy", NULL };
+const char * socket_keepalive_group[] = { "keepalive_socket_init", "keepalive_begin_conn", "keepalive_send_req", "keepalive_recv_resp", "keepalive_end_conn", "keepalive_socket_destroy", NULL };
+const char * profile_round_robin_group[] = { "round_robin_profile_init", "round_robin_get_next_url", "round_robin_create_req", "round_robin_postprocess", "round_robin_loop_condition", "round_robin_profile_destroy", NULL };
+
+profile_group_handler_t profile_group_handlers[] = {
+    {"report", "easy", report_easy_group },
+    {"report", "simple", report_simple_group },
+    {"socket", "generic", socket_generic_group },
+    {"socket", "ssl", socket_ssl_group },
+    {"socket", "keepalive", socket_keepalive_group },
+    {"profiletype", "round_robin", profile_round_robin_group },
+    {NULL}
+};
+
 /**
  * Assign the appropriate implementation to the profile_events_t handler
  * for the given function name and overriden function name.
@@ -352,6 +381,42 @@ static apr_status_t assign_profile_event_handler(profile_events_t *events,
         }
     }
     return APR_ENOTIMPL; /* no implementation found */
+}
+
+/**
+ * Assign all functions listed in the group to the profile_events_t handler
+ * Returns APR_SUCCESS if an appropriate handler was found and assigned, or
+ * returns APR_NOTFOUND if no match was found.
+ */
+static apr_status_t assign_profile_group_handler(profile_events_t *events,
+                                                 const char *class_name,
+                                                 const char *group_name)
+{
+    profile_event_handler_t *p;
+    profile_group_handler_t *g;
+    const char **handlers;
+
+    /* Find our group. */
+    for (g = &profile_group_handlers[0]; g && g->class; g++) 
+    {
+        if (!strncasecmp(class_name, g->class, FLOOD_STRLEN_MAX) &&
+            !strncasecmp(group_name, g->group_name, FLOOD_STRLEN_MAX))
+            break;
+    }
+
+    if (!g)
+        return APR_NOTFOUND;
+
+    /* For all of the handlers, set them. */
+    for (handlers = g->handlers; *handlers; handlers++)
+    {
+        for (p = profile_event_handlers; p && p->handler_name; p++) {
+            if (!strncasecmp(p->impl_name, *handlers, FLOOD_STRLEN_MAX))
+                assign_profile_event_handler(events, p->handler_name, 
+                                             p->impl_name);
+        }
+    }
+    return APR_SUCCESS;
 }
 
 /**
@@ -476,6 +541,21 @@ apr_status_t initialize_events(profile_events_t **events, const char * profile_n
              &profile_elem, root_elem,
              xml_profile, "name", profile_name)) != APR_SUCCESS)
         return stat;
+
+    /* For each event in the profile_events_t struct, allow the config
+     * parameters to override an implementation.
+     */
+    for (p = &profile_group_handler_names[0]; *p; p++) {
+        stat = retrieve_xml_elem_child(&profile_event_elem, profile_elem, *p);
+        /* We found a match */
+        if (stat == APR_SUCCESS)
+        {
+            stat = assign_profile_group_handler(new_events, *p,
+                   profile_event_elem->first_cdata.first->text);
+            if (stat != APR_SUCCESS)
+                return stat;
+        }
+    }
 
     /* For each event in the profile_events_t struct, allow the config
      * parameters to override an implementation.
