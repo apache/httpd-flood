@@ -78,14 +78,14 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r,
     }
 
     if ((rv = apr_socket_create(&fs->socket, APR_INET, SOCK_STREAM,
-                                pool)) != APR_SUCCESS) {
+                                APR_PROTO_TCP, pool)) != APR_SUCCESS) {
         if (status) {
             *status = rv;
         }
         return NULL;
     }
 
-    if ((rv = apr_connect(fs->socket, destsa)) != APR_SUCCESS) {
+    if ((rv = apr_socket_connect(fs->socket, destsa)) != APR_SUCCESS) {
         if (APR_STATUS_IS_EINPROGRESS(rv)) {
             /* FIXME: Handle better */
             close_socket(fs);
@@ -115,7 +115,7 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r,
         }
     }
 
-    apr_setsocketopt(fs->socket, APR_SO_TIMEOUT, LOCAL_SOCKET_TIMEOUT);
+    apr_socket_opt_set(fs->socket, APR_SO_TIMEOUT, LOCAL_SOCKET_TIMEOUT);
     fs->read_pollset.desc_type = APR_POLL_SOCKET;
     fs->read_pollset.desc.s = fs->socket;
     fs->read_pollset.reqevents = APR_POLLIN;
@@ -139,7 +139,7 @@ apr_status_t read_socket(flood_socket_t *s, char *buf, int *buflen)
     e = apr_poll(&s->read_pollset, 1, &socketsRead, LOCAL_SOCKET_TIMEOUT);
     if (e != APR_SUCCESS)
         return e;
-    return apr_recv(s->socket, buf, buflen);
+    return apr_socket_recv(s->socket, buf, buflen);
 }
 
 apr_status_t write_socket(flood_socket_t *s, request_t *r)
@@ -149,7 +149,7 @@ apr_status_t write_socket(flood_socket_t *s, request_t *r)
 
     l = r->rbufsize;
 
-    e = apr_send(s->socket, r->rbuf, &l);
+    e = apr_socket_send(s->socket, r->rbuf, &l);
 
     /* FIXME: Better error and allow restarts? */
     if (l != r->rbufsize)
