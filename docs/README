@@ -1,0 +1,66 @@
+
+* How to build flood documentation
+
+1. Get DocBook DTD and XSL
+
+   For DTD go to:
+
+      http://www.oasis-open.org/docbook/xml/
+
+   ...and download recent DocBook DTD (v4.2 at the time of writting).
+
+   For XSL part go to:
+
+      http://sourceforge.net/projects/docbook/
+
+   and download recent docbook-xsl (1.61.3 at the time of writting).
+
+   Unpack tarballs and move to suitable directory. Most Linux distros use
+   /usr/share/sgml/docbook for that, but it can be anywhere.
+
+   To make things simple, please declare enviroment variable DOCBOOK, that
+   points to XSL root directory.
+
+2. Get recent toolchain
+
+   You'll need decent XSLT procesor, since DocBook stylesheets are complex.
+   Just pick one:
+
+   Xalan	-- http://xml.apache.org/xalan-j/
+   Saxon	-- http://saxon.sf.net/
+   xsltproc	-- http://www.xmlsoft.org/
+   sablotron	-- http://www.gingerall.org/charlie/ga/xml/p_sab.xml
+   XT		-- http://www.jclark.com/xml/xt.html
+   
+   Author of this document uses xsltproc most of the time, and because
+   of that Makefile is tailored at this software. If you happen to like
+   other XSLT engine -- please post a patch.
+
+3. Change DTD location
+
+   Source XML file (docbook/flood.xml) needs to be tweaked a bit. You have
+   to change DTD location there (which reflects my development enviroment)
+   to match your system. Just edit line number 2 with your favourite editor.
+
+3. Translate files
+
+   Just use your XSLT engine. Feed it:
+
+   1. DocBook source -- docbook/flood.xml
+   2. DocBook XSL -- $DOCBOOK/xhtml/chunked.xsl
+
+   Of course, you can substitute another format instead of xhtml. Look at XSL
+   root directory to see what formats are available.
+
+4. Read docs, find bugs, post patches
+
+   You might look for FIXME strings in XML source if you need an issue to
+   work on. When adding new configration element, look for template near end
+   of XML source.
+
+   You might find following resources handy when preparing patches:
+
+   http://www.docbook.org/tdg/
+   http://www.dpawson.co.uk/docbook/
+   http://docbook.org/wiki/
+
