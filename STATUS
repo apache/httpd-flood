@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/06/06 07:52:52 $]
+Last modified at [$Date: 2002/06/06 21:06:18 $]
 
 Release:
 
@@ -56,7 +56,7 @@ Other bugs that need fixing:
 
 Other features that need writing:
 
-    * It would be nice of a url in a urllist could handle basic
+    * It would be nice if a url in a urllist could handle basic
       authentication.
 
     * More analysis and graphing scripts are needed
