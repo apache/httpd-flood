@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/19 23:39:59 $]
+Last modified at [$Date: 2001/07/24 06:45:19 $]
 
 Release:
 
@@ -9,10 +9,6 @@ Release:
 RELEASE SHOWSTOPPERS:
 
     * "Everything needs to work perfectly"
-
-    * A patch must be applied to update the APR thread routines
-      for use with flood. The patch is available at:
-      http://www.apache.org/~aaron/apr-thread.patch
 
 Other bugs that need fixing:
 

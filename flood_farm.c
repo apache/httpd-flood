@@ -85,16 +85,14 @@ typedef struct farmer_worker_info_t farmer_worker_info_t;
  * Worker function that is assigned to a thread. Each worker is
  * called a farmer in our system.
  */
-void * APR_THREAD_FUNC farmer_worker(apr_thread_param_t *parms)
+void * APR_THREAD_FUNC farmer_worker(apr_thread_t *thd, void *data)
 {
     apr_status_t stat;
     apr_pool_t *pool;
-    apr_thread_t *thread;
     farmer_worker_info_t *info;
 
-    thread = parms->t;
-    info = parms->data;
-    pool = (*info->thr)->cntxt;
+    info = (farmer_worker_info_t *)data;
+    pool = apr_thread_pool_get(thd);
 
     /* should we create a subpool here? */
     apr_file_printf(local_stdout, "Starting farmer_worker thread '%s'.\n",
@@ -109,7 +107,9 @@ void * APR_THREAD_FUNC farmer_worker(apr_thread_param_t *parms)
         /* just die for now, later try to return status */
     }
 
-    apr_thread_exit(thread, APR_SUCCESS);
+#if 0 /* this gets uncommented after apr_thread_exit() fixes are commited */
+    apr_thread_exit(thd, APR_SUCCESS);
+#endif
     return NULL;
 }
 
