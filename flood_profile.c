@@ -402,8 +402,11 @@ static apr_status_t assign_profile_group_handler(profile_events_t *events,
             break;
     }
 
-    if (!g)
-        return APR_NOTFOUND;
+    if (!g->class) {
+        apr_file_printf(local_stderr, "Invalid class '%s' or groupname '%s'.\n",
+                        class_name, group_name);
+        return APR_EGENERAL;
+    }
 
     /* For all of the handlers, set them. */
     for (handlers = g->handlers; *handlers; handlers++)
