@@ -878,7 +878,7 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     if (!r->parsed_uri->port)
     {
         r->parsed_uri->port = 
-                         apr_uri_default_port_for_scheme(r->parsed_uri->scheme);
+                         apr_uri_port_of_scheme(r->parsed_uri->scheme);
     }
     if (!r->parsed_uri->path) /* If / is not there, be nice.  */
         r->parsed_uri->path = "/";
