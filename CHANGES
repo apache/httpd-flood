@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Added error handling for failed config-file open.
+  [Phi-Long Tran <ptran@pobox.com>]
+
 * Fix Win32 crash resulting from strtoll() macro
   [Phi-Long Tran <ptran@pobox.com>]
 
