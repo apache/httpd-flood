@@ -136,10 +136,6 @@ SOURCE=.\flood_socket_generic.c
 
 SOURCE=.\flood_socket_keepalive.c
 # End Source File
-# Begin Source File
-
-SOURCE=.\flood_test.c
-# End Source File
 # End Group
 # Begin Group "includes"
 
