@@ -369,10 +369,12 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
 {
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
     char *cl, *ecl, cls[17];
+    char *current_line;
     int i;
     response_t *new_resp;
     apr_status_t status;
     long content_length = 0, chunk_length;
+    const char *header;
 
     new_resp = apr_pcalloc(pool, sizeof(response_t));
     new_resp->rbuftype = POOL;
@@ -386,28 +388,51 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     }
 
     /* FIXME: Assume we got the full header for now. */
-    /* FIXME: Make case-insensitive */
+    new_resp->headers = apr_table_make(pool, 25);
+    current_line = new_resp->rbuf;
+    do {
+        char *end_of_line, *header_end, *header_key, *header_val;
+        int line_length, key_length;
+
+        end_of_line = strstr(current_line, CRLF);
+        if (!end_of_line || end_of_line == current_line) {
+            break;
+        }
+        line_length = end_of_line - current_line;
+
+        header_end = memchr(current_line, ':', line_length);
+        if (header_end) {
+            key_length = header_end - current_line;
+ 
+            header_key = apr_pstrmemdup(pool, current_line, key_length);
+            header_val = apr_pstrmemdup(pool, current_line + key_length + 2,
+                                        line_length - key_length - 2);
+            apr_table_set(new_resp->headers, header_key, header_val);
+        }
+        current_line += line_length + sizeof(CRLF) - 1;
+    }
+    while((current_line - new_resp->rbuf) < new_resp->rbufsize);
 
     /* If this exists, we aren't keepalive anymore. */
-    cl = strstr(new_resp->rbuf, "Connection: Close" CRLF);
-    if (cl) {
+    header = apr_table_get(new_resp->headers, "Connection");
+    if (header && !strcasecmp(header, "Close")) {
         new_resp->keepalive = 0; 
     }
     else {
         new_resp->keepalive = 1; 
     }
  
-    cl = strstr(new_resp->rbuf, "Transfer-Encoding: Chunked" CRLF);
-    if (cl)
+    header = apr_table_get(new_resp->headers, "Transfer-Encoding");
+    if (header && !strcasecmp(header, "Chunked"))
     {
         new_resp->chunked = 1;
         new_resp->chunk = NULL;
         /* Find where headers ended */
-        cl = strstr(new_resp->rbuf, CRLF CRLF);
+        cl = current_line;
 
         if (cl) {
             /* Skip over the CRLF chars */
-            cl += 4;
+            cl += sizeof(CRLF)-1;
         }
 
         /* We have a partial chunk and we aren't at the end. */
@@ -456,21 +481,16 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     }
     else
     {
-        cl = strstr(new_resp->rbuf, "Content-Length: ");
-        if (!cl)
+        header = apr_table_get(new_resp->headers, "Content-Length");
+        if (!header)
         {
-            /* Netscape sends this.  It is technically correct as the header
-             * may be mixed-case - we should be case-insensitive.  But,
-             * that gets mighty expensive. */
-            cl = strstr(new_resp->rbuf, "Content-length: "); 
-            if (!cl)
-                new_resp->keepalive = 0; 
+            new_resp->keepalive = 0; 
         }
 
-        if (cl)
+        if (header)
         {
-            cl += sizeof("Content-Length: ") - 1;
-            ecl = strstr(cl, CRLF);
+            cl = (char*)header;
+            ecl = cl + strlen(cl);
             if (ecl && ecl - cl < 16)
             {
                 strncpy(cls, cl, ecl - cl);
@@ -484,13 +504,13 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
         if (new_resp->keepalive)
         {
             /* Find where we ended */
-            ecl = strstr(new_resp->rbuf, CRLF CRLF);
+            ecl = current_line;
 
             /* We didn't get full headers.  Crap. */
             if (!ecl)
                 new_resp->keepalive = 0; 
             {
-                ecl += sizeof(CRLF CRLF) - 1;
+                ecl += sizeof(CRLF) - 1;
                 content_length -= new_resp->rbufsize - (ecl - (char*)new_resp->rbuf);
             } 
         }

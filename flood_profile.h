@@ -58,6 +58,7 @@
 #define __profile_h
 
 #include <apr_network_io.h> /* Required for apr_socket_t */
+#include <apr_tables.h>     /* Required for apr_table_t */
 #include <apr_pools.h>
 #include <apr_uri.h>
 
@@ -141,6 +142,8 @@ struct response_t {
     buffer_type_e rbuftype;
     char *rbuf;
     apr_size_t rbufsize;
+
+    apr_table_t *headers;
 };
 typedef struct response_t response_t;
 
