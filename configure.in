@@ -30,17 +30,7 @@ else
   dnl Prefix these to the list, so they override env var settings
   CPPFLAGS="-I${fl_openssl_prefix}/include $CPPFLAGS"
   dnl We may need to also include $fl_openssl_prefix/openssl
-  LDFLAGS="-L${fl_openssl_prefix}/lib $LDFLAGS"
-
-  case "$host" in
-    *-solaris2*)
-        LDFLAGS="$LDFLAGS -R${fl_openssl_prefix}/lib"
-        ;;
-    *linux*)
-        LDFLAGS="$LDFLAGS -rpath ${fl_openssl_prefix}/lib"
-        ;;
-  esac
-
+  LDFLAGS="-L${fl_openssl_prefix}/lib $LDFLAGS -R${fl_openssl_prefix}/lib"
 fi])
 
 dnl SSL is disabled by default
