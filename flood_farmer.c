@@ -157,8 +157,6 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
         }
     }
 
-    farmer_pool = pool;
-
     /* now run each of the profiles */
     if (stop_time == -1)
     {
