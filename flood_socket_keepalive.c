@@ -54,11 +54,20 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "config.h"
 #include "flood_net.h"
 #include "flood_net_ssl.h"
 #include "flood_socket_keepalive.h"
+
+#define ksock_read_socket(ksock, buf, lenaddr) \
+    ksock->ssl ? ssl_read_socket(ksock->s, buf, lenaddr) : \
+                 read_socket(ksock->s, buf, lenaddr)
+
+#define ksock_write_socket(ksock, req) \
+    ksock->ssl ? ssl_write_socket(ksock->s, req) : \
+                 write_socket(ksock->s, req)
 
 typedef struct {
     void *s;
@@ -135,6 +144,148 @@ apr_status_t keepalive_send_req(socket_t *sock, request_t *req, apr_pool_t *pool
                         write_socket(ksock->s, req);
 }
 
+static long keepalive_read_chunk_size(char *begin_chunk)
+{
+    char chunk[17], *end_chunk;
+    long chunk_length;
+
+    /* FIXME: Handle chunk-extension */
+    end_chunk = strstr(begin_chunk, CRLF);
+
+    if (end_chunk && end_chunk - begin_chunk < 16)
+    {
+        strncpy(chunk, begin_chunk, end_chunk - begin_chunk);
+        chunk[end_chunk-begin_chunk] = '\0';
+        /* Chunks are base-16 */
+        chunk_length = strtol(chunk, &end_chunk, 16);
+        if (*end_chunk == '\0')
+            return chunk_length;
+    }
+
+    return 0;
+}
+
+static apr_status_t keepalive_read_chunk(response_t *resp,
+                                         keepalive_socket_t *sock,
+                                         int chunk_length,
+                                         char **bp, int blen)
+{
+    apr_status_t status = APR_SUCCESS;
+    int old_length;
+
+    if (!chunk_length) {
+        return status;
+    }
+
+    if (!resp->chunk || !*resp->chunk) {
+        chunk_length = 0;
+    }
+
+    if (chunk_length < 0) {
+        old_length = chunk_length;
+        chunk_length = 0;
+    }
+
+    do {
+        /* Sentinel value */
+        int i = 0;
+        char *start_chunk, *end_chunk, *b;
+
+        /* Always reset the b. */
+        b = *bp;
+
+        /* Time to read the next chunk size.  At this point,
+         * we should be ready to read a CRLF followed by
+         * a line that contains the next chunk size.
+         */
+        while (!chunk_length)
+        {
+            /* We are reading the next chunk and see a CRLF. */
+            if (i >= 2 && b[0] == '\r' && b[1] == '\n') {
+                b += 2;
+                i -= 2;
+            }
+
+            /* Do we need to read? */
+            /* FIXME: We *could* miss a chunk. */
+            if (!i)
+            {
+                /* Read as much as we can. */
+                i = blen - 1;
+                b = *bp;
+                status = ksock_read_socket(sock, b, &i);
+                if (status != APR_SUCCESS) {
+                    return status;
+                }
+
+                /* We got caught in the middle of a chunk last time. */ 
+                if (old_length < 0) {
+                    b -= old_length;
+                    i += old_length;
+                    old_length = 0;
+                }
+                /* We are reading the next chunk and see a CRLF. */
+                if (i >= 2 && b[0] == '\r' && b[1] == '\n') {
+                    b += 2;
+                    i -= 2;
+                }
+            }
+
+            start_chunk = b;
+            chunk_length = keepalive_read_chunk_size(start_chunk);
+
+            /* last-chunk */
+            if (!chunk_length)
+            {
+                /* See if we already read the trailer and final CRLF */
+                end_chunk = strstr(b, CRLF CRLF);
+                if (!end_chunk)
+                {
+                    /* Read as much as we can. */
+                    i = blen - 1;
+                    b = *bp;
+                    status = ksock_read_socket(sock, b, &i);
+                    if (status == APR_EGENERAL || status == APR_EOF || 
+                        status == APR_TIMEUP)
+                        return status;
+                }
+
+                /* FIXME: If we add pipelining, we need to put
+                 * the remainder back so that it can be read. */
+                i -= end_chunk - b + 4;
+
+                return APR_SUCCESS;
+            }
+
+            /* If this fails, we're very unlikely to have read a chunk! */
+            end_chunk = strstr(start_chunk, CRLF) + 2;
+            i -= end_chunk - b;
+
+            /* Oh no, we read more than one chunk this go-around! */
+            if (chunk_length <= i) {
+                b += chunk_length + (end_chunk - b);
+                i -= chunk_length;
+                chunk_length = 0;
+            }
+            else
+                chunk_length -= i;
+        }
+
+        if (chunk_length > blen)
+            i = blen;
+        else
+            i = chunk_length;
+
+        status = ksock_read_socket(sock, b, &i);
+
+        chunk_length -= i;
+    }
+    while (status != APR_EGENERAL && status != APR_EOF && 
+           status != APR_TIMEUP);
+
+    return APR_SUCCESS;
+}
+
 static apr_status_t keepalive_load_resp(response_t *resp, 
                                         keepalive_socket_t *sock,
                                         apr_size_t remaining, apr_pool_t *pool)
@@ -172,8 +323,7 @@ static apr_status_t keepalive_load_resp(response_t *resp,
                 i = remaining;
         }
 
-        status = sock->ssl ? ssl_read_socket(sock->s, b, &i) : 
-                             read_socket(sock->s, b, &i);
+        status = ksock_read_socket(sock, b, &i);
         if (resp->rbufsize + i > currentalloc)
         {
             /* You can think why this always work. */
@@ -189,7 +339,8 @@ static apr_status_t keepalive_load_resp(response_t *resp,
         cp += i;
         remaining -= i;
     }
-    while (status != APR_EGENERAL && status != APR_EOF && status != APR_TIMEUP && (!remain || remaining));
+    while (status != APR_EGENERAL && status != APR_EOF && 
+           status != APR_TIMEUP && (!remain || remaining));
 
     return status;
 }
@@ -200,73 +351,137 @@ static apr_status_t keepalive_load_resp(response_t *resp,
 apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *pool)
 {
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
-    char b[MAX_DOC_LENGTH], *cl, *ecl, cls[17];
+    char *cl, *ecl, cls[17];
     int i;
     response_t *new_resp;
     apr_status_t status;
-    long content_length = 0;
+    long content_length = 0, chunk_length;
 
     new_resp = apr_pcalloc(pool, sizeof(response_t));
     new_resp->rbuftype = POOL;
     new_resp->rbufsize = MAX_DOC_LENGTH - 1;
-    new_resp->rbuf = apr_pcalloc(pool, new_resp->rbufsize);
+    new_resp->rbuf = apr_palloc(pool, new_resp->rbufsize);
 
-    status = ksock->ssl ? 
-             ssl_read_socket(ksock->s, new_resp->rbuf, &new_resp->rbufsize) : 
-             read_socket(ksock->s, new_resp->rbuf, &new_resp->rbufsize);
+    status = ksock_read_socket(ksock, new_resp->rbuf, &new_resp->rbufsize);
 
     if (status != APR_SUCCESS && status != APR_EOF) {
         return status;
     }
 
-    /* FIXME: Deal with chunking, too */
     /* FIXME: Assume we got the full header for now. */
 
-    /* If this exists, we aren't keepalive anymore. */
-    cl = strstr(new_resp->rbuf, "Connection: Close");
+    /* FIXME: Make case-insensitive */
+    cl = strstr(new_resp->rbuf, "Transfer-Encoding: Chunked" CRLF);
     if (cl)
-        new_resp->keepalive = 0; 
-    else
     {
-        new_resp->keepalive = 1; 
-    
-        cl = strstr(new_resp->rbuf, "Content-Length: ");
-        if (!cl)
-        {
-            /* Netscape sends this.  It is technically correct as the header
-             * may be mixed-case - we should be case-insensitive.  But,
-             * that gets mighty expensive. */
-            cl = strstr(new_resp->rbuf, "Content-length: "); 
-            if (!cl)
-                new_resp->keepalive = 0; 
-        }
-
+        new_resp->chunked = 1;
+        /* Find where headers ended */
+        cl = strstr(new_resp->rbuf, CRLF CRLF);
         if (cl)
         {
-            cl += sizeof("Content-Length: ") - 1;
-            ecl = strstr(cl, CRLF);
-            if (ecl && ecl - cl < 16)
+            char *buf = NULL;
+            int bufsize, remaining;
+            /* Skip over the CRLF chars */
+            cl += 4;
+            if (!*cl) {
+                /* We got only the headers in our first read.  */
+                assert(ksock->wantresponse == 0);
+                bufsize = MAX_DOC_LENGTH - 1;
+                buf = apr_palloc(pool, bufsize);
+                status = ksock_read_socket(ksock, buf, &bufsize);
+                if (status != APR_SUCCESS && status != APR_EOF) {
+                    return status;
+                }
+                cl = buf;
+            }
+
+            do {
+                if (new_resp->chunk) {
+                    /* Check if we're unlucky to not have the CRLF ending. */
+                    if (chunk_length + 2 <= remaining) {
+                        new_resp->chunk += chunk_length + 2;
+                    }
+                    else {
+                        /* Special value */
+                        chunk_length = -(remaining - chunk_length);
+                        remaining = 0;
+                        break;
+                    }
+                }
+                else {
+                    new_resp->chunk = cl;
+                }
+
+                if (*new_resp->chunk) {
+                    chunk_length = keepalive_read_chunk_size(new_resp->chunk);
+                    /* Search for the beginning of the chunk. */
+                    new_resp->chunk = strstr(new_resp->chunk, CRLF) + 2;
+                    if (!buf) {
+                        remaining = new_resp->rbufsize - 
+                                    (int)(new_resp->chunk - 
+                                          (char*)new_resp->rbuf);
+                    }
+                    else {
+                        remaining = bufsize - (int)(new_resp->chunk - buf);
+                    }
+                }
+                else {
+                    remaining = 0;
+                }
+            }
+            while (remaining > chunk_length);
+
+            chunk_length -= remaining;
+        }
+    }
+    else
+    {
+        /* If this exists, we aren't keepalive anymore. */
+        cl = strstr(new_resp->rbuf, "Connection: Close" CRLF);
+        if (cl)
+            new_resp->keepalive = 0; 
+        else
+        {
+            new_resp->keepalive = 1; 
+    
+            cl = strstr(new_resp->rbuf, "Content-Length: ");
+            if (!cl)
             {
-                strncpy(cls, cl, ecl - cl);
-                cls[ecl-cl] = '\0';
-                content_length = strtol(cls, &ecl, 10);
-                if (*ecl != '\0')
+                /* Netscape sends this.  It is technically correct as the header
+                 * may be mixed-case - we should be case-insensitive.  But,
+                 * that gets mighty expensive. */
+                cl = strstr(new_resp->rbuf, "Content-length: "); 
+                if (!cl)
                     new_resp->keepalive = 0; 
             }
-        }
 
-        if (new_resp->keepalive)
-        {
-            /* Find where we ended */
-            ecl = strstr(new_resp->rbuf, CRLF CRLF);
-
-            /* We didn't get full headers.  Crap. */
-            if (!ecl)
-                new_resp->keepalive = 0; 
+            if (cl)
             {
-                ecl += sizeof(CRLF CRLF) - 1;
-                content_length -= new_resp->rbufsize - (ecl - (char*)new_resp->rbuf);
-            } 
+                cl += sizeof("Content-Length: ") - 1;
+                ecl = strstr(cl, CRLF);
+                if (ecl && ecl - cl < 16)
+                {
+                    strncpy(cls, cl, ecl - cl);
+                    cls[ecl-cl] = '\0';
+                    content_length = strtol(cls, &ecl, 10);
+                    if (*ecl != '\0')
+                        new_resp->keepalive = 0; 
+                }
+            }
+
+            if (new_resp->keepalive)
+            {
+                /* Find where we ended */
+                ecl = strstr(new_resp->rbuf, CRLF CRLF);
+
+                /* We didn't get full headers.  Crap. */
+                if (!ecl)
+                    new_resp->keepalive = 0; 
+                {
+                    ecl += sizeof(CRLF CRLF) - 1;
+                    content_length -= new_resp->rbufsize - (ecl - (char*)new_resp->rbuf);
+                } 
+            }
         }
     }
    
@@ -279,7 +494,13 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     }
     else
     {
-        if (new_resp->keepalive)
+        char *b = apr_palloc(pool, MAX_DOC_LENGTH);
+        if (new_resp->chunked)
+        {
+            status = keepalive_read_chunk(new_resp, ksock, chunk_length,
+                                          &b, MAX_DOC_LENGTH - 1);
+        }
+        else if (new_resp->keepalive)
         {
             while (content_length && status != APR_EGENERAL &&
                    status != APR_EOF && status != APR_TIMEUP) {
@@ -288,8 +509,7 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
                 else
                     i = content_length;
 
-                status = ksock->ssl ? ssl_read_socket(ksock->s, b, &i) : 
-                                      read_socket(ksock->s, b, &i);
+                status = ksock_read_socket(ksock, b, &i);
 
                 content_length -= i;
             }
@@ -299,8 +519,7 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
             while (status != APR_EGENERAL && status != APR_EOF && 
                    status != APR_TIMEUP) {
                 i = MAX_DOC_LENGTH - 1;
-                status = ksock->ssl ? ssl_read_socket(ksock->s, b, &i) : 
-                                      read_socket(ksock->s, b, &i);
+                status = ksock_read_socket(ksock, b, &i);
             }
         }
     }

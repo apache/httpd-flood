@@ -132,6 +132,9 @@ typedef struct request_t request_t;
 struct response_t {
     /* a boolean */
     int keepalive; 
+    /* a boolean */
+    int chunked;
+    char *chunk;
 
     /* Raw buffer connection 
      * FIXME: apr_bucket_t? */ 
