@@ -247,7 +247,6 @@ static char *parse_param_string(round_robin_profile_t *rp, char *template)
 apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
 {
     round_robin_profile_t *p;
-    int crdlen;
     char *cookies;
     char *enc_credtls, *credtls, *authz_hdr = NULL;
     cookie_t *cook;
@@ -278,15 +277,21 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
 
     if (p->url[p->current_url].user) {
         if (!p->url[p->current_url].password) {
-            apr_file_printf(local_stderr, "missing password for user '%s'\n", p->url[p->current_url].user);
+            apr_file_printf(local_stderr,
+                            "missing password for user '%s'\n",
+                            p->url[p->current_url].user);
             return APR_EGENERAL;
-	} else {
-	    credtls = apr_pstrcat(r->pool, p->url[p->current_url].user, ":", p->url[p->current_url].password, NULL);
-	    crdlen = strlen(credtls);
-	    enc_credtls = (char *) apr_palloc(r->pool, apr_base64_encode_len(crdlen) + 1);
-	    apr_base64_encode(enc_credtls, credtls, crdlen);
-	    authz_hdr = apr_pstrcat(r->pool, "Authorization: Basic ", enc_credtls, CRLF, NULL);
-	}
+        } else {
+            int credlen;
+            credtls = apr_pstrcat(r->pool, p->url[p->current_url].user,
+                                  ":", p->url[p->current_url].password, NULL);
+            crdlen = strlen(credtls);
+            enc_credtls = (char *) apr_palloc(r->pool,
+                                              apr_base64_encode_len(crdlen) + 1);
+            apr_base64_encode(enc_credtls, credtls, crdlen);
+            authz_hdr = apr_pstrcat(r->pool, "Authorization: Basic ",
+                                    enc_credtls, CRLF, NULL);
+        }
     }
 
     switch (r->method)
@@ -825,20 +830,26 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
 
     apr_uri_parse(rp->pool, r->uri, r->parsed_uri);
     if (r->parsed_uri->scheme == NULL || r->parsed_uri->hostname == NULL) {
-        apr_file_printf (local_stderr, "Misformed URL '%s'\n", r->uri);
+        apr_file_printf(local_stderr, "Misformed URL '%s'\n", r->uri);
         exit (APR_EGENERAL);
-    }                                                                          
+    }
     if (r->parsed_uri->hostname[0] == '\0') {
-        apr_file_printf (local_stderr, "Misformed URL '%s' -- can't find valid hostname.\n", r->uri);
+        apr_file_printf(local_stderr,
+                        "Misformed URL '%s' -- can't find valid hostname.\n",
+                        r->uri);
         exit (APR_EGENERAL);
     }
     /* this schouldn't be hardcoded, but... :) */
-    if (apr_strnatcmp (r->parsed_uri->scheme, "http") != APR_SUCCESS && apr_strnatcmp (r->parsed_uri->scheme, "https") != APR_SUCCESS) {
-        apr_file_printf (local_stderr, "Wrong URL scheme '%s' -- only 'http' and 'https' schemes are supported.\n", r->parsed_uri->scheme);
+    if (apr_strnatcmp (r->parsed_uri->scheme, "http") != APR_SUCCESS
+        && apr_strnatcmp (r->parsed_uri->scheme, "https") != APR_SUCCESS) {
+        apr_file_printf(local_stderr,
+                        "Wrong URL scheme '%s' -- only 'http' and 'https' schemes are supported.\n",
+                        r->parsed_uri->scheme);
         exit (APR_EGENERAL);
     }
     if (r->parsed_uri->user != NULL || r->parsed_uri->password != NULL) {
-        apr_file_printf (local_stderr, "Misformed URL -- auth data schould be outside URL -- please see docs.\n");
+        apr_file_printf(local_stderr,
+                        "Misformed URL -- auth data schould be outside URL -- please see docs.\n");
         exit (APR_EGENERAL);
     }
     if (!r->parsed_uri->port)
@@ -914,9 +925,11 @@ apr_status_t round_robin_postprocess(profile_t *profile,
         status = regexec(&re, resp->rbuf, 10, match, 0);
 
         if (status != REG_OK) {
-            apr_file_printf(local_stderr, "Regular expression match failed (%s)\n", rp->url[rp->current_url].responsetemplate);
+            apr_file_printf(local_stderr,
+                            "Regular expression match failed (%s)\n",
+                            rp->url[rp->current_url].responsetemplate);
             return APR_EGENERAL;
-	}
+        }
 
         size = match[1].rm_eo - match[1].rm_so + 1;
         newValue = apr_palloc(rp->pool, size);
