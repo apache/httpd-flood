@@ -123,6 +123,7 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
     apr_time_t farmer_start_delay;
     char *xml_farm, **usefarmer_names;
     struct apr_xml_elem *e, *root_elem, *farm_elem;
+    struct apr_xml_attr *use_elem;
     farm_t *farm;
     farmer_worker_info_t *infovec;
 
@@ -145,16 +146,18 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
     usefarmer_count = 0;
     for (e = farm_elem->first_child; e; e = e->next) {
         if (strncasecmp(e->name, XML_FARM_USEFARMER, FLOOD_STRLEN_MAX) == 0) {
-            if (e->attr && e->attr->name &&
-                strncasecmp(e->attr->name, XML_FARM_USEFARMER_COUNT, FLOOD_STRLEN_MAX) == 0) {
-                usefarmer_count += strtol(e->attr->value, NULL, 10);
-                continue; /* only deal with the first attribute of this name per usefarmer */
-            } else {
-                ++usefarmer_count;
+            for (use_elem = e->attr; use_elem; use_elem = use_elem->next) {
+                if (use_elem->name &&
+                    strncasecmp(use_elem->name, XML_FARM_USEFARMER_COUNT, 
+                                FLOOD_STRLEN_MAX) == 0) {
+                    usefarmer_count += strtol(use_elem->value, NULL, 10);
+                } 
             }
         }
     }
-    /*    usefarmer_count = count_xml_elem_child(farm_elem, XML_FARM_USEFARMER); */
+
+    if (!usefarmer_count)
+        usefarmer_count = 1;
 
     /* create each of the children and put their names in an array */
     usefarmer_names = apr_palloc(pool, sizeof(char*) * (usefarmer_count + 1));
@@ -165,45 +168,48 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
         int handled_usefarmers = 0;
 
         if (strncasecmp(e->name, XML_FARM_USEFARMER, FLOOD_STRLEN_MAX) == 0) {
-            if (e->attr && e->attr->name &&
-                strncasecmp(e->attr->name, XML_FARM_USEFARMER_COUNT, FLOOD_STRLEN_MAX) == 0) {
-                for (j = strtol(e->attr->value, NULL, 10); j > 0; j--) {
-                    usefarmer_names[i++] = apr_pstrdup(pool, 
-                                                       e->first_cdata.first->text);
-                }
-                handled_usefarmers = 1;
-            }
-            else if (e->attr && e->attr->name &&
-                     strncasecmp(e->attr->name, XML_FARM_USEFARMER_DELAY, 
-                                 FLOOD_STRLEN_MAX) == 0) {
-                char *endptr;
-                farmer_start_delay = strtoll(e->attr->value, &endptr, 10);
-                if (*endptr != '\0')
-                {
-                    apr_file_printf(local_stderr,
-                                    "Attribute %s has invalid value %s.\n",
-                                    XML_FARM_USEFARMER_DELAY, e->attr->value);
-                    return APR_EGENERAL;
-                }
-                farmer_start_delay *= APR_USEC_PER_SEC;
-            }
-            else if (e->attr && e->attr->name &&
-                     strncasecmp(e->attr->name, XML_FARM_USEFARMER_START, 
-                                 FLOOD_STRLEN_MAX) == 0) {
-                char *endptr;
-                farmer_start_count = strtol(e->attr->value, &endptr, 10);
-                if (*endptr != '\0')
-                {
-                    apr_file_printf(local_stderr,
-                                    "Attribute %s has invalid value %s.\n",
-                                    XML_FARM_USEFARMER_START, e->attr->value);
-                    return APR_EGENERAL;
-                }
-            } else {
-                if (!handled_usefarmers)
-                    usefarmer_names[i++] = apr_pstrdup(pool, 
+            for (use_elem = e->attr; use_elem; use_elem = use_elem->next) {
+                if (use_elem->name && strncasecmp(use_elem->name, 
+                            XML_FARM_USEFARMER_COUNT, FLOOD_STRLEN_MAX) == 0) {
+                    for (j = strtol(use_elem->value, NULL, 10); j > 0; j--) {
+                        usefarmer_names[i++] = apr_pstrdup(pool, 
                                                    e->first_cdata.first->text);
+                    }
+                    handled_usefarmers = 1;
+                }
+                else if (use_elem->name &&
+                         strncasecmp(use_elem->name, XML_FARM_USEFARMER_DELAY, 
+                                     FLOOD_STRLEN_MAX) == 0) {
+                    char *endptr;
+                    farmer_start_delay = strtoll(use_elem->value, &endptr, 10);
+                    if (*endptr != '\0')
+                    {
+                        apr_file_printf(local_stderr,
+                                        "Attribute %s has invalid value %s.\n",
+                                        XML_FARM_USEFARMER_DELAY, 
+                                        use_elem->value);
+                        return APR_EGENERAL;
+                    }
+                    farmer_start_delay *= APR_USEC_PER_SEC;
+                }
+                else if (use_elem->name && 
+                         strncasecmp(e->attr->name, XML_FARM_USEFARMER_START, 
+                                     FLOOD_STRLEN_MAX) == 0) {
+                    char *endptr;
+                    farmer_start_count = strtol(e->attr->value, &endptr, 10);
+                    if (*endptr != '\0')
+                    {
+                        apr_file_printf(local_stderr,
+                                        "Attribute %s has invalid value %s.\n",
+                                        XML_FARM_USEFARMER_START, 
+                                        use_elem->value);
+                        return APR_EGENERAL;
+                    }
+                }
             }
+            if (!handled_usefarmers)
+                usefarmer_names[i++] = apr_pstrdup(pool, 
+                                                   e->first_cdata.first->text);
         }
     }
 
@@ -229,7 +235,7 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
             /* error, perhaps shutdown other threads then exit? */
             return stat;
         }
-        if (farmer_start_delay && i % farmer_start_count == 0)
+        if (farmer_start_delay && (i - 1) % farmer_start_count == 0)
             apr_sleep(farmer_start_delay);
     }
 
