@@ -1,5 +1,16 @@
 Changes since milestone-0-1:
 
+* Added a new report type called "relative_timers". Each
+  of our 4 main timers is printed just as with the "easy"
+  reporting scheme, only they only show elapsed time since
+  the beginning of the request/response test cycle.
+  [Aaron Bannert]
+
+* Added another timer (begin) that happens immediately before
+  the connect() is made (or would be made). This is necessary
+  if we want to calculate the elapsed time for the rest of
+  our timers. [Aaron Bannert]
+
 * Add better resolution timers (connect, write, read, close).  
   [Justin Erenkrantz]
 
