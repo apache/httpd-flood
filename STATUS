@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/08/06 22:35:38 $]
+Last modified at [$Date: 2001/08/06 23:14:10 $]
 
 Release:
 
@@ -20,27 +20,10 @@ Other bugs that need fixing:
       (This is not something that can be detected with a validating
       XML parser, unfortunately.)
 
-    * We're cheating a bit at the network level.  read_socket only
-      reads what is available at that point in time.  It probably
-      needs to read until we hit EOF (we're specifing Connection: Close).
-      But, what do we do with the intermediate data?  Store only the first 
-      X KB (8KB?) bytes of the response?  This starts to lead into bucket 
-      brigades.  Consider as you read from the socket bucket, it morphs and
-      does a read into to a char*/heap bucket (what's available now) and 
-      the original socket bucket is preserved if we are not at EOS 
-      (remember EOS for keepalive isn't signaled with EOF).  
-       Status: We need to figure out what to do for now.  I think we can 
-               just hack at read_socket or recv_resp to read from the 
-               socket until it hits EOF.  Roy needs to guide us in the 
-               right direction here...
-
 Other features that need writing:
 
     * Validation of responses (known C-L, specific strings in response)
        Status: Justin volunteers
-
-    * HTTP/SSL Keepalive
-       Justin says: This is more important than HTTP Keepalive.
 
     * HTTP error codes (ie. teach it about 302s)
        Justin says: Yeah, this won't be with round_robin as implemented.  
@@ -60,18 +43,6 @@ Other features that need writing:
     * Megaconglomerate (Multiple hosts each running a collective)
       This is a number of Collectives running on a number of hosts, invoked
       via RSH/SSH or maybe even some proprietary mechanism.
-
-    * Timers
-      Metrics include:
-        a) TCP connect() time
-        b) Time to send request (time to fill local outbound buffers)
-        c) Time until first response chunk was received
-           (tests network latency at the application layer (HTTP))
-        d) Time to receive a full response
-        e) (optional) Local processing time, such as time to generate
-           a request.
-      Status: Aaron is interested, but won't volunteer until he's done
-        with the other things on his plate.
 
     * Other types of urllists
         a) Random / Random-weighted
@@ -136,3 +107,6 @@ Open issues:
       No one told BEA how to make an HTTP server.  Send it Connection: Close
       and a cookie, and it'll respond with Connection: Keep-Alive (no cookie
       and it honors Connection: Close).  That's wrong.
+
+    * OpenSSL 0.9.6
+      Segfaults under high load.  Upgrade to OpenSSL 0.9.6b.
