@@ -28,6 +28,8 @@
 #define XML_URLLIST_PREDELAYPRECISION "predelayprecision"
 #define XML_URLLIST_POSTDELAY "postdelay"
 #define XML_URLLIST_POSTDELAYPRECISION "postdelayprecision"
+#define XML_URLLIST_USER "user"
+#define XML_URLLIST_PASSWORD "password"
 #define XML_URLLIST_NAME "name"
 #define XML_PROFILE "profile"
 #define XML_PROFILE_COUNT "count"

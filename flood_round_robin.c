@@ -60,6 +60,7 @@
 #include <apr_uri.h>
 #include <apr_lib.h>
 #include <apr_hash.h>
+#include <apr_base64.h>
 
 #if APR_HAVE_STRINGS_H
 #include <strings.h>    /* strncasecmp */
@@ -115,6 +116,8 @@ typedef struct {
     char *responsetemplate;
     char *responsename;
     int responselen;
+    char *user;
+    char *password;
 } url_t;
 
 typedef struct cookie_t {
@@ -244,7 +247,9 @@ static char *parse_param_string(round_robin_profile_t *rp, char *template)
 apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
 {
     round_robin_profile_t *p;
+    int crdlen;
     char *cookies;
+    char *enc_credtls, *credtls, *authz_hdr = NULL;
     cookie_t *cook;
    
     p = (round_robin_profile_t*)profile; 
@@ -271,6 +276,19 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
     else
         cookies = "";
 
+    if (p->url[p->current_url].user) {
+        if (!p->url[p->current_url].password) {
+            apr_file_printf(local_stderr, "missing password for user '%s'\n", p->url[p->current_url].user);
+            return APR_EGENERAL;
+	} else {
+	    credtls = apr_pstrcat(r->pool, p->url[p->current_url].user, ":", p->url[p->current_url].password, NULL);
+	    crdlen = strlen(credtls);
+	    enc_credtls = (char *) apr_palloc(r->pool, apr_base64_encode_len(crdlen) + 1);
+	    apr_base64_encode(enc_credtls, credtls, crdlen);
+	    authz_hdr = apr_pstrcat(r->pool, "Authorization: Basic ", enc_credtls, CRLF, NULL);
+	}
+    }
+
     switch (r->method)
     {
     case GET:
@@ -279,12 +297,14 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
                                "Connection: %s" CRLF
                                "Host: %s" CRLF 
+                               "%s"
                                "%s" CRLF,
                                r->parsed_uri->path, 
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->keepalive ? "Keep-Alive" : "Close",
                                r->parsed_uri->hostinfo,
+                               authz_hdr ? authz_hdr : "",
                                cookies);
         r->rbuftype = POOL;
         r->rbufsize = strlen(r->rbuf);
@@ -295,12 +315,14 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
                                "Connection: %s" CRLF
                                "Host: %s" CRLF 
+                               "%s"
                                "%s" CRLF,
                                r->parsed_uri->path, 
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->keepalive ? "Keep-Alive" : "Close",
                                r->parsed_uri->hostinfo,
+                               authz_hdr ? authz_hdr : "",
                                cookies);
         r->rbuftype = POOL;
         r->rbufsize = strlen(r->rbuf);
@@ -315,6 +337,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                    "Host: %s" CRLF
                                    "Content-Length: %d" CRLF 
                                    "Content-type: application/x-www-form-urlencoded" CRLF
+                                   "%s"
                                    "%s" CRLF
                                    "%s",
                                    r->parsed_uri->path, 
@@ -323,6 +346,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                    r->keepalive ? "Keep-Alive" : "Close",
                                    r->parsed_uri->hostinfo,
                                    r->payloadsize,
+                                   authz_hdr ? authz_hdr : "",
                                    cookies,
                                    (char*)r->payload);
         } else { /* There is no payload, but it's still a POST */
@@ -332,12 +356,14 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                    "Connection: %s" CRLF
                                    "Host: %s" CRLF
 
+                                   "%s"
                                    "%s" CRLF "",
                                    r->parsed_uri->path, 
                                    r->parsed_uri->query ? "?" : "",
                                    r->parsed_uri->query ? r->parsed_uri->query : "",
                                    r->keepalive ? "Keep-Alive" : "Close",
                                    r->parsed_uri->hostinfo,
+                                   authz_hdr ? authz_hdr : "",
                                    cookies);
         }
         r->rbuftype = POOL;
@@ -468,6 +494,16 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
                                  FLOOD_STRLEN_MAX) == 0) {
                 url->responsename = (char*)attr->value;
                 url->responselen = strlen((char*)attr->value);
+            }
+            else if (strncasecmp(attr->name, 
+                                 XML_URLLIST_USER,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->user = (char*)attr->value;
+            }
+            else if (strncasecmp(attr->name, 
+                                 XML_URLLIST_PASSWORD,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->password = (char*)attr->value;
             }
             attr = attr->next;
         }
