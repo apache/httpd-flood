@@ -1,0 +1,102 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(flood.c)
+
+dnl Override the default prefix with /pkg/flood-0.1
+AC_PREFIX_DEFAULT(/pkg/flood-0.1)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+
+AC_CANONICAL_SYSTEM
+
+AC_MSG_CHECKING([whether threads are to be enabled])
+AC_ARG_ENABLE(threads,dnl
+[  --enable-threads   enable threads (default=yes)],
+enable_threads="$enableval",
+if test ".$enable_threads" = .; then
+    enable_threads=yes
+fi
+)dnl
+if test ".$enable_threads" = .yes; then
+  FLOOD_USE_THREADS=1
+  AC_MSG_RESULT(yes)
+else
+  FLOOD_USE_THREADS=0
+  AC_MSG_RESULT(no)
+fi
+
+dnl openssl-0.9.x/{include,lib}
+AC_ARG_WITH(openssl,
+  [  --with-openssl=PATH     Prefix to openssl (default /pkg/openssl-0.9.6)],
+  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-openssl requires a path'); else OPENSSL_PREFIX="$withval"; fi],
+  [OPENSSL_PREFIX="/pkg/openssl-0.9.6"])
+
+dnl Need for now.  Remove later.
+AC_ARG_WITH(httpd,
+  [  --with-httpd=PATH       Prefix to httpd-2.0 (default /home/jerenkrantz/cvs-apache/httpd-2.0)],
+  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-httpd requires a path'); else HTTPD_SOURCE="$withval"; fi],
+  [HTTPD_SOURCE="/home/jerenkrantz/cvs-apache/httpd-2.0"])
+
+AC_ARG_WITH(apr,
+  [  --with-apr=PATH         Prefix to apr (default ${HTTPD_SOURCE}/srclib/apr)],
+  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-apr requires a path'); else APR_SOURCE="$withval"; fi],
+  [APR_SOURCE="$HTTPD_SOURCE/srclib/apr"])
+
+AC_ARG_WITH(apr,
+  [  --with-apr-util=PATH    Prefix to apr-util (default ${HTTPD_SOURCE}/srclib/apr-util)],
+  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-apr-util requires a path'); else APU_SOURCE="$withval"; fi],
+  [APU_SOURCE="$HTTPD_SOURCE/srclib/apr-util"])
+
+. $APR_SOURCE/APRVARS
+
+EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -I${OPENSSL_PREFIX}/include"
+
+EXTRA_LDFLAGS="$EXTRA_LDFLAGS -L${OPENSSL_PREFIX}/lib"
+
+case "$host" in
+  *-solaris2*)
+      EXTRA_LDFLAGS="$EXTRA_LDFLAGS -R${OPENSSL_PREFIX}/lib"
+      if test "$FLOOD_USE_THREADS" = "1" ; then
+		EXTRA_LIBS="$EXTRA_LIBS -lpthread"
+        EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -D_REENTRANT"
+      fi
+      ;;
+  *linux*)
+      if test "$FLOOD_USE_THREADS" = "1" ; then
+		EXTRA_LIBS="$EXTRA_LIBS -lpthread"
+      fi
+      ;;
+esac
+
+dnl Use our specified *FLAGS when testing for the libraries.
+LDFLAGS="$LDFLAGS $EXTRA_LDFLAGS"
+CPPFLAGS="$CPPFLAGS $EXTRA_CPPFLAGS"
+CFLAGS="$CFLAGS $EXTRA_CFLAGS"
+
+dnl Checks for libraries.
+dnl Replace `main' with a function in -lcrypto:
+AC_CHECK_LIB(nsl, inet_addr)
+AC_CHECK_LIB(socket, getsockname)
+AC_CHECK_LIB(crypto, SHA1)
+AC_CHECK_LIB(ssl, SSL_library_init)
+
+AC_SUBST(FLOOD_USE_THREADS)
+AC_SUBST(OPENSSL_PREFIX)
+AC_SUBST(HTTPD_SOURCE)
+AC_SUBST(APR_SOURCE)
+AC_SUBST(APU_SOURCE)
+AC_SUBST(EXTRA_CFLAGS)
+AC_SUBST(EXTRA_CPPFLAGS)
+AC_SUBST(EXTRA_LDFLAGS)
+AC_SUBST(EXTRA_LIBS)
+
+dnl Makefile outputs
+dnl Note: There can only be one AC_OUTPUT command.
+AC_OUTPUT(
+  Makefile
+  config.h
+)
