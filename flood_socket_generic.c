@@ -3,11 +3,13 @@
 
 #include "config.h"
 #include "flood_net.h"
+#include "flood_net_ssl.h"
 #include "flood_socket_generic.h"
 
 typedef struct {
-    flood_socket_t *s;
-    int wantresponse;
+    void *s;
+    int wantresponse;   /* A boolean */
+    int ssl;            /* A boolean */
 } generic_socket_t;
 
 apr_status_t generic_socket_init(socket_t **sock, apr_pool_t *pool)
@@ -29,9 +31,21 @@ apr_status_t generic_socket_init(socket_t **sock, apr_pool_t *pool)
 apr_status_t generic_begin_conn(socket_t *sock, request_t *req, apr_pool_t *pool)
 {
     generic_socket_t *gsock = (generic_socket_t *)sock;
-    gsock->s = open_socket(pool, req);
+    if (strcasecmp(req->parsed_uri->scheme, "https") == 0)
+        gsock->ssl = 1;
+    else
+        gsock->ssl = 0;
+
+    /* The return types are not identical, so it can't be a ternary
+     * operation. */
+    if (gsock->ssl)
+        gsock->s = ssl_open_socket(pool, req);
+    else
+        gsock->s = open_socket(pool, req);
+
     if (gsock->s == NULL)
         return APR_EGENERAL;
+
     req->keepalive = 0; /* FIXME: Maybe move this into flood_socket_t */
     return APR_SUCCESS;
 }
@@ -43,7 +57,8 @@ apr_status_t generic_send_req(socket_t *sock, request_t *req, apr_pool_t *pool)
 {
     generic_socket_t *gsock = (generic_socket_t *)sock;
     gsock->wantresponse = req->wantresponse;
-    return write_socket(gsock->s, req);
+    return gsock->ssl ? ssl_write_socket(gsock->s, req) :
+                        write_socket(gsock->s, req);
 }
 
 /**
@@ -74,7 +89,8 @@ apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *po
         do
         {
             i = MAX_DOC_LENGTH - 1;
-            status = read_socket(gsock->s, b, &i);
+            status = gsock->ssl ? ssl_read_socket(gsock->s, b, &i)
+                                : read_socket(gsock->s, b, &i);
             if (new_resp->rbufsize + i > currentalloc)
             {
                 /* You can think why this always work. */
@@ -96,10 +112,15 @@ apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *po
         /* We just want to store the first chunk read. */
         new_resp->rbufsize = MAX_DOC_LENGTH - 1;
         new_resp->rbuf = apr_palloc(pool, new_resp->rbufsize);
-        status = read_socket(gsock->s, new_resp->rbuf, &new_resp->rbufsize);
+        status = gsock->ssl ? ssl_read_socket(gsock->s, new_resp->rbuf, 
+                                              &new_resp->rbufsize) :
+                              read_socket(gsock->s, new_resp->rbuf, 
+                                          &new_resp->rbufsize);
+
         while (status != APR_EOF && status != APR_TIMEUP) {
             i = MAX_DOC_LENGTH - 1;
-            status = read_socket(gsock->s, b, &i);
+            status = gsock->ssl ? ssl_read_socket(gsock->s, b, &i) :
+                                  read_socket(gsock->s, b, &i);
         }
         if (status != APR_SUCCESS && status != APR_EOF) {
             return status;
@@ -118,7 +139,7 @@ apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *po
 apr_status_t generic_end_conn(socket_t *sock, request_t *req, response_t *resp)
 {
     generic_socket_t *gsock = (generic_socket_t *)sock;
-    close_socket(gsock->s);
+    gsock->ssl ? ssl_close_socket : close_socket(gsock->s);
     return APR_SUCCESS;
 }
 
