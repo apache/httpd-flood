@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Namespace protect expand_param_e enum values to not conflict with Win32
+  headers.  [Phi-Long Tran <ptran@pobox.com>]
+
 * Added error handling for failed config-file open.
   [Phi-Long Tran <ptran@pobox.com>]
 

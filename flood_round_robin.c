@@ -97,9 +97,9 @@ extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
 
 typedef enum {
-    EXPAND,
-    EXPAND_SET,
-    PASSTHROUGH
+    EPE_EXPAND,
+    EPE_EXPAND_SET,
+    EPE_PASSTHROUGH
 } expand_param_e;
 
 typedef struct {
@@ -236,12 +236,12 @@ static char *handle_param_string(round_robin_profile_t *rp, char *template,
 
 static char *expand_param_string(round_robin_profile_t *rp, char *template)
 {
-    return handle_param_string(rp, template, EXPAND);
+    return handle_param_string(rp, template, EPE_EXPAND);
 }
 
 static char *parse_param_string(round_robin_profile_t *rp, char *template)
 {
-    return handle_param_string(rp, template, EXPAND_SET);
+    return handle_param_string(rp, template, EPE_EXPAND_SET);
 }
 
 /* Construct a request */
@@ -598,19 +598,19 @@ static apr_status_t parse_xml_seq_info(apr_xml_elem *e,
                     p->url[p->current_url].payloadtemplate = 
                         handle_param_string(p,
                                         p->url[p->current_url].payloadtemplate,
-                                        PASSTHROUGH);
+                                        EPE_PASSTHROUGH);
                 }
                 if (p->url[p->current_url].requesttemplate) {
                     p->url[p->current_url].requesttemplate = 
                         handle_param_string(p,
                                         p->url[p->current_url].requesttemplate,
-                                        PASSTHROUGH);
+                                        EPE_PASSTHROUGH);
                 }
                 if (p->url[p->current_url].responsetemplate) {
                     p->url[p->current_url].responsetemplate = 
                         handle_param_string(p,
                                         p->url[p->current_url].responsetemplate,
-                                        PASSTHROUGH);
+                                        EPE_PASSTHROUGH);
                 }
                 p->current_url++;
             }
