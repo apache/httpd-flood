@@ -4,7 +4,6 @@
     <description>A bunch of hosts we want to hit</description>
     <url>https://www.modssl.org/example/test.phtml</url>
     <url>https://mozilla-crypto.ssleay.org/cryptocheck.php</url>
-    <url>https://www.wellsfargo.com/</url>
   </urllist>
 
   <profile>
