@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/08/01 22:20:30 $]
+Last modified at [$Date: 2002/08/01 22:28:51 $]
 
 Release:
 
@@ -21,11 +21,6 @@ Other bugs that need fixing:
     * DNS lookup failures in any <urllist> cause segfault.
        Justin says: Wow.  Why?
        Aaron says: Is this still happening? It's been awhile.
-
-    * Misformed URLs cause a segfault. When we fix this we should
-      make sure to print out a helpful message when this occurs.
-      (This is not something that can be detected with a validating
-      XML parser, unfortunately.)
 
     * iPlanet sends "Content-length" - there is a hack in there now
       to recognize it.  However, all HTTP headers need to be normalized
