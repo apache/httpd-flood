@@ -60,6 +60,7 @@
 #include "flood_net_ssl.h"
 
 #define OPENSSL_THREAD_DEFINES
+#define NO_BIO
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
@@ -141,7 +142,7 @@ ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
     SSL_CTX_set_options(ssl_socket->ssl_context, SSL_OP_ALL);
     SSL_CTX_set_options(ssl_socket->ssl_context, SSL_MODE_AUTO_RETRY);
     /*SSL_CTX_set_default_verify_paths(ssl_socket->ssl_context);*/
-    SSL_CTX_load_verify_locations(ssl_socket->ssl_context, CAFILE, NULL);
+    SSL_CTX_load_verify_locations(ssl_socket->ssl_context, NULL, CAPATH);
 
     /* Initialize the SSL connection */
     ssl_socket->ssl_connection = SSL_new(ssl_socket->ssl_context);
