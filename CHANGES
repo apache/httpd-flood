@@ -1,5 +1,16 @@
 Changes since milestone-02:
 
+* Rewrite the expression/template code to use variable names (backed by a 
+  hash table) and allow use of regular expressions for the response
+  template.  
+  The new syntax is as follows:
+    ${foo}  substitutes foo's value.
+    ${=foo} generates a random number and stores it in foo and substitutes it.
+    ([^>]*) (regex sub-expression) coupled with responsename="foo" allows 
+            that subexpression to be stored in foo based on what is in the
+            response from the server.  It will only take the first 
+            sub-expression in the regex and store it in the value.
+  [Justin Erenkrantz]
 
 Changes since milestone-01:
 

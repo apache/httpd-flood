@@ -5,12 +5,12 @@
     <name>Test Hosts</name>
     <description>A bunch of hosts we want to hit</description>
     <!-- Search for httpd-2.0 commit access.  -->
-    <url method="POST" payload="method=and&amp;format=builtin-long&amp;sort=score&amp;config=htdig&amp;restrict=&amp;exclude=&amp;words=httpd-2.0+commit+access" responsetemplate="&lt;a href=&quot;$$&quot;&gt;">http://www.apachelabs.org/cgi-bin/htsearch</url>
-    <url method="GET" requestparamcount="1" requesttemplate="$0" responsetemplate="Prev&lt;/A&gt; &lt;A HREF=&quot;$$&quot;&gt;"/>
-    <url method="GET" requestparamcount="1" requesttemplate="http://www.apachelabs.org$1" />
+    <url method="POST" payload="method=and&amp;format=builtin-long&amp;sort=score&amp;config=htdig&amp;restrict=&amp;exclude=&amp;words=httpd-2.0+commit+access" responsetemplate="&lt;a href=&quot;([^&quot;]*)&quot;&gt;" responsename="id">http://www.apachelabs.org/cgi-bin/htsearch</url>
+    <url method="GET" requesttemplate="${id}" responsetemplate="Prev&lt;/A&gt; &lt;A HREF=&quot;([^&quot;]*)&quot;&gt;" responsename="next" />
+    <url method="GET" requestparamcount="1" requesttemplate="http://www.apachelabs.org${next}" />
     <!-- Search google.com for "foo" and go to the first search result. 
-    <url method="GET" responsetemplate="&lt;A HREF=http://$$&gt;">http://www.google.com/search?q=foo</url>
-    <url method="GET" requestparamcount="1" requesttemplate="http://$1" />
+    <url method="GET" responsetemplate="&lt;A HREF=http://([^&quot;]*)&quot;" responsename="foo">http://www.google.com/search?q=foo</url>
+    <url method="GET" requestparamcount="1" requesttemplate="http://${foo}" />
     -->
   </urllist>
 

@@ -58,26 +58,22 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <regex.h>
+#include <assert.h>
 
 #include <apr_file_io.h>
 #include <apr_network_io.h>
 #include <apr_strings.h>
 #include <apr_uri.h>
 #include <apr_lib.h>
+#include <apr_hash.h>
 
 #include "config.h"
 #include "flood_net.h"
 
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
-
-/* Allowable mechanisms for payload template generation. */
-enum param_e {
-    RANDOM_DATA,
-    SEQUENTIAL_DATA,
-    FILE_DATA
-};
-typedef enum param_e param_e;
 
 typedef struct {
     char *url;
@@ -87,15 +83,12 @@ typedef struct {
     apr_int64_t predelayprecision;
     apr_int64_t postdelay;
     apr_int64_t postdelayprecision;
-    param_e payloadtype;
-    int payloadparamcount;
+
     char *payloadtemplate;
-
-    param_e requestparamtype;
-    int requestparamcount;
     char *requesttemplate;
-
     char *responsetemplate;
+    char *responsename;
+    int responselen;
 } url_t;
 
 typedef struct cookie_t {
@@ -117,9 +110,7 @@ typedef struct {
 
     cookie_t *cookie;
 
-    int states;
-    /* There's a max to dynamicism. */
-    char *state[10];
+    apr_hash_t *state;
 
     int current_round;
     int current_url;
@@ -249,6 +240,7 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
     /* yeah, yeah; calloc(), whatever...this is readability baby! */
     p->current_url = 0; /* start on the first URL */
     p->current_round = 0; /* start counting rounds at 0 */
+    p->state = apr_hash_make(pool);
 
     /* get the XML pathes to the profile and the urllist */
     xml_profile = apr_pstrdup(pool, XML_PROFILE);
@@ -394,71 +386,10 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                         }
                         p->url[i].postdelayprecision *= APR_USEC_PER_SEC;
                     }
-                    else if (strncasecmp(attr->name, XML_URLLIST_PAYLOAD_PARAM, 
-                                     FLOOD_STRLEN_MAX) == 0) {
-                        if (strncasecmp(attr->value, "random", 6) == 0)
-                            p->url[i].payloadtype = RANDOM_DATA;
-                        else if (strncasecmp(attr->value, "seq", 3) == 0)
-                            p->url[i].payloadtype = SEQUENTIAL_DATA;
-                        else if (strncasecmp(attr->value, "file", 3) == 0)
-                            p->url[i].payloadtype = FILE_DATA;
-                        else {
-                            apr_file_printf(local_stderr, 
-                                         "Attribute %s has invalid value %s.\n",
-                                         XML_URLLIST_PAYLOAD_PARAM, 
-                                         attr->value);
-                            return APR_EGENERAL;
-                        }
-                    }
-                    else if (strncasecmp(attr->name, 
-                                         XML_URLLIST_PAYLOAD_PARAM_COUNT, 
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        char *endptr;
-                        p->url[i].payloadparamcount = strtoll(attr->value, 
-                                                              &endptr, 10);
-                        if (*endptr != '\0')
-                        {
-                            apr_file_printf(local_stderr, 
-                                        "Attribute %s has invalid value %s.\n",
-                                        XML_URLLIST_PAYLOAD_PARAM_COUNT, attr->value);
-                            return APR_EGENERAL;
-                        }
-                    }
                     else if (strncasecmp(attr->name, 
                                          XML_URLLIST_PAYLOAD_TEMPLATE, 
                                          FLOOD_STRLEN_MAX) == 0) {
                         p->url[i].payloadtemplate = (char*)attr->value;
-                    }
-                    else if (strncasecmp(attr->name, XML_URLLIST_REQUEST_PARAM, 
-                                     FLOOD_STRLEN_MAX) == 0) {
-                        if (strncasecmp(attr->value, "random", 6) == 0)
-                            p->url[i].requestparamtype = RANDOM_DATA;
-                        else if (strncasecmp(attr->value, "seq", 3) == 0)
-                            p->url[i].requestparamtype = SEQUENTIAL_DATA;
-                        else if (strncasecmp(attr->value, "file", 3) == 0)
-                            p->url[i].requestparamtype = FILE_DATA;
-                        else {
-                            apr_file_printf(local_stderr, 
-                                         "Attribute %s has invalid value %s.\n",
-                                         XML_URLLIST_REQUEST_PARAM, 
-                                         attr->value);
-                            return APR_EGENERAL;
-                        }
-                    }
-                    else if (strncasecmp(attr->name, 
-                                         XML_URLLIST_REQUEST_PARAM_COUNT, 
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        char *endptr;
-                        p->url[i].requestparamcount = strtoll(attr->value, 
-                                                              &endptr, 10);
-                        if (*endptr != '\0')
-                        {
-                            apr_file_printf(local_stderr, 
-                                        "Attribute %s has invalid value %s.\n",
-                                        XML_URLLIST_REQUEST_PARAM_COUNT, 
-                                        attr->value);
-                            return APR_EGENERAL;
-                        }
                     }
                     else if (strncasecmp(attr->name, 
                                          XML_URLLIST_REQUEST_TEMPLATE, 
@@ -470,6 +401,13 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                                          FLOOD_STRLEN_MAX) == 0) {
                         p->url[i].responsetemplate = (char*)attr->value;
                     }
+                    else if (strncasecmp(attr->name, 
+                                         XML_URLLIST_RESPONSE_NAME,
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        p->url[i].responsename = (char*)attr->value;
+                        p->url[i].responselen = strlen((char*)attr->value);
+                    }
+                    
                     attr = attr->next;
                 }
             }
@@ -488,119 +426,87 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
     return APR_SUCCESS;
 }
 
-char *expand_param_string(round_robin_profile_t *rp, char *template)
+char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
 {
-    char *cpy, *cur, *prev, *data, *returnValue;
+    char *cpy, *cur, *prev, *data, *returnValue, *pattern;
+    int size, matchsize;
+    regex_t re;
+    regmatch_t match[2];
          
     prev = template;
     returnValue = NULL;
 
-    cur = strstr(prev, "$");
-    while (cur)
+    pattern = "\\$\\{([^\\}]+)\\}";
+    regcomp(&re, pattern, REG_EXTENDED);
+    cur = template;
+    while (regexec(&re, cur, 2, match, 0) == REG_OK)
     {
-        /* What do we want to fill in? */
-        if (apr_isdigit(*(cur+1)))
-            data = rp->state[*(cur+1) - '0'];
-
-        /* May be 0, but that's okay. */
-        if (cur-prev)
+        /* We must backup over the ${ characters. */
+        size = match[1].rm_sp - cur - 2;
+        if (size++)
         {
-            /* Copy the $ character, but we'll set it to NULL soon. */
-            cpy = apr_pmemdup(rp->pool, prev, cur - prev + 1);
-            cpy[cur-prev] = '\0';
+            cpy = apr_palloc(rp->pool, size);
+            apr_cpystrn(cpy, cur, size);
+        }
+        else
+            cpy = NULL;
 
-            if (!returnValue) 
+        if (*match[1].rm_sp == '=')
+        {
+            if (set)
+            {
+                /* We need to assign it a random value. */
+                data = apr_psprintf(rp->pool, "%d", rand());
+                matchsize = match[1].rm_eo - match[1].rm_so - 1;
+                apr_hash_set(rp->state, match[1].rm_sp+1, matchsize, data);
+            }
+            else
+                data = NULL;
+        }
+        else
+        {
+            matchsize = match[1].rm_eo - match[1].rm_so;
+            data = apr_hash_get(rp->state, match[1].rm_sp, matchsize);
+        }
+
+        if (!returnValue)
+        {
+            if (cpy)
                 returnValue = apr_pstrcat(rp->pool, cpy, data, NULL);
             else
-                returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, NULL);
+                returnValue = apr_pstrdup(rp->pool, data);
         }
         else
         {
-            if (!returnValue) 
-                returnValue = apr_pstrdup(rp->pool, data);
+            if (cpy)
+                returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, 
+                                          NULL);
             else
                 returnValue = apr_pstrcat(rp->pool, returnValue, data, NULL);
+            
         }
 
-        prev = cur + 2;
+        /* Skip over the trailing } */
+        cur += match[1].rm_ep - cur + 1;
+    }
 
-        cur = strstr(prev, "$");
-    }
-    if (*prev)
-    { 
-        if (!returnValue) 
-            returnValue = apr_pstrdup(rp->pool, prev);
-        else
-            returnValue = apr_pstrcat(rp->pool, returnValue, prev, NULL);
-    }
+    if (!returnValue)
+        returnValue = apr_pstrdup(rp->pool, cur);
+    else
+        returnValue = apr_pstrcat(rp->pool, returnValue, cur, NULL);
+
+    regfree(&re);
     return returnValue;
 }
 
-char *parse_param_string(round_robin_profile_t *rp, char *template, 
-                         int paramcount, param_e payload)
+char *expand_param_string(round_robin_profile_t *rp, char *template)
 {
-    int i;
-    char *cpy, *cur, *prev, *data, *returnValue;
-         
-    prev = template;
-    returnValue = NULL;
-    for (i = 0; i < paramcount; i++)
-    {
-        cur = strstr(prev, "$");
-        if (!cur)
-            return NULL;
+    return handle_param_string(rp, template, 0);
+}
 
-        /* What do we want to fill in? */
-        if (*(cur+1) == '$')
-        {
-            switch (payload) {
-            case RANDOM_DATA:
-                data = apr_psprintf(rp->pool, "%d", rand());
-                break;
-            case SEQUENTIAL_DATA:
-                break;
-            case FILE_DATA:
-                break;
-            }
-            rp->state[rp->states++] = apr_pstrdup(rp->pool, data);
-        }
-        else if (apr_isdigit(*(cur+1)))
-        {
-            data = rp->state[*(cur+1) - '0'];
-        }
-        else
-            return NULL;
-
-        /* May be 0, but that's okay. */
-        if (cur-prev)
-        {
-            /* Copy the $ character, but we'll set it to NULL soon. */
-            cpy = apr_pmemdup(rp->pool, prev, cur - prev + 1);
-            cpy[cur-prev] = '\0';
-
-            if (!returnValue) 
-                returnValue = apr_pstrcat(rp->pool, cpy, data, NULL);
-            else
-                returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, NULL);
-        }
-        else
-        {
-            if (!returnValue) 
-                returnValue = apr_pstrdup(rp->pool, data);
-            else
-                returnValue = apr_pstrcat(rp->pool, returnValue, data, NULL);
-        }
-
-        prev = cur + 2;
-    }
-    if (*prev)
-    { 
-        if (!returnValue) 
-            returnValue = apr_pstrdup(rp->pool, prev);
-        else
-            returnValue = apr_pstrcat(rp->pool, returnValue, prev, NULL);
-    }
-    return returnValue;
+char *parse_param_string(round_robin_profile_t *rp, char *template)
+{
+    return handle_param_string(rp, template, 1);
 }
 
 apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
@@ -617,9 +523,7 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     if (rp->url[rp->current_url].requesttemplate)
     {
         r->uri = parse_param_string(rp, 
-                                    rp->url[rp->current_url].requesttemplate,
-                                    rp->url[rp->current_url].requestparamcount,
-                                    rp->url[rp->current_url].requestparamtype);
+                                    rp->url[rp->current_url].requesttemplate);
     }
     else
         r->uri = rp->url[rp->current_url].url;
@@ -637,9 +541,7 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     else if (rp->url[rp->current_url].payloadtemplate)
     {
         r->payload = parse_param_string(rp, 
-                                    rp->url[rp->current_url].payloadtemplate,
-                                    rp->url[rp->current_url].payloadparamcount,
-                                    rp->url[rp->current_url].payloadtype);
+                                    rp->url[rp->current_url].payloadtemplate);
         r->payloadsize = strlen(r->payload);
     }
 
@@ -737,43 +639,24 @@ apr_status_t round_robin_postprocess(profile_t *profile,
     }
     if (rp->url[rp->current_url].responsetemplate)
     {
-        char *c, *endfirsthalf, *ec, *bc;
-        char *firsthalf, *secondhalf;
-        int firsthalflen;
+        int status, size;
+        char *expanded, *newValue;
+        regmatch_t match[10];
+        regex_t re;
 
-        c = rp->url[rp->current_url].responsetemplate;
-        endfirsthalf = strstr(c,"$$");
+        expanded = expand_param_string(rp, 
+                                    rp->url[rp->current_url].responsetemplate);
+        regcomp(&re, expanded, REG_EXTENDED);
+        status = regexec(&re, resp->rbuf, 10, match, 0);
 
-        if (!endfirsthalf)
-            return APR_EGENERAL;
+        assert(status == REG_OK);
 
-        firsthalf = apr_palloc(rp->pool, endfirsthalf - c + 1);
-        apr_cpystrn(firsthalf, c, endfirsthalf - c + 1);
-        firsthalf = expand_param_string(rp, firsthalf);
-        firsthalflen = strlen(firsthalf);
-
-        secondhalf = expand_param_string(rp, endfirsthalf+2);
-
-        bc = resp->rbuf;
-        /* The response pattern must be on the same line.  */
-        do
-        {
-            bc = strstr(bc, firsthalf);
-            if (!bc)
-                return APR_EGENERAL;
-            /* Skip the part that was given. */
-            bc += firsthalflen;
-            /* Now search for the second half. */
-            ec = strstr(bc, secondhalf);
-            if (!ec)
-                return APR_EGENERAL;
-        }
-        while (memchr(bc, '\n', ec - bc));
-       
-        /* Increment it by one, so that we copy everything. */ 
-        ec++;
-        rp->state[rp->states] = apr_palloc(rp->pool, ec - bc);
-        apr_cpystrn(rp->state[rp->states++], bc, ec - bc);
+        size = match[1].rm_eo - match[1].rm_so + 1;
+        newValue = apr_palloc(rp->pool, size);
+        apr_cpystrn(newValue, match[1].rm_sp, size);
+        apr_hash_set(rp->state, rp->url[rp->current_url].responsename,
+                     rp->url[rp->current_url].responselen, newValue);
+        regfree(&re);
     }
 
     return APR_SUCCESS;
