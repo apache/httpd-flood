@@ -81,7 +81,8 @@ if test "$enable_ssl" = "yes"; then
   
   AC_CHECK_LIB(crypto, SHA1, LIBS="$LIBS -lcrypto")
   dnl BIO_next only appears in newer versions of OpenSSL
-  AC_CHECK_LIB(ssl, BIO_next, LIBS="$LIBS -lssl")
+  dnl Since libssl relies on libcrypto, it *must* appear before -lcrypto.
+  AC_CHECK_LIB(ssl, BIO_next, LIBS="-lssl $LIBS")
   flood_has_openssl=1
 
   dnl Extra OpenSSL specific options
@@ -131,8 +132,10 @@ if test "$apu_found" = "reconfig"; then
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr-util"
 fi
 
+CPPFLAGS="$CPPFLAGS `$apu_config --includes`"
 LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS `$apr_config --ldflags`"
-LIBTOOL_LIBS="$LIBTOOL_LIBS `$apu_config --link-libtool --libs`"
+dnl Since libaprutil relies on libapr, it *must* appear before -lapr.
+LIBTOOL_LIBS="`$apu_config --link-libtool --libs` $LIBTOOL_LIBS"
 
 AC_CHECK_FUNC(strtoll, hasstrtoll="1", hasstrtoll="0")
 AC_CHECK_FUNC(strtoq, hasstrtoq="1", hasstrtoq="0")
