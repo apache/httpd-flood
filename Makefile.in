@@ -29,6 +29,6 @@ FLOOD_OBJS = flood_round_robin.lo flood_profile.lo flood_config.lo \
 	flood_farm.lo
 
 flood_OBJECTS = flood.lo $(FLOOD_OBJS)
-flood: $(flood_OBJECTS)
+flood: $(flood_OBJECTS) $(PROGRAM_DEPENDENCIES)
 	$(LINK) $(flood_OBJECTS) $(PROGRAM_LDADD)
 
