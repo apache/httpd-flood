@@ -5,8 +5,9 @@
      After compiling flood (./configure && make), you can execute me as:
      ./flood examples/round-robin.xml
      (The path to me.)
-     Flood will then output in the format as specified below (relative_times)
-     for each URL that it hits:
+
+     Flood will then output data to stdout in the format as specified below 
+     (relative_times) for each URL that it hits:
      998951597871780 1389 57420 7960273 7960282 OK  4 http://www.apache.org/
      The columns are as follows:
      - Absolute Time in usec that the request was started by flood
@@ -22,6 +23,12 @@
        verify_200) thought of the request.
      - The thread/process id of the farmer that made the request.
      - The URL that was hit (without query strings)
+
+     To get a "nice" summary of the output (as well as an idea of how to
+     further process this info), try out:
+     ./flood examples/round-robin.xml > my-output
+     ./examples/analyze-relative my-output
+     
 -->
 <flood>
   <!-- A urllist describes which hosts and which methods we want to hit. -->
