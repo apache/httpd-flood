@@ -70,27 +70,19 @@ EXTRA_LDFLAGS="$EXTRA_LDFLAGS -L${OPENSSL_PREFIX}/lib"
 case "$host" in
   *-solaris2*)
       EXTRA_LDFLAGS="$EXTRA_LDFLAGS -R${OPENSSL_PREFIX}/lib"
-      if test "$FLOOD_USE_THREADS" = "1" ; then
-		EXTRA_LIBS="$EXTRA_LIBS -lpthread"
-        EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -D_REENTRANT"
-      fi
       ;;
   *linux*)
-      if test "$FLOOD_USE_THREADS" = "1" ; then
-		EXTRA_LIBS="$EXTRA_LIBS -lpthread"
-      fi
       ;;
 esac
 
 dnl Use our specified *FLAGS when testing for the libraries.
 LDFLAGS="$LDFLAGS $EXTRA_LDFLAGS"
+LIBS="$LIBS $EXTRA_LIBS"
 CPPFLAGS="$CPPFLAGS $EXTRA_CPPFLAGS"
 CFLAGS="$CFLAGS $EXTRA_CFLAGS"
 
 dnl Checks for libraries.
 dnl Replace `main' with a function in -lcrypto:
-AC_CHECK_LIB(nsl, inet_addr)
-AC_CHECK_LIB(socket, getsockname)
 AC_CHECK_LIB(crypto, SHA1)
 AC_CHECK_LIB(ssl, SSL_library_init)
 
