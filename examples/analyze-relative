@@ -9,7 +9,7 @@ if [ ! -f $1 ]; then
 fi
 echo "Slowest pages on average (worst 5):"
 echo "   Average times (sec)"
-echo "connect\twrite\tread\tclose\thits\tURL"
+gawk 'BEGIN{printf("connect\twrite\tread\tclose\thits\tURL\n");}'
 tail +1 $1 | gawk '
 /OK.*https?/ {
     split($8, urlarray, /\?/); url = urlarray[1]; ht[url] = url;
