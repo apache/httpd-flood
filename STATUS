@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/11/17 02:02:25 $]
+Last modified at [$Date: 2001/11/17 02:34:45 $]
 
 Release:
 
@@ -30,7 +30,10 @@ Other bugs that need fixing:
 
     * OpenSSL 0.9.6
       Segfaults under high load.  Upgrade to OpenSSL 0.9.6b.
-       Aaron says: I'll bump the required version number after I upgrade. :)
+       Aaron says: I just found a big bug that might have been causing
+                   this all along (we weren't closing ssl sockets).
+                   How can I reproduce the problem you were seeing
+                   to verify if this was the fix?
 
     * SEGVs when /tmp/.rnd doesn't exist are bad. Make it configurable
       and at least bomb with a good error message. (See Doug's patch.)
@@ -38,6 +41,11 @@ Other bugs that need fixing:
     * If APR has disabled threads, flood should as well. We might want
       to have an enable/disable parameter that does this also, providing
       an error if threads are desired but not available.
+
+    * flood needs to clear pools more often. With a long running test
+      it can chew up memory very quickly. We should just bite the bullet
+      and create/destroy/clear pools for each level of our model:
+      farm, farmer, profile, url/request-cycle, etc.
 
 Other features that need writing:
 
