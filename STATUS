@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/25 00:38:35 $]
+Last modified at [$Date: 2001/07/29 15:36:11 $]
 
 Release:
 
@@ -28,22 +28,6 @@ Other bugs that need fixing:
                just hack at read_socket or recv_resp to read from the 
                socket until it hits EOF.  Roy needs to guide us in the 
                right direction here...
-
-Bugs and features that have been fixed:
-    Aaron says: "We delete these fixes from STATUS when they are 'verified'."
-
-    * When parsing XML identifiers, we should be using strncasecmp()
-      instead of strncmp().
-       Status: Aaron says "fixed, please verify".
-
-    * Cookies
-       Status: Aaron says "Justin did this for Round Robin, hurray!"
-
-    * Can only use one farmer named "Joe".
-       Status: Aaron says "fixed when threads are enabled, please verify".
-
-    * Farm (Single-process, multiple farmers)
-       Status: Justin says "Aaron did this."
 
 Other features that need writing:
 
