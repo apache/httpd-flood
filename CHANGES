@@ -1,5 +1,15 @@
 Changes since milestone-0-1:
 
+* Added random pre and post delay. You can also specify a precision
+  amount. This means that the actual delay will be:
+      actual_delay + (precision * e)
+    (where e is a number between -1 and 1).
+  This can be accomplished in the <url> tag, like so:
+  <url predelay="10" predelayprecision="2">http://example.com/</url>
+  <url postdelay="10" postdelayprecision="2">http://example.com/</url>
+  Both types of delays can be used together, and they are all optional.
+  [Aaron Bannert]
+
 * Add pseudo-random data to a POST payload via the $$ character in the
   new payloadtemplate parameter for a URL.  [Justin Erenkrantz]
 
@@ -19,7 +29,7 @@ Changes since milestone-0-1:
   it easier for users to build configurations). Currently
   the groupings we have are:
   profile events, socket events, reporting events, and
-  verification events.
+  verification events. [Aaron Bannert]
 
 * Added delay support for urllist. A urllist entry can now be
   given a delay (in seconds) that happens each time that URL

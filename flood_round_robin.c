@@ -82,7 +82,10 @@ typedef struct {
     char *url;
     method_e method;
     char *payload;
-    apr_int64_t delay;
+    apr_int64_t predelay;
+    apr_int64_t predelayprecision;
+    apr_int64_t postdelay;
+    apr_int64_t postdelayprecision;
     payload_e payloadtype;
     int payloadparamcount;
     char *payloadtemplate;
@@ -308,6 +311,58 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                                      FLOOD_STRLEN_MAX) == 0) {
                         p->url[i].payload = (char*)attr->value;
                     }
+                    else if (strncasecmp(attr->name, XML_URLLIST_PREDELAY,
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        char *endptr;
+                        p->url[i].predelay = strtoll(attr->value, &endptr, 10);
+                        if (*endptr != '\0')
+                        {
+                            apr_file_printf(local_stderr, 
+                                        "Attribute %s has invalid value %s.\n",
+                                        XML_URLLIST_PREDELAY, attr->value);
+                            return APR_EGENERAL;
+                        }
+                        p->url[i].predelay *= APR_USEC_PER_SEC;
+                    }
+                    else if (strncasecmp(attr->name, XML_URLLIST_PREDELAYPRECISION,
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        char *endptr;
+                        p->url[i].predelayprecision = strtoll(attr->value, &endptr, 10);
+                        if (*endptr != '\0')
+                        {
+                            apr_file_printf(local_stderr,
+                                            "Attribute %s has invalid value %s.\n",
+                                            XML_URLLIST_PREDELAYPRECISION, attr->value);
+                            return APR_EGENERAL;
+                        }
+                        p->url[i].predelayprecision *= APR_USEC_PER_SEC;
+                    }
+                    else if (strncasecmp(attr->name, XML_URLLIST_POSTDELAY,
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        char *endptr;
+                        p->url[i].postdelay = strtoll(attr->value, &endptr, 10);
+                        if (*endptr != '\0')
+                        {
+                            apr_file_printf(local_stderr, 
+                                        "Attribute %s has invalid value %s.\n",
+                                        XML_URLLIST_POSTDELAY, attr->value);
+                            return APR_EGENERAL;
+                        }
+                        p->url[i].postdelay *= APR_USEC_PER_SEC;
+                    }
+                    else if (strncasecmp(attr->name, XML_URLLIST_POSTDELAYPRECISION,
+                                         FLOOD_STRLEN_MAX) == 0) {
+                        char *endptr;
+                        p->url[i].postdelayprecision = strtoll(attr->value, &endptr, 10);
+                        if (*endptr != '\0')
+                        {
+                            apr_file_printf(local_stderr,
+                                            "Attribute %s has invalid value %s.\n",
+                                            XML_URLLIST_POSTDELAYPRECISION, attr->value);
+                            return APR_EGENERAL;
+                        }
+                        p->url[i].postdelayprecision *= APR_USEC_PER_SEC;
+                    }
                     else if (strncasecmp(attr->name, XML_URLLIST_PAYLOAD_PARAM, 
                                      FLOOD_STRLEN_MAX) == 0) {
                         if (strncasecmp(attr->value, "random", 6) == 0)
@@ -334,7 +389,7 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                         {
                             apr_file_printf(local_stderr, 
                                         "Attribute %s has invalid value %s.\n",
-                                        XML_URLLIST_DELAY, attr->value);
+                                        XML_URLLIST_PAYLOAD_PARAM_COUNT, attr->value);
                             return APR_EGENERAL;
                         }
                     }
@@ -342,19 +397,6 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
                                          XML_URLLIST_PAYLOAD_TEMPLATE, 
                                          FLOOD_STRLEN_MAX) == 0) {
                         p->url[i].payloadtemplate = (char*)attr->value;
-                    }
-                    else if (strncasecmp(attr->name, XML_URLLIST_DELAY,
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        char *endptr;
-                        p->url[i].delay = strtoll(attr->value, &endptr, 10);
-                        if (*endptr != '\0')
-                        {
-                            apr_file_printf(local_stderr, 
-                                        "Attribute %s has invalid value %s.\n",
-                                        XML_URLLIST_DELAY, attr->value);
-                            return APR_EGENERAL;
-                        }
-                        p->url[i].delay *= APR_USEC_PER_SEC;
                     }
                     attr = attr->next;
                 }
@@ -430,10 +472,33 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     }
 
     /* If they want a sleep, do it now. */
-    if (rp->url[rp->current_url].delay)
-        apr_sleep(rp->url[rp->current_url].delay);
+    if (rp->url[rp->current_url].predelay) {
+        apr_int64_t real_predelay = rp->url[rp->current_url].predelay;
 
-    rp->current_url++;
+        /* If the delay has a precision, adjust the
+         * delay by some random fraction of the precision here */
+        if (rp->url[rp->current_url].predelayprecision) {
+            /* FIXME: this should be more portable, like apr_generate_random_bytes() */
+            float factor = -1.0 + (2.0*rand()/(RAND_MAX+1.0));
+            apr_file_printf(local_stderr,
+                            "Generating random predelay factor of %fus\n",
+                            factor);
+            real_predelay += rp->url[rp->current_url].predelayprecision * factor;
+        }
+
+        /* we can only delay positive times, can't go back in time :( */
+        if (real_predelay < 0)
+            real_predelay = 0;
+
+        apr_file_printf(local_stderr,
+                        "Generating random predelay of %" APR_INT64_T_FMT "us\n",
+                        real_predelay);
+
+        /* only bother going to sleep if we generated a delay */
+        if (real_predelay > 0)
+            apr_sleep(real_predelay);
+
+    }
 
     r->parsed_uri = apr_pcalloc(rp->pool, sizeof(apr_uri_components));
 
@@ -445,14 +510,6 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     }
     if (!r->parsed_uri->path) /* If / is not there, be nice.  */
         r->parsed_uri->path = "/";
-
-    /* Adjust counters for profile */
-    if (rp->current_url >= rp->urls) {
-        rp->current_url = 0;
-
-        /* Loop cond tells us when to stop. */
-        rp->current_round++;
-    }
 
 #ifdef PROFILE_DEBUG
     apr_file_printf(local_stdout, "Generating request to: %s\n", r->uri);
@@ -528,8 +585,21 @@ apr_status_t verify_200(int *verified, profile_t *profile, request_t *req, respo
 int round_robin_loop_condition(profile_t *profile)
 {
     round_robin_profile_t *rp;
+    int real_current_url;
 
     rp = (round_robin_profile_t*)profile;
+
+    real_current_url = rp->current_url; /* save the real one before we try to increment */
+
+    rp->current_url++;
+
+    /* Adjust counters for profile */
+    if (rp->current_url >= rp->urls) {
+        rp->current_url = 0;
+        
+        /* Loop cond tells us when to stop. */
+        rp->current_round++;
+    }
 
 #ifdef PROFILE_DEBUG
     apr_file_printf(local_stdout, "Round %d of %d, %s.\n",
@@ -537,7 +607,40 @@ int round_robin_loop_condition(profile_t *profile)
                     (rp->current_round < rp->execute_rounds ? "Continuing" : "Finished"));
 #endif /* PROFILE_DEBUG */
 
-    return (rp->current_round < rp->execute_rounds);
+    if (rp->current_round >= rp->execute_rounds)
+        return 0;
+    else { /* we'll continue, so do delay stuff now if necessary */
+        
+        /* If they want a sleep, do it now. */
+        if (rp->url[real_current_url].postdelay) {
+            apr_int64_t real_postdelay = rp->url[real_current_url].postdelay;
+
+            /* If the delay has a precision, adjust the
+             * delay by some random fraction of the precision here */
+            if (rp->url[real_current_url].postdelayprecision) {
+                /* FIXME: this should be more portable, like apr_generate_random_bytes() */
+                float factor = -1.0 + (2.0*rand()/(RAND_MAX+1.0));
+                apr_file_printf(local_stderr,
+                                "Generating random postdelay factor of %fus\n",
+                                factor);
+                real_postdelay += rp->url[real_current_url].postdelayprecision * factor;
+            }
+
+            /* we can only delay positive times, can't go back in time :( */
+            if (real_postdelay < 0)
+                real_postdelay = 0;
+
+            apr_file_printf(local_stderr,
+                            "Generating random postdelay of %" APR_INT64_T_FMT "us\n",
+                            real_postdelay);
+
+            /* only bother going to sleep if we generated a delay */
+            if (real_postdelay > 0)
+                apr_sleep(real_postdelay);
+        }
+
+        return 1;
+    }
 }
 
 apr_status_t round_robin_profile_destroy(profile_t *profile)

@@ -4,6 +4,9 @@
   <urllist>
     <name>Test Hosts</name>
     <description>A bunch of hosts we want to hit</description>
+    <url method="POST" payload="version=2&amp;keyword=foo&amp;results=20&amp;what=apr.apache.org" predelay="1" predelayprecision="5">http://search.apache.org/index.cgi</url>
+    <url method="HEAD" postdelay="2" postdelayprecision="2">http://www.apache.org/</url>
+    <url method="GET" predelay="1" postdelay="1">http://dev.apache.org/</url>
     <url method="POST" payload="version=2&amp;keyword=foo&amp;results=20&amp;what=apr.apache.org">http://search.apache.org/index.cgi</url>
     <url method="POST" payloadparam="random" payloadparamcount="1" payloadtemplate="version=2&amp;keyword=foo$$&amp;results=20&amp;what=apr.apache.org">http://search.apache.org/index.cgi</url>
     <url method="HEAD">http://www.apache.org/</url>
