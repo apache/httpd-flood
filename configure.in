@@ -4,8 +4,8 @@ AC_INIT(flood.c)
 dnl Location for config.guess, config.sub, install.sh, etc.
 AC_CONFIG_AUX_DIR(build)
 
-dnl Override the default prefix with /pkg/flood-0.1
-AC_PREFIX_DEFAULT(/pkg/flood-0.1)
+dnl Override the default prefix with /usr/local/flood
+AC_PREFIX_DEFAULT(/usr/local/flood)
 
 dnl m4 Macros from APR
 sinclude(build/apr_common.m4)

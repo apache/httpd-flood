@@ -5,6 +5,10 @@ srcdir       = @srcdir@
 builddir     = $(shell pwd)
 VPATH        = @srcdir@
 
+prefix       = @prefix@
+exec_prefix  = @exec_prefix@
+bindir       = @bindir@
+
 targets = flood
 
 PROGRAMS = flood
