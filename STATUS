@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/07/23 18:45:14 $]
+Last modified at [$Date: 2002/08/01 22:20:30 $]
 
 Release:
 
@@ -55,7 +55,9 @@ Other bugs that need fixing:
       exhaustion, but aparently Solaris and Linux return different
       errors at the moment. Fix this in APR then take advantage of
       it in flood.
-      Status: Aaron volunteers
+
+    * The examples/analyze-relative scripts fail when there are less
+      than 5 unique URLs.
 
 Other features that need writing:
 
