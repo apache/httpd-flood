@@ -1,5 +1,11 @@
 Changes since 1.0:
 
+* Catch some badly formed URLs and exit instead of later crashing.
+  [Jacek Prucia <jacek.prucia@7bulls.com>]
+
+* Fix tab formatting in some analysis scripts.
+  [Reini Urban <rurban@inode.at>]
+
 Changes since milestone-03:
 
 * Revamp keepalive_recv_resp to use the APR table API.  This allows true
