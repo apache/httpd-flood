@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Fixed compiler warning about signed/unsigned mismatch in generic_recv_resp.
+  [Phi-Long Tran <ptran@pobox.com>]
+
 * Include correct header to import defintion of apr_pstrmemdup in
   flood_socket_keepalive.c.  [Phi-Long Tran <ptran@pobox.com>]
 

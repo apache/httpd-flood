@@ -134,7 +134,7 @@ apr_status_t generic_send_req(socket_t *sock, request_t *req, apr_pool_t *pool)
 apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *pool)
 {
     char b[MAX_DOC_LENGTH];
-    int i;
+    apr_size_t i;
     response_t *new_resp;
     apr_status_t status;
 
@@ -146,7 +146,7 @@ apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *po
     if (gsock->wantresponse)
     {
         /* Ugh, we want everything. */
-        int currentalloc;
+        apr_size_t currentalloc;
         char *cp, *op;
 
         new_resp->rbufsize = 0;
