@@ -1,0 +1,54 @@
+<!-- Hi, I'm a flood config file.  -->
+<flood>
+  <!-- A urllist describes which hosts and which methods we want to hit. -->
+  <urllist>
+    <name>Test Hosts</name>
+    <description>A bunch of hosts we want to hit</description>
+    <!-- Search for httpd-2.0 commit access.  -->
+    <url method="POST" payload="method=and&amp;format=builtin-long&amp;sort=score&amp;config=htdig&amp;restrict=&amp;exclude=&amp;words=httpd-2.0+commit+access" responsetemplate="&lt;a href=&quot;$$&quot;&gt;">http://www.apachelabs.org/cgi-bin/htsearch</url>
+    <url method="GET" requestparamcount="1" requesttemplate="$0" responsetemplate="Prev&lt;/A&gt; &lt;A HREF=&quot;$$&quot;&gt;"/>
+    <url method="GET" requestparamcount="1" requesttemplate="http://www.apachelabs.org$1" />
+    <!-- Search google.com for "foo" and go to the first search result. 
+    <url method="GET" responsetemplate="&lt;A HREF=http://$$&gt;">http://www.google.com/search?q=foo</url>
+    <url method="GET" requestparamcount="1" requesttemplate="http://$1" />
+    -->
+  </urllist>
+
+  <!-- The profile describes how we will hit the urllists. 
+       Round robin runs all of the URLs in the urllist in order once. -->
+  <profile>
+    <name>RoundRobinProfile</name>
+    <description>Round Robin Configuration</description>
+
+    <useurllist>Test Hosts</useurllist>
+
+    <!-- Profile Events -->
+    <profiletype>round_robin</profiletype>
+    <!--socket>generic</socket-->
+    <socket>keepalive</socket>
+
+    <!-- Verification Events -->
+    <verify_resp>verify_200</verify_resp>
+
+    <!-- Reporting Events -->
+    <report>easy</report>
+  </profile>
+
+  <!-- A farmer runs one profile a certain number of times.  -->
+  <farmer>
+    <name>Joe</name>
+    <!-- run the Joe farmer 5 times -->
+    <count>5</count>
+    <!-- Joe uses this profile -->
+    <useprofile>RoundRobinProfile</useprofile>
+  </farmer>
+
+  <!-- A farm contains a bunch of farmers - each farmer is a thread.  -->
+  <farm>
+    <name>Bingo</name>
+    <usefarmer count="1">Joe</usefarmer>
+  </farm>
+
+  <!-- Set the seed to a known value so we can reproduce the same tests -->
+  <seed>23</seed>
+</flood>

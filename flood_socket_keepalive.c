@@ -9,6 +9,7 @@ typedef struct {
     flood_socket_t *s;
     apr_pollfd_t *p;
     int reopen_socket; /* A boolean */
+    int wantresponse;  /* A boolean */
 } keepalive_socket_t;
 
 /**
@@ -52,7 +53,66 @@ apr_status_t keepalive_begin_conn(socket_t *sock, request_t *req, apr_pool_t *po
 apr_status_t keepalive_send_req(socket_t *sock, request_t *req, apr_pool_t *pool)
 {
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
+    ksock->wantresponse = req->wantresponse;
     return write_socket(ksock->s, req);
+}
+
+static apr_status_t keepalive_load_resp(response_t *resp, 
+                                        keepalive_socket_t *sock,
+                                        apr_size_t remaining, apr_pool_t *pool)
+{
+    /* Ugh, we want everything. */
+    int currentalloc, remain, i;
+    char *cp, *op, b[MAX_DOC_LENGTH];
+    apr_status_t status;
+
+    if (remaining > 0)
+    {
+        remain = 1;
+        currentalloc = remaining + resp->rbufsize;
+    }
+    else
+    {
+        remain = 0;
+        currentalloc = MAX_DOC_LENGTH + resp->rbufsize;
+    }
+
+    cp = apr_palloc(pool, currentalloc);
+    memcpy(cp, resp->rbuf, resp->rbufsize);
+    resp->rbuf = cp;
+    cp = resp->rbuf + resp->rbufsize;
+
+    do
+    {
+        if (remain)
+            i = MAX_DOC_LENGTH - 1;
+        else
+        {
+            if (remaining > MAX_DOC_LENGTH - 1)
+                i = MAX_DOC_LENGTH - 1;
+            else
+                i = remaining;
+        }
+
+        status = read_socket(sock->s, b, &i);
+        if (resp->rbufsize + i > currentalloc)
+        {
+            /* You can think why this always work. */
+            currentalloc *= 2;
+            op = resp->rbuf;
+            resp->rbuf = apr_palloc(pool, currentalloc);
+            memcpy(resp->rbuf, op, cp - op);
+            cp = resp->rbuf + (cp - op);
+        }
+
+        memcpy(cp, b, i);
+        resp->rbufsize += i;
+        cp += i;
+        remaining -= i;
+    }
+    while (status != APR_EOF && status != APR_TIMEUP && (!remain || remaining));
+
+    return status;
 }
 
 /**
@@ -120,18 +180,24 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
             } 
         }
     }
-    
+   
     if (new_resp->keepalive)
     {
-        while (content_length && status != APR_EOF && status != APR_TIMEUP) {
-            if (content_length > MAX_DOC_LENGTH - 1)
-                i = MAX_DOC_LENGTH - 1;
-            else
-                i = content_length;
+        if (ksock->wantresponse)
+            status = keepalive_load_resp(new_resp, ksock, content_length, pool);
+        else
+        {
+            while (content_length && 
+                   status != APR_EOF && status != APR_TIMEUP) {
+                if (content_length > MAX_DOC_LENGTH - 1)
+                    i = MAX_DOC_LENGTH - 1;
+                else
+                    i = content_length;
 
-            status = read_socket(ksock->s, b, &i);
+                status = read_socket(ksock->s, b, &i);
 
-            content_length -= i;
+                content_length -= i;
+            }
         }
     }
     else

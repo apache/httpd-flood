@@ -57,39 +57,60 @@
 #include "flood_easy_reports.h"
 #include <apr.h>
 #include <apr_portable.h>
+#include <apr_strings.h>
 
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
 
-typedef void easy_report_t;
+typedef struct easy_report_t {
+    apr_pool_t *pool;
+} easy_report_t;
 
 apr_status_t easy_report_init(report_t **report, config_t *config, 
                               const char *profile_name, apr_pool_t *pool)
 {
-    *report = apr_palloc(pool, sizeof(easy_report_t));
+    easy_report_t *easy;
 
+    easy = apr_palloc(pool, sizeof(easy_report_t));
+   
+    if (!easy)
+        return APR_EGENERAL;
+ 
+    apr_pool_create(&easy->pool, pool);
+
+    *report = easy;
     return APR_SUCCESS;
 }
 
 apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, response_t *resp, flood_timer_t *timer)
 {
-    apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %" APR_INT64_T_FMT
-                    " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT,
-                    timer->begin, timer->connect, timer->write, timer->read, timer->close);
+    easy_report_t* easy;
+    char *foo;
+
+    easy = (easy_report_t*)report;
+
+    foo = apr_psprintf(easy->pool, "%" APR_INT64_T_FMT " %" APR_INT64_T_FMT 
+                       " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT 
+                       " %" APR_INT64_T_FMT,
+                       timer->begin, timer->connect, timer->write, 
+                       timer->read, timer->close);
 
     switch (verified)
     {
     case FLOOD_VALID:
-        apr_file_printf(local_stdout, " OK ");
+        foo = apr_pstrcat(easy->pool, foo, " OK", NULL);
         break;
     case FLOOD_INVALID:
-        apr_file_printf(local_stdout, " FAIL ");
+        foo = apr_pstrcat(easy->pool, foo, " FAIL", NULL);
         break;
     default:
-        apr_file_printf(local_stdout, " %d ", verified);
+        foo = apr_psprintf(easy->pool, "%s %d", foo, verified);
     }
 
-    apr_file_printf(local_stdout, "%ld %s\n", apr_os_thread_current(), req->uri);
+    foo = apr_psprintf(easy->pool, "%s %d %s", foo, apr_os_thread_current(), 
+                       req->uri);
+
+    apr_file_printf(local_stdout, "%s\n", foo);
 
     return APR_SUCCESS;
 }
@@ -101,5 +122,8 @@ apr_status_t easy_report_stats(report_t *report)
 
 apr_status_t easy_destroy_report(report_t *report)
 {
+    easy_report_t *easy;
+    easy = (easy_report_t*)report;
+    apr_pool_destroy(easy->pool);
     return APR_SUCCESS;
 }

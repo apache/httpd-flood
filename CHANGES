@@ -1,5 +1,12 @@
 Changes since milestone-0-1:
 
+* Add ability to retrieve some data from the response and place it in 
+  state variables (max of 10).  These "state" variables live for the 
+  life of the profile (i.e. all elements in the urllist).  They may be 
+  referred in any template via $[0-9].  Add ability to store the 
+  entire response (only active if a response template is present).
+  [Justin Erenkrantz]
+
 * Added a new report type called "relative_timers". Each
   of our 4 main timers is printed just as with the "easy"
   reporting scheme, only they only show elapsed time since

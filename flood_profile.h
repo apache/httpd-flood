@@ -116,6 +116,9 @@ struct request_t {
     void * rbuf;
     apr_size_t rbufsize;
 
+    /* If this is set, we want to keep the *entire* response. */
+    int wantresponse;
+
     /* Mandatory for keepalives - although we aren't handling keepalives
      * just yet... */
     socket_t *rsock;

@@ -7,6 +7,7 @@
 
 typedef struct {
     flood_socket_t *s;
+    int wantresponse;
 } generic_socket_t;
 
 apr_status_t generic_socket_init(socket_t **sock, apr_pool_t *pool)
@@ -41,6 +42,7 @@ apr_status_t generic_begin_conn(socket_t *sock, request_t *req, apr_pool_t *pool
 apr_status_t generic_send_req(socket_t *sock, request_t *req, apr_pool_t *pool)
 {
     generic_socket_t *gsock = (generic_socket_t *)sock;
+    gsock->wantresponse = req->wantresponse;
     return write_socket(gsock->s, req);
 }
 
@@ -58,18 +60,51 @@ apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *po
 
     new_resp = apr_pcalloc(pool, sizeof(response_t));
     new_resp->rbuftype = POOL;
-    new_resp->rbufsize = MAX_DOC_LENGTH - 1;
-    new_resp->rbuf = apr_pcalloc(pool, new_resp->rbufsize);
 
-    status = read_socket(gsock->s, new_resp->rbuf, &new_resp->rbufsize);
+    if (gsock->wantresponse)
+    {
+        /* Ugh, we want everything. */
+        int currentalloc;
+        char *cp, *op;
 
-    if (status != APR_SUCCESS && status != APR_EOF) {
-        return status;
+        new_resp->rbufsize = 0;
+        currentalloc = MAX_DOC_LENGTH;
+        new_resp->rbuf = apr_palloc(pool, currentalloc);
+        cp = new_resp->rbuf;
+        do
+        {
+            i = MAX_DOC_LENGTH - 1;
+            status = read_socket(gsock->s, b, &i);
+            if (new_resp->rbufsize + i > currentalloc)
+            {
+                /* You can think why this always work. */
+                currentalloc *= 2;
+                op = new_resp->rbuf;
+                new_resp->rbuf = apr_palloc(pool, currentalloc);
+                memcpy(new_resp->rbuf, op, cp - op);
+                cp = new_resp->rbuf + (cp - op);
+            }
+            
+            memcpy(cp, b, i);
+            new_resp->rbufsize += i;
+            cp += i;
+        }
+        while (status != APR_EOF && status != APR_TIMEUP);
     }
+    else
+    {
+        /* We just want to store the first chunk read. */
+        new_resp->rbufsize = MAX_DOC_LENGTH - 1;
+        new_resp->rbuf = apr_palloc(pool, new_resp->rbufsize);
+        status = read_socket(gsock->s, new_resp->rbuf, &new_resp->rbufsize);
+        while (status != APR_EOF && status != APR_TIMEUP) {
+            i = MAX_DOC_LENGTH - 1;
+            status = read_socket(gsock->s, b, &i);
+        }
+        if (status != APR_SUCCESS && status != APR_EOF) {
+            return status;
+        }
 
-    while (status != APR_EOF && status != APR_TIMEUP) {
-        i = MAX_DOC_LENGTH - 1;
-        status = read_socket(gsock->s, b, &i);
     }
 
     *resp = new_resp;
