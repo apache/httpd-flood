@@ -1,10 +1,10 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/18 04:27:16 $]
+Last modified at [$Date: 2001/07/18 06:46:07 $]
 
 Release:
 
     ASF-transfer:   Released July 17, 2001
-    milestone-0-1:  Tagged July 11, 2001
+    milestone-0-1:  Tagged July 11, 2001 (tag lost during transfer)
 
 RELEASE SHOWSTOPPERS:
 
@@ -77,8 +77,11 @@ Other features that need writing:
        Status: Aaron volunteers.
 
     * Collective (Single-host, multiple farms)
+      This is a number of Farms that have been fork()ed into child processes.
 
     * Megaconglomerate (Multiple hosts each running a collective)
+      This is a number of Collectives running on a number of hosts, invoked
+      via RSH/SSH or maybe even some proprietary mechanism.
 
     * Timers
       Metrics include:
@@ -121,9 +124,22 @@ Open issues:
     * Validating XML Parser?
        Justin says: I don't think we want this.  We want a standalone 
                     validator.
+       Aaron says: I strongly feel we should have this turned on at
+                   least for the invoking "Megaconglomerate". The added
+                   overhead for validating when we're already parsing
+                   will be minimal. It will not affect the results of
+                   the tests. It only happens when a new flood process
+                   is created (directly or via rsh/ssh), not when invoking
+                   a collective, farm, farmer, or profile. What it gives
+                   us from the user's standpoint is far greater than
+                   the impact of the added startup overhead.
+                   (Maybe a flood argument that disables it for when
+                   some UI wrapper already did the checking or if it's
+                   being invoked as part of a megaconglomerate (rsh/ssh).)
   
     * Supporting use of installed APR / APR-util
        Justin says: Requires changes to APR/APR-util.
+       Aaron asks: Is this still true? (remove this line if true ;)
 
     * Mandrake Linux 8.0 and OpenSSL 0.9.6a just aren't coexisting at all.
       The problem seems to be that OpenSSL is refusing to initialize the
