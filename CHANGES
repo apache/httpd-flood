@@ -1,5 +1,8 @@
 Changes since milestone-02:
 
+* Add support for platforms that do not have threads (or are unusable by APR).
+  [Justin Erenkrantz]
+
 * Sleep for four minutes (typical TIME_WAIT period) when we run out of 
   ports rather than exiting with an error.  [Justin Erenkrantz]
 
