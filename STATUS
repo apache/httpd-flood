@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/09/06 10:24:42 $]
+Last modified at [$Date: 2003/07/01 20:55:12 $]
 
 Release:
 
@@ -57,7 +57,9 @@ Other features that need writing:
     * Write robust tool (using tethereal perhaps) to take network dumps 
       and convert them to flood's XML format.
         Status: Justin volunteers.  Aaron had a script somewhere that is
-                a start.
+                a start. Jacek is working on a Mozilla application, codename
+                "Flood URL bag" (much like Live HTTP Headers) and small
+                HTTP proxy.
 
     * Get chunked encoding support working.
         Status: Justin volunteers.  He got sidetracked by the httpd
