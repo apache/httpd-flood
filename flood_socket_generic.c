@@ -193,7 +193,7 @@ apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *po
 apr_status_t generic_end_conn(socket_t *sock, request_t *req, response_t *resp)
 {
     generic_socket_t *gsock = (generic_socket_t *)sock;
-    gsock->ssl ? ssl_close_socket : close_socket(gsock->s);
+    gsock->ssl ? ssl_close_socket(gsock->s) : close_socket(gsock->s);
     return APR_SUCCESS;
 }
 
