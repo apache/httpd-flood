@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/11/16 22:38:12 $]
+Last modified at [$Date: 2001/11/16 23:41:10 $]
 
 Release:
 
@@ -35,6 +35,9 @@ Other bugs that need fixing:
     * FLOOD_HAS_OPENSSL is now a CPP defined symbol. Use it to optionally
       compile OpenSSL code so that we don't have to require OpenSSL any
       longer.
+
+    * SEGVs when /tmp/.rnd doesn't exist are bad. Make it configurable
+      and at least bomb with a good error message.
 
 Other features that need writing:
 
