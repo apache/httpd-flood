@@ -970,7 +970,8 @@ $ flood /home/jacekp/tests/simple-test.xml | analize-relative
                     [ postdelay="INTEGER" ] 
                     [ postdelayprecision="INTEGER" ] 
                     [ user="STRING" ] 
-                    [ password="STRING" ]&gt; [ STRING&lt;/url&gt; ]
+                    [ password="STRING" ]
+                    [ Content-Type="STRING" ]&gt; [ STRING&lt;/url&gt; ]
                 </synopsis>
             </refsynopsisdiv>
 
@@ -1157,6 +1158,15 @@ $ flood /home/jacekp/tests/simple-test.xml | analize-relative
                             <entry>
                             This attribute holds password for auth (401
                             header).
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <row>
+                            <entry>Content-Type</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute (when present) overrides default
+                            Content-Type header which is 'application/x-www-form-urlencoded'.
                             </entry>
                             <entry>(empty)</entry>
                         </row>
