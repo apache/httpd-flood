@@ -59,6 +59,7 @@
 #include <apr_file_io.h>
 #include <apr_xml.h>
 #include <apr_strings.h>
+#include <stdlib.h>
 
 #include "config.h"
 #include "flood_config.h"
