@@ -912,6 +912,7 @@ $ flood /home/jacekp/tests/simple-test.xml | analize-relative
                     [ payloadtemplate="STRING" ] 
                     [ responsename="STRING" ] 
                     [ responsetemplate="STRING" ] 
+                    [ responsescript="STRING" ] 
                     [ requesttemplate="STRING" ] 
                     [ requestparamcount="INTEGER" ] 
                     [ predelay="INTEGER" ] 
@@ -1022,6 +1023,19 @@ $ flood /home/jacekp/tests/simple-test.xml | analize-relative
                             <entry>(empty)</entry>
                         </row>
                         <row>
+                            <entry>responsescript</entry>
+                            <entry>STRING</entry>
+                            <entry>
+                            This attribute holds path to executable script,
+                            that will be used in response postprocessing. Such
+                            script schould read standard input, which will
+                            contain server response (both HTTP headers and
+                            response body). Script exit value of 0 means
+                            success, while any other value means error.
+                            </entry>
+                            <entry>(empty)</entry>
+                        </row>
+                        <row>
                             <entry>requesttemplate</entry>
                             <entry>STRING</entry>
                             <entry>
@@ -1117,6 +1131,22 @@ $ flood /home/jacekp/tests/simple-test.xml | analize-relative
                 You can specify how to perform request (method, optional
                 payload) and how to postprocess response. 
                 </para>
+                <note>
+                <para>
+                When using responsescript attribute, please keep in mind, that
+                the execution time of script might distort overall results. In
+                addition, please add following element to your profile:
+                </para>
+                <screen>
+&lt;recv_resp&gt;generic_fullresp_recv_resp&lt;/recv_resp&gt;
+                </screen>
+                <para>
+                This wil cause flood to fetch whole response every time.
+                Without such element flood could sometimes retrieve only
+                first chunk of data, which just isn't enough for valid
+                postprocessing.
+                </para>
+                </note>
             </refsection>
 
             <refsection>
