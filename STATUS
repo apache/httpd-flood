@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/08/13 23:47:10 $]
+Last modified at [$Date: 2001/08/24 05:19:55 $]
 
 Release:
 
@@ -24,6 +24,8 @@ Other bugs that need fixing:
     * iPlanet sends "Content-length" - there is a hack in there now
       to recognize it.  However, all HTTP headers need to be normalized
       before checking their values.  This isn't easy to do.  Grr.
+
+    * Autoconf should check that OpenSSL is version 0.9.6a or greater.
 
 Other features that need writing:
 
