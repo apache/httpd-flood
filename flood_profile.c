@@ -244,14 +244,6 @@ profile_event_handler_t profile_event_handlers[] = {
 
     /* Alternative Implementations that are currently available: */
 
-    /* SSL support */
-    {"socket_init",      "ssl_socket_init",          &ssl_socket_init},
-    {"begin_conn",       "ssl_begin_conn",           &ssl_begin_conn},
-    {"send_req",         "ssl_send_req",             &ssl_send_req},
-    {"recv_resp",        "ssl_recv_resp",            &ssl_recv_resp},
-    {"end_conn",         "ssl_end_conn",             &ssl_end_conn},
-    {"socket_destroy",   "ssl_socket_destroy",       &ssl_socket_destroy},
-
     /* Keep-Alive support */
     {"socket_init",      "keepalive_socket_init",    &keepalive_socket_init},
     {"begin_conn",       "keepalive_begin_conn",     &keepalive_begin_conn},

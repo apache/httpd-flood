@@ -57,6 +57,7 @@
 #include "flood_report_relative_times.h"
 #include <apr.h>
 #include <apr_portable.h>
+#include <apr_strings.h>
 
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
