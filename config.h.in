@@ -29,6 +29,7 @@
 #define XML_FARM "farm"
 #define XML_FARM_NAME "name"
 #define XML_FARM_USEFARMER "usefarmer"
+#define XML_FARM_USEFARMER_COUNT "count"
 
 /* The delimiter (used above) between XML elements */
 #define XML_ELEM_DELIM "."

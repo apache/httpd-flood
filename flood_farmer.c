@@ -74,6 +74,7 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
     int count, i, j, useprofile_count;
     char *xml_farmer, **useprofile_names;
     struct apr_xml_elem *e, *root_elem, *farmer_elem, *count_elem;
+    apr_pool_t *farmer_pool;
 
     apr_file_printf(local_stderr, "Running farmer '%s'.\n",
                     farmer_name);
@@ -134,15 +135,24 @@ apr_status_t run_farmer(config_t *config, const char *farmer_name, apr_pool_t *p
         }
     }
 
+    farmer_pool = pool;
+    if ((stat = apr_pool_create(&farmer_pool, pool)) != APR_SUCCESS) {
+      return stat;
+    }
+
     /* now run each of the profiles */
     for (i = 0; i < count; i++) {
         for (j = 0; j < useprofile_count; j++) {
-            if ((stat = run_profile(pool, config, 
+            if ((stat = run_profile(farmer_pool, config, 
                                     useprofile_names[j])) != APR_SUCCESS) {
                 return stat;
             }
+
+	    apr_pool_clear(farmer_pool);
         }
     }
+
+    apr_pool_destroy(farmer_pool);
 
     return APR_SUCCESS;
 }
