@@ -31,9 +31,19 @@ fi
 
 dnl openssl-0.9.x/{include,lib}
 AC_ARG_WITH(openssl,
-  [  --with-openssl=PATH     Prefix to openssl (default /pkg/openssl-0.9.6)],
+  [  --with-openssl=PATH     Prefix to openssl (default /pkg/openssl-0.9.6b)],
   [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-openssl requires a path'); else OPENSSL_PREFIX="$withval"; fi],
-  [OPENSSL_PREFIX="/pkg/openssl-0.9.6"])
+  [OPENSSL_PREFIX="/pkg/openssl-0.9.6b"])
+
+AC_ARG_WITH(randfile,
+  [  --with-randfile=PATH    Path to a random file used by OpenSSL (default /tmp/.rnd)],
+  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-randfile requires a path'); else RANDFILE="$withval"; fi],
+  [RANDFILE="/tmp/.rnd"])
+
+AC_ARG_WITH(cafile,
+  [  --with-cafile=PATH      Path to a CA file used by OpenSSL (default /tmp/certs.pem)],
+  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-cafile requires a path'); else CAFILE="$withval"; fi],
+  [CAFILE="/tmp/certs.pem"])
 
 dnl Need for now.  Remove later.
 AC_ARG_WITH(httpd,
@@ -86,6 +96,8 @@ AC_CHECK_LIB(ssl, SSL_library_init)
 
 AC_SUBST(FLOOD_USE_THREADS)
 AC_SUBST(OPENSSL_PREFIX)
+AC_SUBST(RANDFILE)
+AC_SUBST(CAFILE)
 AC_SUBST(HTTPD_SOURCE)
 AC_SUBST(APR_SOURCE)
 AC_SUBST(APU_SOURCE)

@@ -57,4 +57,7 @@
 
 #define LOCAL_SOCKET_TIMEOUT 15 * APR_USEC_PER_SEC
 
+#define RANDFILE "@RANDFILE@"
+#define CAFILE "@CAFILE@"
+
 #endif  /* __config_h */

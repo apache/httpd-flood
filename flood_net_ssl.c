@@ -59,6 +59,7 @@
 #include "flood_net.h"
 #include "flood_net_ssl.h"
 
+#define OPENSSL_THREAD_DEFINES
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
@@ -71,13 +72,48 @@ struct ssl_socket_t {
     flood_socket_t *socket;
 };
 
+apr_pool_t *ssl_pool;
+
+typedef struct CRYPTO_dynlock_value { 
+    apr_lock_t *lock; 
+} CRYPTO_dynlock_value;
+
+CRYPTO_dynlock_value * ssl_dyn_create(const char* file, int line)
+{
+    CRYPTO_dynlock_value *l;
+
+    l = apr_palloc(ssl_pool, sizeof(CRYPTO_dynlock_value));
+    apr_lock_create(&l->lock, APR_MUTEX, APR_INTRAPROCESS, NULL, ssl_pool);
+    return l;
+}
+
+void ssl_dyn_lock(int mode, CRYPTO_dynlock_value *l, const char *file, 
+                  int line)
+{
+    if (mode & CRYPTO_LOCK)
+        apr_lock_acquire(l->lock);
+    else if (mode & CRYPTO_UNLOCK)
+        apr_lock_release(l->lock);
+}
+
+void ssl_dyn_destroy(CRYPTO_dynlock_value *l, const char *file, int line)
+{
+    apr_lock_destroy(l->lock);
+}
+
 apr_status_t ssl_init_socket(apr_pool_t *pool)
 {
     SSL_library_init();
     OpenSSL_add_ssl_algorithms();
     SSL_load_error_strings();
     ERR_load_crypto_strings();
-    RAND_load_file("/home/jerenkrantz/.rnd", -1);
+    RAND_load_file(RANDFILE, -1);
+
+    CRYPTO_set_dynlock_create_callback(ssl_dyn_create);
+    CRYPTO_set_dynlock_lock_callback(ssl_dyn_lock);
+    CRYPTO_set_dynlock_destroy_callback(ssl_dyn_destroy);
+
+    ssl_pool = pool;
 
     return APR_SUCCESS;
 }
@@ -104,7 +140,8 @@ ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
     ssl_socket->ssl_context = SSL_CTX_new(SSLv23_client_method());
     SSL_CTX_set_options(ssl_socket->ssl_context, SSL_OP_ALL);
     SSL_CTX_set_options(ssl_socket->ssl_context, SSL_MODE_AUTO_RETRY);
-    SSL_CTX_set_default_verify_paths(ssl_socket->ssl_context);
+    /*SSL_CTX_set_default_verify_paths(ssl_socket->ssl_context);*/
+    SSL_CTX_load_verify_locations(ssl_socket->ssl_context, CAFILE, NULL);
 
     /* Initialize the SSL connection */
     ssl_socket->ssl_connection = SSL_new(ssl_socket->ssl_context);
