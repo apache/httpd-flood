@@ -7,10 +7,11 @@
   <urllist>
     <name>Test Hosts</name>
     <description>A bunch of hosts we want to hit</description>
-    <!-- Three static non-MultiView URLs that are included in Apache 2.0 -->
-    <url>http://localhost:8080/index.html.en</url>
-    <url>http://localhost:8080/manual/index.html.en</url>
-    <url>http://localhost:8080/manual/mod/index-bytype.html</url>
+    <!-- change element below to point to default Apache 2.0 installation -->
+    <baseurl>http://localhost</baseurl>
+    <url>/index.html.en</url>
+    <url>/manual/index.html.en</url>
+    <url>/manual/mod/index.html.en</url>
   </urllist>
 
   <!-- The profile describes how we will hit the urllists. 

@@ -5,7 +5,9 @@
     <name>Test Hosts</name>
     <description>A bunch of hosts we want to hit</description>
     <url>https://www.modssl.org/example/test.phtml</url>
+    <!-- This site is currently down
     <url>https://mozilla-crypto.ssleay.org/cryptocheck.php</url>
+    -->
   </urllist>
 
   <profile>
