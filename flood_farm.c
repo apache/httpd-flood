@@ -54,10 +54,10 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
+#include <stdlib.h>     /* exit */
 #include <strings.h>    /* strncasecmp */
 #include <apr_errno.h>
 #include <apr_thread_proc.h>
-#include <threadproc.h>
 #include <apr_strings.h>
 #include "config.h"
 #include "flood_farmer.h"
