@@ -64,7 +64,10 @@
 #include "flood_profile.h"
 #include "flood_config.h"
 #include "flood_net.h"
+
+#if FLOOD_HAS_OPENSSL
 #include "flood_net_ssl.h"
+#endif /* FLOOD_HAS_OPENSSL */
 
 #include "flood_round_robin.h"
 #include "flood_simple_reports.h"
@@ -198,7 +201,7 @@ static apr_status_t generic_profile_destroy(profile_t *p)
     return APR_SUCCESS;
 }
 
-const char * profile_event_handler_names[] = {
+const char *profile_event_handler_names[] = {
     "profile_init",
     "report_init",
     "get_next_url",
@@ -320,9 +323,7 @@ static apr_status_t assign_profile_event_handler(profile_events_t *events,
 {
     profile_event_handler_t *p;
 
-    for (p = &profile_event_handlers[0];
-         p;
-         p++) {
+    for (p = &profile_event_handlers[0]; p; p++) {
         /* these are case insensitive (both key and value) for the sake of simplicity */
         if (strncasecmp(impl_name, (*p).impl_name, FLOOD_STRLEN_MAX) == 0) {
             if (strncasecmp(handler_name, (*p).handler_name, FLOOD_STRLEN_MAX) == 0) {
@@ -374,10 +375,17 @@ static apr_status_t assign_profile_event_handler(profile_events_t *events,
                 return APR_SUCCESS;
             } else {
                 /* invalid implementation for this handler */
+                apr_file_printf(local_stderr, "Invalid handler (%s) "
+                                "specified.\n",
+                                handler_name ? handler_name : "NULL");
                 return APR_ENOTIMPL; /* XXX: There's probably a better return val than this? */
             }
         }
     }
+    apr_file_printf(local_stderr, "Invalid implementation (%s) for "
+                    "this handler (%s)\n",
+                    impl_name ? impl_name : "NULL",
+                    handler_name ? handler_name : "NULL");
     return APR_ENOTIMPL; /* no implementation found */
 }
 
