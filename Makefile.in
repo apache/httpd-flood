@@ -16,9 +16,9 @@ CLEAN_TARGETS = $(PROGRAMS)
 
 SUBDIRS = @FLOOD_SUBDIRS@
 
-include $(top_srcdir)/build/rules.mk
+include $(top_builddir)/build/rules.mk
 
-INCLUDES=-I$(srcdir)
+INCLUDES=-I$(srcdir) -I$(builddir)
 
 all: $(SUBDIRS) $(PROGRAMS)
 FLOOD_OBJS = flood_round_robin.lo flood_profile.lo flood_config.lo \

@@ -1,5 +1,9 @@
 Changes since 1.0:
 
+* Use APR's bundled mkdir script.  [Justin Erenkrantz]
+
+* Support VPATH builds again.  [Justin Erenkrantz]
+
 * Added the "content-type" parameter for URLs using the POST method.
   [Philippe Marzouk <phil@ozigo.org>]
 

@@ -125,6 +125,7 @@ CPPFLAGS="$CPPFLAGS `$apr_config --cppflags --includes`"
 LDFLAGS="$LDFLAGS `$apr_config --ldflags`"
 LIBTOOL="`$apr_config --apr-libtool`"
 LIBTOOL_LIBS="$LIBTOOL_LIBS `$apr_config --link-libtool --libs`"
+APR_CONFIG="$apr_config"
 
 APR_FIND_APU(./apr-util)
 
@@ -142,6 +143,7 @@ CPPFLAGS="$CPPFLAGS `$apu_config --includes`"
 LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS `$apu_config --ldflags`"
 dnl Since libaprutil relies on libapr, it *must* appear before -lapr.
 LIBTOOL_LIBS="`$apu_config --link-libtool --libs` $LIBTOOL_LIBS"
+APU_CONFIG="$apu_config"
 
 AC_CHECK_FUNC(strtoll, hasstrtoll="1", hasstrtoll="0")
 AC_CHECK_FUNC(strtoq, hasstrtoq="1", hasstrtoq="0")
@@ -184,6 +186,9 @@ AC_SUBST(hasstrtoq)
 AC_SUBST(flood_has_openssl)
 AC_SUBST(flood_has_devrand)
 AC_SUBST(abs_builddir)
+
+AC_SUBST(APR_CONFIG)
+AC_SUBST(APU_CONFIG)
 
 dnl Required for source compatibility with build/rules.mk of httpd-2.0
 LTFLAGS="--silent"
