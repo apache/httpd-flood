@@ -1,0 +1,45 @@
+<flood>
+  <urllist>
+    <name>Test Hosts</name>
+    <description>A bunch of hosts we want to hit</description>
+    <url>https://www.modssl.org/example/test.phtml</url>
+    <url>https://mozilla-crypto.ssleay.org/cryptocheck.php</url>
+    <url>https://www.wellsfargo.com</url>
+  </urllist>
+
+  <profile>
+    <name>RoundRobinProfile</name>
+    <description>Test of the Round Robin Configuration</description>
+    <useurllist>Test Hosts</useurllist>
+    <profile_init>round_robin_profile_init</profile_init>
+    <get_next_url>round_robin_get_next_url</get_next_url>
+    <send_req>ssl_send_req</send_req>
+    <recv_resp>ssl_recv_resp</recv_resp>
+    <loop_condition>round_robin_loop_condition</loop_condition>
+
+    <verify_resp>verify_200</verify_resp>
+    <!-- request_destroy uses default -->
+    <!-- response_destroy uses default -->
+    <socket_destroy>ssl_socket_destroy</socket_destroy>
+    <profile_destroy>round_robin_profile_destroy</profile_destroy>
+
+    <!-- Simple Reporting -->
+    <report_init>simple_report_init</report_init>
+    <process_stats>simple_process_stats</process_stats>
+    <report_stats>simple_report_stats</report_stats>
+    <destroy_report>simple_destroy_report</destroy_report>
+  </profile>
+
+  <farmer>
+    <name>Joe</name>
+    <!-- run the Joe farmer 2 times -->
+    <count>2</count>
+    <!-- Joe uses this profile -->
+    <useprofile>RoundRobinProfile</useprofile>
+  </farmer>
+
+  <farm>
+    <name>Bingo</name>
+    <usefarmer>Joe</usefarmer>
+  </farm>
+</flood>

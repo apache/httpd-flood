@@ -1,0 +1,51 @@
+<!-- Hi, I'm a flood config file.  -->
+<flood>
+  <!-- A urllist describes which hosts and which methods we want to hit. -->
+  <urllist>
+    <name>Test Hosts</name>
+    <description>A bunch of hosts we want to hit</description>
+    <url method="POST" payload="version=2&amp;keyword=foo&amp;results=20&amp;what=apr.apache.org">http://search.apache.org/index.cgi</url>
+    <url method="HEAD">http://www.apache.org/</url>
+    <url method="GET">http://dev.apache.org/</url>
+    <url>http://apr.apache.org/</url>
+  </urllist>
+
+  <!-- The profile describes how we will hit the urllists. 
+       Round robin runs all of the URLs in the urllist in order once. -->
+  <profile>
+    <name>RoundRobinProfile</name>
+    <description>Round Robin Configuration</description>
+    <useurllist>Test Hosts</useurllist>
+    <profile_init>round_robin_profile_init</profile_init>
+    <get_next_url>round_robin_get_next_url</get_next_url>
+    <!-- <send_req>ssl_send_req</send_req> -->
+    <!-- <recv_resp>ssl_recv_resp</recv_resp> -->
+    <verify_resp>verify_200</verify_resp>
+    <loop_condition>round_robin_loop_condition</loop_condition>
+    <!-- request_destroy uses default -->
+    <!-- response_destroy uses default -->
+    <!-- <socket_destroy>ssl_socket_destroy</socket_destroy> -->
+    <profile_destroy>round_robin_profile_destroy</profile_destroy>
+
+    <!-- Simple Reporting -->
+    <report_init>simple_report_init</report_init>
+    <process_stats>simple_process_stats</process_stats>
+    <report_stats>simple_report_stats</report_stats>
+    <destroy_report>simple_destroy_report</destroy_report>
+  </profile>
+
+  <!-- A farmer runs one profile a certain number of times.  -->
+  <farmer>
+    <name>Joe</name>
+    <!-- run the Joe farmer 5 times -->
+    <count>5</count>
+    <!-- Joe uses this profile -->
+    <useprofile>RoundRobinProfile</useprofile>
+  </farmer>
+
+  <!-- A farm contains a bunch of farmers - each farmer is a thread.  -->
+  <farm>
+    <name>Bingo</name>
+    <usefarmer>Joe</usefarmer>
+  </farm>
+</flood>
