@@ -54,12 +54,19 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
-#include <strings.h>    /* strncasecmp */
-#include <string.h>     /* strncmp */
 #include <apr_file_io.h>
 #include <apr_xml.h>
 #include <apr_strings.h>
-#include <stdlib.h>
+
+#if APR_HAVE_STRINGS_H
+#include <strings.h>    /* strncasecmp */
+#endif
+#if APR_HAVE_STRING_H
+#include <string.h>    /* strncasecmp */
+#endif
+#if APR_HAVE_STDLIB_H
+#include <stdlib.h>     /* strtol */
+#endif
 
 #include "config.h"
 #include "flood_config.h"

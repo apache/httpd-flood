@@ -54,11 +54,16 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
-#include <stdlib.h>
 #include <apr_file_io.h>
 #include <apr_strings.h>
 #include <apr_errno.h>
-#include <string.h>
+
+#if APR_HAVE_STRING_H
+#include <string.h>    /* strncasecmp */
+#endif
+#if APR_HAVE_STDLIB_H
+#include <stdlib.h>     /* strtol */
+#endif
 
 #include "config.h"
 #include "flood_profile.h"

@@ -54,13 +54,15 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
-#include <stdlib.h>      /* For atexit */
-#include <apr.h>        
 #include <apr_general.h> /* For apr_initialize */
 #include <apr_strings.h>
 #include <apr_file_io.h>
 
-#include <flood_profile.h>
+#if APR_HAVE_STDLIB_H
+#include <stdlib.h>     /* atexit */
+#endif
+
+#include "flood_profile.h"
 
 /* FIXME: Base this on RCS ID? */
 #define FLOOD_VERSION ".001"

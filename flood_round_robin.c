@@ -54,14 +54,6 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
-#include <flood_profile.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <regex.h>
-#include <assert.h>
-
 #include <apr_file_io.h>
 #include <apr_network_io.h>
 #include <apr_strings.h>
@@ -69,9 +61,31 @@
 #include <apr_lib.h>
 #include <apr_hash.h>
 
+#if APR_HAVE_STRINGS_H
+#include <strings.h>    /* strncasecmp */
+#endif
+#if APR_HAVE_STRING_H
+#include <string.h>    /* strncasecmp */
+#endif
+#if APR_HAVE_STDLIB_H
+#include <stdlib.h>     /* strtol */
+#endif
+#if APR_HAVE_UNISTD_H
+#include <unistd.h>      /* For pause */
+#endif
+#if APR_HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if APR_HAVE_LIMITS_H
+#include <limits.h>
+#endif
+#include <assert.h>
+#include "regex.h"
+
 #include "config.h"
 #include "flood_net.h"
 #include "flood_round_robin.h"
+#include "flood_profile.h"
 
 /* On FreeBSD, the return of regexec() is 0 or REG_NOMATCH, and REG_OK is undefined */
 #ifndef REG_OK
@@ -570,7 +584,6 @@ static int count_xml_seq_child(apr_xml_elem *urllist_elem)
 
     for (e = urllist_elem->first_child; e; e = e->next) {
         if (strncasecmp(e->name, XML_URLLIST_SEQUENCE, FLOOD_STRLEN_MAX) == 0) {
-            apr_xml_elem *child_url_elem;
             int children_urls, list_count;
             list_count = 0;
             if (e->attr) {

@@ -54,11 +54,14 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
-#include "flood_easy_reports.h"
-#include <apr.h>
 #include <apr_portable.h>
 #include <apr_strings.h>
+
+#if APR_HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#include "flood_easy_reports.h"
 
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;

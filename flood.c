@@ -54,14 +54,17 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
-#include <stdlib.h>      /* For atexit */
-#include <stdlib.h>      /* For rand()/seed() */
-#include <unistd.h>      /* For pause */
-#include <apr.h>        
 #include <apr_general.h> /* For apr_initialize */
 #include <apr_strings.h>
 #include <apr_file_io.h>
 #include <apr_pools.h>
+
+#if APR_HAVE_STDLIB_H
+#include <stdlib.h>     /* rand/strtol */
+#endif
+#if APR_HAVE_UNISTD_H
+#include <unistd.h>      /* For pause */
+#endif
 
 #include "config.h"
 #include "flood_profile.h"

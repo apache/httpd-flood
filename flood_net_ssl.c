@@ -54,6 +54,13 @@
  * Originally developed by Aaron Bannert and Justin Erenkrantz, eBuilt.
  */
 
+#include <apr_portable.h>
+#include <apr_strings.h>
+
+#if APR_HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include "config.h"
 #include "flood_profile.h"
 #include "flood_net.h"
@@ -65,10 +72,6 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
-
-#include <apr_portable.h>
-#include <apr_strings.h>
-#include <unistd.h>
 
 struct ssl_socket_t {
     SSL_CTX *ssl_context;

@@ -52,8 +52,14 @@
  * <http://www.apache.org/>.
  */
 
+#include <apr.h>
+
+#if APR_HAVE_STDLIB_H
+#include <stdlib.h>     /* rand/strtol */
+#endif
+#if APR_HAVE_STRING_H
 #include <string.h>
-#include <stdlib.h>
+#endif
 #include <assert.h>
 
 #include "config.h"
