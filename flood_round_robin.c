@@ -72,6 +72,11 @@
 #include "config.h"
 #include "flood_net.h"
 
+/* On FreeBSD, the return of regexec() is 0 or REG_NOMATCH, and REG_OK is undefined */
+#ifndef REG_OK
+#define REG_OK 0
+#endif
+
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
 
