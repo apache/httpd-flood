@@ -1,5 +1,8 @@
 Changes since milestone-03:
 
+* Add ability to detect when the server has closed the connection instead
+  of erroring out (think Keep-Alive).  [Justin Erenkrantz]
+
 * Add chunked support.  [Justin Erenkrantz]
 
 * Add detection of CAPATH variable for RedHat installs.

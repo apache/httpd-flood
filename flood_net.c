@@ -140,5 +140,26 @@ apr_status_t write_socket(flood_socket_t *s, request_t *r)
     if (l != r->rbufsize)
         return APR_EGENERAL;
 
-    return APR_SUCCESS;     
+    return e;
+}
+
+apr_status_t check_socket(flood_socket_t *s, apr_pool_t *pool)
+{
+    apr_status_t e;
+    int socketsRead = 1;
+    apr_pollfd_t *pout;
+    apr_int16_t event;
+
+    apr_poll_setup(&pout, 1, pool);
+    apr_poll_socket_add(pout, s->socket, APR_POLLIN | APR_POLLPRI | APR_POLLERR | APR_POLLHUP | APR_POLLNVAL);
+
+    e = apr_poll(pout, &socketsRead, 1000);
+    if (socketsRead) {
+        apr_poll_revents_get(&event, s->socket, pout);
+        if (event) {
+            return APR_EGENERAL;
+        }
+    }
+    
+    return APR_SUCCESS;
 }

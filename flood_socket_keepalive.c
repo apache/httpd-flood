@@ -104,6 +104,13 @@ apr_status_t keepalive_begin_conn(socket_t *sock, request_t *req, apr_pool_t *po
 {
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
 
+    if (!ksock->reopen_socket && ksock->s) {
+        apr_status_t e;
+        e = check_socket(ksock->s, pool);
+        if (e != APR_SUCCESS) {
+            ksock->reopen_socket = 1;
+        }
+    }
     if (ksock->reopen_socket || ksock->s == NULL) {
         if (strcasecmp(req->parsed_uri->scheme, "https") == 0) {
         /* If we don't have SSL, error out. */
