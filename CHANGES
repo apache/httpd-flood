@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Sync with latest find_apr.m4 and find_apu.m4 to detect 1.0 APR and APR-util.
+  [Justin Erenkrantz]
+
 * Add <proxyurl> child element to <urllist> to request against a proxy.
   [Justin Erenkrantz]
 

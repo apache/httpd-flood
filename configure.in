@@ -109,7 +109,7 @@ if test "$enable_ssl" = "yes"; then
     ])
 fi
 
-APR_FIND_APR(./apr)
+APR_FIND_APR(./apr,,,[1 0])
 
 if test "$apr_found" = "no"; then
   AC_MSG_ERROR([APR not found.  Please read the documentation.])
@@ -127,7 +127,7 @@ LIBTOOL="`$apr_config --apr-libtool`"
 LIBTOOL_LIBS="$LIBTOOL_LIBS `$apr_config --link-libtool --libs`"
 APR_CONFIG="$apr_config"
 
-APR_FIND_APU(./apr-util)
+APR_FIND_APU(./apr-util,,,[1 0])
 
 if test "$apu_found" = "no"; then
   AC_MSG_ERROR([APR-util not found.  Please read the documentation.])
