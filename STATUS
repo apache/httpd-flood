@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/18 06:46:07 $]
+Last modified at [$Date: 2001/07/18 06:51:27 $]
 
 Release:
 
@@ -138,8 +138,8 @@ Open issues:
                    being invoked as part of a megaconglomerate (rsh/ssh).)
   
     * Supporting use of installed APR / APR-util
-       Justin says: Requires changes to APR/APR-util.
-       Aaron asks: Is this still true? (remove this line if true ;)
+       Justin says: Requires changes to APR/APR-util to make it install
+                    the right stuff.  We currently rely on the source.
 
     * Mandrake Linux 8.0 and OpenSSL 0.9.6a just aren't coexisting at all.
       The problem seems to be that OpenSSL is refusing to initialize the
