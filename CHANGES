@@ -1,3 +1,5 @@
+Changes since milestone-03:
+
 Changes since milestone-02:
 
 * Updated apr_lock_create to reflect the API change in APR.
