@@ -1,0 +1,15 @@
+#!/bin/sh
+# Go read relative-averages-time.awk - there is nothing here of interest.
+# Execute this as:
+# ./analyze-relative-ramp <flood output> <startcount> <startdelay>
+# As indicated in the next two lines, the defaults are 5 users and 180
+# second delays.
+u=5
+d=180
+if [ "x$2" != "x" ] ; then
+    u=$2 
+fi
+if [ "x$3" != "x" ] ; then
+    d=$3 
+fi
+gawk -f relative-averages-time.awk -v users=$u -v delay=$d $1
