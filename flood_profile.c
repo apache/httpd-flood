@@ -660,7 +660,8 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         timer->begin = apr_time_now();
 
         if ((stat = events->begin_conn(socket, req, pool)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "open request failed.\n");
+            apr_file_printf(local_stderr, "open request failed (%s).\n", 
+                            req->uri);
             return stat;
         }
 
@@ -671,7 +672,8 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
          * But, I'm not sure how to do it otherwise.
          */
         if ((stat = events->create_req(profile, req)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "create request failed.\n");
+            apr_file_printf(local_stderr, "create request failed (%s).\n", 
+                            req->uri);
             return stat;
         }
 
@@ -679,7 +681,8 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
          * we could take a timer sample here */
 
         if ((stat = events->send_req(socket, req, pool)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "send request failed.\n");
+            apr_file_printf(local_stderr, "send request failed (%s).\n", 
+                            req->uri);
             return stat;
         }
 
@@ -687,7 +690,8 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         timer->write = apr_time_now();
 
         if ((stat = events->recv_resp(&resp, socket, pool)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "receive request failed.\n");
+            apr_file_printf(local_stderr, "receive request failed (%s).\n", 
+                            req->uri);
             return stat;
         }
 
@@ -695,17 +699,20 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         timer->read = apr_time_now();
 
         if ((stat = events->postprocess(profile, req, resp)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "postprocessing failed.\n");
+            apr_file_printf(local_stderr, "postprocessing failed (%s).\n", 
+                            req->uri);
             return stat;
         }
 
         if ((stat = events->verify_resp(&verified, profile, req, resp)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "Error while verifying query.\n");
+            apr_file_printf(local_stderr, 
+                            "Error while verifying query (%s).\n", req->uri);
             return stat;
         }
 
         if ((stat = events->end_conn(socket, req, resp)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "Unable to end the connection.\n");
+            apr_file_printf(local_stderr, 
+                            "Unable to end the connection (%s).\n", req->uri);
             return stat;
         }
 
@@ -715,7 +722,8 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         timer->close = apr_time_now();
 
         if ((stat = events->process_stats(report, verified, req, resp, timer)) != APR_SUCCESS) {
-            apr_file_printf(local_stderr, "Unable to process statistics.\n");
+            apr_file_printf(local_stderr, 
+                            "Unable to process statistics (%s).\n", req->uri);
             return stat;
         }
 
