@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/11/17 01:29:03 $]
+Last modified at [$Date: 2001/11/17 02:02:25 $]
 
 Release:
 
@@ -33,7 +33,7 @@ Other bugs that need fixing:
        Aaron says: I'll bump the required version number after I upgrade. :)
 
     * SEGVs when /tmp/.rnd doesn't exist are bad. Make it configurable
-      and at least bomb with a good error message.
+      and at least bomb with a good error message. (See Doug's patch.)
 
     * If APR has disabled threads, flood should as well. We might want
       to have an enable/disable parameter that does this also, providing
@@ -99,6 +99,11 @@ Documentation that needs writing:
       we support.
 
 Available Patches:
+
+    * Doug MacEachern posted an untested patch demonstrating how to
+      seed openssl from memory instead of from a rnd file.
+
+      Message-ID: <Pine.LNX.4.21.0111161644250.22233-100000@localhost>
 
 Open issues:
 
