@@ -877,7 +877,10 @@ apr_status_t round_robin_postprocess(profile_t *profile,
         regcomp(&re, expanded, REG_EXTENDED);
         status = regexec(&re, resp->rbuf, 10, match, 0);
 
-        assert(status == REG_OK);
+        if (status != REG_OK) {
+            apr_file_printf(local_stderr, "Regular expression match failed (%s)\n", rp->url[rp->current_url].responsetemplate);
+            return APR_EGENERAL;
+	}
 
         size = match[1].rm_eo - match[1].rm_so + 1;
         newValue = apr_palloc(rp->pool, size);
