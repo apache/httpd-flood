@@ -1,5 +1,5 @@
 #!/bin/sh
-autoconf
+${AUTOCONF:-autoconf}
 
 if [ -d ./apr ] ; then
   cd apr
