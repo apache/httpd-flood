@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/11/16 23:41:10 $]
+Last modified at [$Date: 2001/11/17 00:16:47 $]
 
 Release:
 
@@ -39,7 +39,13 @@ Other bugs that need fixing:
     * SEGVs when /tmp/.rnd doesn't exist are bad. Make it configurable
       and at least bomb with a good error message.
 
+    * If APR has disabled threads, flood should as well. We might want
+      to have an enable/disable parameter that does this also, providing
+      an error if threads are desired but not available.
+
 Other features that need writing:
+
+    * Migrate all locks to APRs new lock api.
 
     * We are using apr_os_thread_current() and getpid() in some places
       when what we really want is a GUID. The GUID will be used to
