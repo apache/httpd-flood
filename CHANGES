@@ -1,5 +1,9 @@
 Changes since milestone-02:
 
+* Add ability to have a staggered startup of threads.  By specifying
+  startdelay="X" and startcount="Y", flood will start Y threads every
+  X seconds until the count value is reached.  [Justin Erenkrantz]
+
 * Rewrite the expression/template code to use variable names (backed by a 
   hash table) and allow use of regular expressions for the response
   template.  
