@@ -1,5 +1,7 @@
 Changes since milestone-02:
 
+* Fix regex code to work with Linux as well.  [Justin Erenkrantz]
+
 * Add ability to have a staggered startup of threads.  By specifying
   startdelay="X" and startcount="Y", flood will start Y threads every
   X seconds until the count value is reached.  [Justin Erenkrantz]

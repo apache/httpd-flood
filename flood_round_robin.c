@@ -462,7 +462,7 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
     while (regexec(&re, cur, 2, match, 0) == REG_OK)
     {
         /* We must backup over the ${ characters. */
-        size = match[1].rm_sp - cur - 2;
+        size = match[1].rm_so - 2;
         if (size++)
         {
             cpy = apr_palloc(rp->pool, size);
@@ -471,7 +471,7 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
         else
             cpy = NULL;
 
-        if (*match[1].rm_sp == '=')
+        if (*(cur+match[1].rm_so) == '=')
         {
             if (set)
             {
@@ -484,7 +484,7 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
                 data = apr_psprintf(rp->pool, "%ld", random());
 #endif
                 matchsize = match[1].rm_eo - match[1].rm_so - 1;
-                apr_hash_set(rp->state, match[1].rm_sp+1, matchsize, data);
+                apr_hash_set(rp->state, cur+match[1].rm_so+1, matchsize, data);
             }
             else
                 data = NULL;
@@ -492,7 +492,7 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
         else
         {
             matchsize = match[1].rm_eo - match[1].rm_so;
-            data = apr_hash_get(rp->state, match[1].rm_sp, matchsize);
+            data = apr_hash_get(rp->state, cur+match[1].rm_so, matchsize);
         }
 
         if (!returnValue)
@@ -513,7 +513,7 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
         }
 
         /* Skip over the trailing } */
-        cur += match[1].rm_ep - cur + 1;
+        cur += match[1].rm_eo + 1;
     }
 
     if (!returnValue)
@@ -672,7 +672,7 @@ apr_status_t round_robin_postprocess(profile_t *profile,
 
         size = match[1].rm_eo - match[1].rm_so + 1;
         newValue = apr_palloc(rp->pool, size);
-        apr_cpystrn(newValue, match[1].rm_sp, size);
+        apr_cpystrn(newValue, resp->rbuf + match[1].rm_so, size);
         apr_hash_set(rp->state, rp->url[rp->current_url].responsename,
                      rp->url[rp->current_url].responselen, newValue);
         regfree(&re);
