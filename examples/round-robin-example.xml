@@ -18,13 +18,15 @@
     <useurllist>Test Hosts</useurllist>
     <profile_init>round_robin_profile_init</profile_init>
     <get_next_url>round_robin_get_next_url</get_next_url>
-    <!-- <send_req>ssl_send_req</send_req> -->
-    <!-- <recv_resp>ssl_recv_resp</recv_resp> -->
+    <!-- <open_req>generic_open_req</open_req> -->
+    <create_req>round_robin_create_req</create_req>
+    <!-- <send_req>generic_send_req</send_req> -->
+    <!-- <recv_resp>generic_recv_resp</recv_resp> -->
     <verify_resp>verify_200</verify_resp>
     <loop_condition>round_robin_loop_condition</loop_condition>
     <!-- request_destroy uses default -->
     <!-- response_destroy uses default -->
-    <!-- <socket_destroy>ssl_socket_destroy</socket_destroy> -->
+    <!-- <socket_destroy>generic_socket_destroy</socket_destroy> -->
     <profile_destroy>round_robin_profile_destroy</profile_destroy>
 
     <!-- Simple Reporting -->
@@ -46,6 +48,7 @@
   <!-- A farm contains a bunch of farmers - each farmer is a thread.  -->
   <farm>
     <name>Bingo</name>
-    <usefarmer>Joe</usefarmer>
+    <!-- make 5 identical Joe farmers -->
+    <usefarmer count="1">Joe</usefarmer>
   </farm>
 </flood>

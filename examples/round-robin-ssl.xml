@@ -14,6 +14,7 @@
     <profile_init>round_robin_profile_init</profile_init>
     <get_next_url>round_robin_get_next_url</get_next_url>
     <send_req>ssl_send_req</send_req>
+    <create_req>round_robin_create_req</create_req>
     <recv_resp>ssl_recv_resp</recv_resp>
     <loop_condition>round_robin_loop_condition</loop_condition>
 
@@ -40,6 +41,6 @@
 
   <farm>
     <name>Bingo</name>
-    <usefarmer>Joe</usefarmer>
+    <usefarmer count="1">Joe</usefarmer>
   </farm>
 </flood>
