@@ -26,11 +26,18 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r,
     apr_status_t rv = 0;
     apr_sockaddr_t *destsa;
     flood_socket_t* fs;
+    apr_uri_t *u;
     
     fs = apr_palloc(pool, sizeof(flood_socket_t));
+    if (r->parsed_proxy_uri) {
+        u = r->parsed_proxy_uri;
+    }
+    else {
+        u = r->parsed_uri;
+    }
 
-    if ((rv = apr_sockaddr_info_get(&destsa, r->parsed_uri->hostname, APR_INET, 
-                                    r->parsed_uri->port, 0, pool)) 
+    if ((rv = apr_sockaddr_info_get(&destsa, u->hostname, APR_INET,
+                                    u->port, 0, pool)) 
                                     != APR_SUCCESS) {
         if (status) {
             *status = rv;

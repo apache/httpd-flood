@@ -16,6 +16,7 @@
 #define XML_URLLIST_SEQUENCE_NAME "sequencename"
 #define XML_URLLIST_SEQUENCE_LIST "sequencelist"
 #define XML_URLLIST_BASE_URL "baseurl"
+#define XML_URLLIST_PROXY_URL "proxyurl"
 #define XML_URLLIST_URL "url"
 #define XML_URLLIST_METHOD "method"
 #define XML_URLLIST_METHOD_GET "get"

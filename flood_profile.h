@@ -61,7 +61,6 @@ typedef void socket_t;
 struct request_t {
     /* The basic components to connect to the server */
     char * uri;
-    char * proxy_url;
 
     method_e method;
     int keepalive; /* a boolean */
@@ -74,6 +73,7 @@ struct request_t {
     char * contenttype;
     
     apr_uri_t *parsed_uri;
+    apr_uri_t *parsed_proxy_uri;
 
     /* Raw buffer connection 
      * FIXME: apr_bucket_t? */ 

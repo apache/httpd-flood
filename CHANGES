@@ -1,5 +1,10 @@
 Changes since 1.0:
 
+* Add <proxyurl> child element to <urllist> to request against a proxy.
+  [Justin Erenkrantz]
+
+* Accept HTTP/1.0 responses to HTTP/1.1 requests.  [Justin Erenkrantz]
+
 * Use APR's bundled mkdir script.  [Justin Erenkrantz]
 
 * Support VPATH builds again.  [Justin Erenkrantz]

@@ -103,6 +103,7 @@ typedef struct {
     int urls;
     url_t *url;
     char *baseurl;
+    apr_uri_t *proxy_url;
 
     cookie_t *cookie;
 
@@ -214,7 +215,7 @@ static char *parse_param_string(round_robin_profile_t *rp, char *template)
 apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
 {
     round_robin_profile_t *p;
-    char *cookies;
+    char *cookies, *path;
     char *enc_credtls, *credtls, *authz_hdr = NULL;
     cookie_t *cook;
    
@@ -261,6 +262,15 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
         }
     }
 
+    if (p->proxy_url != NULL) {
+        path = apr_pstrcat(r->pool, r->parsed_uri->scheme, "://",
+                                    r->parsed_uri->hostinfo,
+                                    r->parsed_uri->path, NULL);
+    }
+    else {
+        path = r->parsed_uri->path;
+    }
+
     switch (r->method)
     {
     case GET:
@@ -271,7 +281,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                "Host: %s" CRLF 
                                "%s"
                                "%s" CRLF,
-                               r->parsed_uri->path, 
+                               path,
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->keepalive ? "Keep-Alive" : "Close",
@@ -289,7 +299,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                "Host: %s" CRLF 
                                "%s"
                                "%s" CRLF,
-                               r->parsed_uri->path, 
+                               path, 
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->keepalive ? "Keep-Alive" : "Close",
@@ -312,7 +322,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                    "%s"
                                    "%s" CRLF
                                    "%s",
-                                   r->parsed_uri->path, 
+                                   path, 
                                    r->parsed_uri->query ? "?" : "",
                                    r->parsed_uri->query ? r->parsed_uri->query : "",
                                    r->keepalive ? "Keep-Alive" : "Close",
@@ -331,7 +341,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
 
                                    "%s"
                                    "%s" CRLF "",
-                                   r->parsed_uri->path, 
+                                   path, 
                                    r->parsed_uri->query ? "?" : "",
                                    r->parsed_uri->query ? r->parsed_uri->query : "",
                                    r->keepalive ? "Keep-Alive" : "Close",
@@ -642,7 +652,8 @@ apr_status_t round_robin_profile_init(profile_t **profile,
     apr_status_t rv;
     int i;
     struct apr_xml_elem *root_elem, *profile_elem,
-           *urllist_elem, *count_elem, *useurllist_elem, *baseurl_elem, *e;
+           *urllist_elem, *count_elem, *useurllist_elem, *baseurl_elem,
+           *proxyurl_elem, *e;
     round_robin_profile_t *p;
     char *xml_profile, *xml_urllist, *urllist_name;
 
@@ -717,6 +728,17 @@ apr_status_t round_robin_profile_init(profile_t **profile,
         p->baseurl = apr_pstrdup(pool, baseurl_elem->first_cdata.first->text);
     } else {
         p->baseurl = NULL;
+    }
+
+    /* do we have proxy url? */
+    if ((rv = retrieve_xml_elem_child(
+             &proxyurl_elem, urllist_elem, XML_URLLIST_PROXY_URL)) == APR_SUCCESS) {
+        /* yes we do */
+        p->proxy_url = apr_pcalloc(p->pool, sizeof(apr_uri_t));
+        apr_uri_parse(p->pool, proxyurl_elem->first_cdata.first->text,
+                      p->proxy_url);
+    } else {
+        p->proxy_url = NULL;
     }
 
     p->urls = 0;
@@ -819,7 +841,7 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
 
     }
 
-    r->parsed_uri = apr_pcalloc(rp->pool, sizeof(apr_uri_t));
+    r->parsed_uri = apr_palloc(rp->pool, sizeof(apr_uri_t));
 
     if (rp->baseurl != NULL) {
         r->uri = apr_pstrcat(rp->pool, rp->baseurl, r->uri, NULL);
@@ -856,6 +878,8 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     }
     if (!r->parsed_uri->path) /* If / is not there, be nice.  */
         r->parsed_uri->path = "/";
+
+    r->parsed_proxy_uri = rp->proxy_url;
 
 #ifdef PROFILE_DEBUG
     apr_file_printf(local_stdout, "Generating request to: %s\n", r->uri);
@@ -1076,6 +1100,8 @@ apr_status_t verify_200(int *verified, profile_t *profile, request_t *req, respo
     if (!res)
         *verified = FLOOD_VALID;
     else if (memcmp(resp->rbuf + 9, "3", 1) == 0) /* Accept 3xx as okay. */
+        *verified = FLOOD_VALID;
+    else if (memcmp(resp->rbuf, "HTTP/1.0 2", 10) == 0) /* HTTP/1.0 is ok. */
         *verified = FLOOD_VALID;
     else
         *verified = FLOOD_INVALID;
