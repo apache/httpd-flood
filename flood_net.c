@@ -84,7 +84,16 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
             close_socket(fs);
             return NULL;
         }
-        else {
+        else if (rv == EADDRNOTAVAIL)
+        {
+            /* We have run out of ports available.  Sleep for four minutes,
+             * and try again. 
+             */
+            apr_sleep(4 * 60 * APR_USEC_PER_SEC);
+            return open_socket(pool, r);
+        }
+        else
+        {
             /* FIXME: Handle */
             close_socket(fs);
             return NULL;

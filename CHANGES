@@ -1,5 +1,8 @@
 Changes since milestone-02:
 
+* Sleep for four minutes (typical TIME_WAIT period) when we run out of 
+  ports rather than exiting with an error.  [Justin Erenkrantz]
+
 * Fix regex code to work with Linux as well.  [Justin Erenkrantz]
 
 * Add ability to have a staggered startup of threads.  By specifying
