@@ -107,7 +107,13 @@ apr_status_t set_seed(config_t *config)
     }
 
     /* actually set the seed */
+#if FLOOD_USE_RAND
     srand(seed);
+#elif FLOOD_USE_RAND48
+    srand48(seed);
+#elif FLOOD_USE_RANDOM
+    srandom(seed);
+#endif
 
     return APR_SUCCESS;
 }

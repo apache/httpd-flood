@@ -86,6 +86,27 @@ dnl Replace `main' with a function in -lcrypto:
 AC_CHECK_LIB(crypto, SHA1)
 AC_CHECK_LIB(ssl, SSL_library_init)
 
+AC_CHECK_FUNC(rand, hasrand="1", hasrand="0")
+AC_CHECK_FUNC(lrand48, hasrand48="1", hasrand48="0")
+AC_CHECK_FUNC(random, hasrandom="1", hasrandom="0")
+
+AC_MSG_CHECKING([random number generator to use])
+prngrand="0"
+prngrand48="0"
+prngrandom="0"
+if test $hasrandom = "1"; then
+    prngrandom="1"
+    AC_MSG_RESULT([random])
+else if $hasrand48 = "1"; then
+    prngrand48="1"
+    AC_MSG_RESULT([rand48])
+else if $hasrand = "1"; then
+    prngrand="1"
+    AC_MSG_RESULT([rand])
+fi
+fi
+fi
+
 AC_SUBST(FLOOD_USE_THREADS)
 AC_SUBST(OPENSSL_PREFIX)
 AC_SUBST(RANDFILE)
@@ -97,6 +118,9 @@ AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(EXTRA_CPPFLAGS)
 AC_SUBST(EXTRA_LDFLAGS)
 AC_SUBST(EXTRA_LIBS)
+AC_SUBST(prngrand)
+AC_SUBST(prngrand48)
+AC_SUBST(prngrandom)
 
 dnl Makefile outputs
 dnl Note: There can only be one AC_OUTPUT command.

@@ -310,7 +310,22 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
         if (strncasecmp(e->name, XML_URLLIST_URL, FLOOD_STRLEN_MAX) == 0) {
             /* Do we need strdup? */
             if (e->first_cdata.first && e->first_cdata.first->text)
-                p->url[i].url = apr_pstrdup(pool, e->first_cdata.first->text);
+            {
+                if (e->first_cdata.first->next)
+                {
+                    apr_text *t;
+                    t = e->first_cdata.first; 
+                    p->url[i].url = apr_pstrdup(pool, t->text);
+                    while (t = t->next)
+                    {
+                        p->url[i].url = apr_pstrcat(pool, p->url[i].url, 
+                                                    t->text, NULL);
+                    }
+                }
+                else
+                    p->url[i].url = apr_pstrdup(pool, 
+                                                e->first_cdata.first->text);
+            }
             if (e->attr)
             {
                 apr_xml_attr *attr = e->attr;
@@ -456,7 +471,13 @@ char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
             if (set)
             {
                 /* We need to assign it a random value. */
+#if FLOOD_USE_RAND
                 data = apr_psprintf(rp->pool, "%d", rand());
+#elif FLOOD_USE_RAND48
+                data = apr_psprintf(rp->pool, "%ld", lrand48());
+#elif FLOOD_USE_RANDOM
+                data = apr_psprintf(rp->pool, "%ld", random());
+#endif
                 matchsize = match[1].rm_eo - match[1].rm_so - 1;
                 apr_hash_set(rp->state, match[1].rm_sp+1, matchsize, data);
             }
@@ -554,19 +575,12 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
         if (rp->url[rp->current_url].predelayprecision) {
             /* FIXME: this should be more portable, like apr_generate_random_bytes() */
             float factor = -1.0 + (2.0*rand()/(RAND_MAX+1.0));
-            apr_file_printf(local_stderr,
-                            "Generating random predelay factor of %fus\n",
-                            factor);
             real_predelay += rp->url[rp->current_url].predelayprecision * factor;
         }
 
         /* we can only delay positive times, can't go back in time :( */
         if (real_predelay < 0)
             real_predelay = 0;
-
-        apr_file_printf(local_stderr,
-                        "Generating random predelay of %" APR_INT64_T_FMT "us\n",
-                        real_predelay);
 
         /* only bother going to sleep if we generated a delay */
         if (real_predelay > 0)
@@ -719,19 +733,12 @@ int round_robin_loop_condition(profile_t *profile)
             if (rp->url[real_current_url].postdelayprecision) {
                 /* FIXME: this should be more portable, like apr_generate_random_bytes() */
                 float factor = -1.0 + (2.0*rand()/(RAND_MAX+1.0));
-                apr_file_printf(local_stderr,
-                                "Generating random postdelay factor of %fus\n",
-                                factor);
                 real_postdelay += rp->url[real_current_url].postdelayprecision * factor;
             }
 
             /* we can only delay positive times, can't go back in time :( */
             if (real_postdelay < 0)
                 real_postdelay = 0;
-
-            apr_file_printf(local_stderr,
-                            "Generating random postdelay of %" APR_INT64_T_FMT "us\n",
-                            real_postdelay);
 
             /* only bother going to sleep if we generated a delay */
             if (real_postdelay > 0)
