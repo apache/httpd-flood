@@ -1,5 +1,12 @@
 Changes since milestone-03:
 
+* Stop using the apr_lock.h API and start using apr_thread_mutex.h
+  instead.  [Aaron Bannert]
+
+* Remove the USE_RW_LOCK_FOR_SSL conditional compiles since we
+  didn't have an autoconf feature test for it nor was it really
+  giving us any benefit.  [Aaron Bannert]
+
 * Add ability to detect when the server has closed the connection instead
   of erroring out (think Keep-Alive).  [Justin Erenkrantz]
 
