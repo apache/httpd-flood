@@ -55,17 +55,17 @@ if test "$enable_ssl" = "yes"; then
   dnl BIO_next only appears in newer versions of OpenSSL
   AC_CHECK_LIB(ssl, BIO_next, LIBS="$LIBS -lssl")
   flood_has_openssl=1
+
+  AC_ARG_WITH(randfile,
+    [  --with-randfile=PATH    Path to a random file used by OpenSSL],
+    [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-randfile requires a path'); else RANDFILE="$withval"; fi],
+    [AC_MSG_ERROR('option --with-randfile must be specified')])
+
+  AC_ARG_WITH(capath,
+    [  --with-capath=PATH      Path to a directory with c_rehash'd CA files used by OpenSSL],
+    [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-capath requires a path'); else CAPATH="$withval"; fi],
+    [AC_MSG_ERROR('option --with-capath must be specified')])
 fi
-
-AC_ARG_WITH(randfile,
-  [  --with-randfile=PATH    Path to a random file used by OpenSSL (default /tmp/.rnd)],
-  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-randfile requires a path'); else RANDFILE="$withval"; fi],
-  [RANDFILE="/tmp/.rnd"])
-
-AC_ARG_WITH(capath,
-  [  --with-capath=PATH      Path to a directory with c_rehash'd CA files used by OpenSSL (default /tmp/certdir)],
-  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-capath requires a path'); else CAPATH="$withval"; fi],
-  [CAPATH="/tmp/certdir"])
 
 dnl Need for now.  Remove later.
 AC_ARG_WITH(httpd,
