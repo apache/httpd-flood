@@ -1,0 +1,16 @@
+
+Changes since milestone-0-1:
+
+* Now using strncasecmp() instead of strncmp() to compare XML
+  identifiers. [Aaron Bannert]
+
+* There is now limited support for Cookies in a Round Robin profile.
+  [Justin Erenkrantz]
+
+* A Farm can consist of multiple Farmers now, instead of being
+  restricted to a single Farmer named "Joe". (This is only correct
+  if you have thread support on your system.) [Aaron Bannert]
+
+* Limited support for Farms has been implemented. There can
+  be one Farm named "Bingo". [Aaron Bannert]
+
