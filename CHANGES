@@ -1,5 +1,11 @@
 Changes since milestone-02:
 
+* Updated apr_lock_create to reflect the API change in APR.
+  [Aaron Bannert]
+
+* Fix an unterminated string that would produce garbage cookie strings
+  when processing multiple cookies.  [Chris Williams <chriwill@cmguc.com>]
+
 * Allow OpenSSL to seed from memory rather than a file if we don't
   have random support.  [Doug MacEachern]
 
