@@ -488,6 +488,54 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
     return APR_SUCCESS;
 }
 
+char *expand_param_string(round_robin_profile_t *rp, char *template)
+{
+    char *cpy, *cur, *prev, *data, *returnValue;
+         
+    prev = template;
+    returnValue = NULL;
+
+    cur = strstr(prev, "$");
+    while (cur)
+    {
+        /* What do we want to fill in? */
+        if (apr_isdigit(*(cur+1)))
+            data = rp->state[*(cur+1) - '0'];
+
+        /* May be 0, but that's okay. */
+        if (cur-prev)
+        {
+            /* Copy the $ character, but we'll set it to NULL soon. */
+            cpy = apr_pmemdup(rp->pool, prev, cur - prev + 1);
+            cpy[cur-prev] = '\0';
+
+            if (!returnValue) 
+                returnValue = apr_pstrcat(rp->pool, cpy, data, NULL);
+            else
+                returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, NULL);
+        }
+        else
+        {
+            if (!returnValue) 
+                returnValue = apr_pstrdup(rp->pool, data);
+            else
+                returnValue = apr_pstrcat(rp->pool, returnValue, data, NULL);
+        }
+
+        prev = cur + 2;
+
+        cur = strstr(prev, "$");
+    }
+    if (*prev)
+    { 
+        if (!returnValue) 
+            returnValue = apr_pstrdup(rp->pool, prev);
+        else
+            returnValue = apr_pstrcat(rp->pool, returnValue, prev, NULL);
+    }
+    return returnValue;
+}
+
 char *parse_param_string(round_robin_profile_t *rp, char *template, 
                          int paramcount, param_e payload)
 {
@@ -514,6 +562,7 @@ char *parse_param_string(round_robin_profile_t *rp, char *template,
             case FILE_DATA:
                 break;
             }
+            rp->state[rp->states++] = apr_pstrdup(rp->pool, data);
         }
         else if (apr_isdigit(*(cur+1)))
         {
@@ -688,24 +737,31 @@ apr_status_t round_robin_postprocess(profile_t *profile,
     }
     if (rp->url[rp->current_url].responsetemplate)
     {
-        char *c, *endfirsthalf, *secondhalf, *ec, *bc;
-        c = apr_pstrdup(rp->pool, rp->url[rp->current_url].responsetemplate);
-        endfirsthalf = strstr(c,"$$"); 
+        char *c, *endfirsthalf, *ec, *bc;
+        char *firsthalf, *secondhalf;
+        int firsthalflen;
+
+        c = rp->url[rp->current_url].responsetemplate;
+        endfirsthalf = strstr(c,"$$");
+
         if (!endfirsthalf)
             return APR_EGENERAL;
-        *endfirsthalf = '\0';
-        secondhalf = endfirsthalf + 2;
+
+        apr_cpystrn(firsthalf, c, endfirsthalf - c);
+        firsthalf = expand_param_string(rp, firsthalf);
+        firsthalflen = strlen(firsthalf);
+
+        secondhalf = expand_param_string(rp, endfirsthalf+2);
+
         bc = resp->rbuf;
-        /* The response pattern must be on the same line. 
-         * Consider this a lameo maximal regular expression match.
-         */
+        /* The response pattern must be on the same line.  */
         do
         {
-            bc = strstr(bc, c);
+            bc = strstr(bc, firsthalf);
             if (!bc)
                 return APR_EGENERAL;
             /* Skip the part that was given. */
-            bc += endfirsthalf - c;
+            bc += firsthalflen;
             /* Now search for the second half. */
             ec = strstr(bc, secondhalf);
             if (!ec)
