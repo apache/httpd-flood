@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/12/04 09:14:20 $]
+Last modified at [$Date: 2001/12/04 10:43:23 $]
 
 Release:
 
@@ -120,11 +120,6 @@ Documentation that needs writing:
       we support.
 
 Available Patches:
-
-    * Doug MacEachern posted an untested patch demonstrating how to
-      seed openssl from memory instead of from a rnd file.
-
-      Message-ID: <Pine.LNX.4.21.0111161644250.22233-100000@localhost>
 
 Open issues:
 
