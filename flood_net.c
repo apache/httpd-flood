@@ -58,13 +58,19 @@
 #include "flood_profile.h"
 #include "flood_net.h"
 
+struct flood_socket_t {
+    apr_socket_t *socket;
+    apr_pollfd_t *poll;
+};
+
 /* Open the TCP connection to the server */
-apr_socket_t* open_socket(apr_pool_t *pool, request_t *r)
+flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
 {
     apr_status_t rv = 0;
     apr_sockaddr_t *destsa;
-    /* FIXME: apr_socket_t == socket_t - fix profile.h */
-    apr_socket_t *socket;
+    flood_socket_t* fs;
+    
+    fs = apr_palloc(pool, sizeof(flood_socket_t));
 
     if ((rv = apr_sockaddr_info_get(&destsa, r->parsed_uri->hostname, APR_INET, 
                                     r->parsed_uri->port, 0, pool)) 
@@ -72,49 +78,58 @@ apr_socket_t* open_socket(apr_pool_t *pool, request_t *r)
         return NULL;
     }
 
-    if ((rv = apr_socket_create(&socket, APR_INET, SOCK_STREAM,
+    if ((rv = apr_socket_create(&fs->socket, APR_INET, SOCK_STREAM,
                                 pool)) != APR_SUCCESS) {
         return NULL;
     }
 
-    if ((rv = apr_connect(socket, destsa)) != APR_SUCCESS) {
+    if ((rv = apr_connect(fs->socket, destsa)) != APR_SUCCESS) {
         if (APR_STATUS_IS_EINPROGRESS(rv)) {
             /* FIXME: Handle better */
-            apr_socket_close(socket);
+            close_socket(fs);
             return NULL;
         }
         else {
             /* FIXME: Handle */
-            apr_socket_close(socket);
+            close_socket(fs);
             return NULL;
         }
     }
 
-    apr_setsocketopt(socket, APR_SO_TIMEOUT, LOCAL_SOCKET_TIMEOUT);
+    apr_setsocketopt(fs->socket, APR_SO_TIMEOUT, LOCAL_SOCKET_TIMEOUT);
 
-    return socket;
+    apr_poll_setup(&fs->poll, 1, pool);
+    apr_poll_socket_add(fs->poll, fs->socket, APR_POLLIN);
+
+    return fs;
 }
 
 /* close down TCP socket */
-void close_socket(apr_socket_t *s)
+void close_socket(flood_socket_t *s)
 {
     /* FIXME: recording and other stuff here? */
-    apr_socket_close(s);
+    apr_socket_close(s->socket);
 }
 
-apr_status_t read_socket(apr_socket_t *s, char *buf, int *buflen)
+apr_status_t read_socket(flood_socket_t *s, char *buf, int *buflen)
 {
-    return apr_recv(s, buf, buflen);
+    apr_status_t e;
+    int socketsRead = 1;
+
+    e = apr_poll(s->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+    if (e != APR_SUCCESS)
+        return e;
+    return apr_recv(s->socket, buf, buflen);
 }
 
-apr_status_t write_socket(apr_socket_t *s, request_t *r)
+apr_status_t write_socket(flood_socket_t *s, request_t *r)
 {
     apr_size_t l;
     apr_status_t e;
 
     l = r->rbufsize;
 
-    e = apr_send(s, r->rbuf, &l);
+    e = apr_send(s->socket, r->rbuf, &l);
 
     /* FIXME: Better error and allow restarts? */
     if (l != r->rbufsize)
