@@ -270,6 +270,7 @@ profile_event_handler_t profile_event_handlers[] = {
 
     /* Verification by OK/200 */
     {"verify_resp",      "verify_200",                   &verify_200},
+    {"verify_resp",      "verify_status_code",           &verify_status_code},
 
     /* Simple Reports */
     {"report_init",      "simple_report_init",           &simple_report_init},

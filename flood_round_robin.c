@@ -892,6 +892,25 @@ apr_status_t verify_200(int *verified, profile_t *profile, request_t *req, respo
     return APR_SUCCESS;
 }
 
+apr_status_t verify_status_code(int *verified, profile_t *profile,
+                                request_t *req, response_t *resp)
+{
+    const char delimiter = ' ';
+    char *state, *protocol, *scode;
+
+    protocol = apr_strtok(resp->rbuf, &delimiter, &state);
+    scode = apr_strtok(NULL, &delimiter, &state);
+
+    if (scode[0] == '2' || scode[0] == '3') {
+        *verified = FLOOD_VALID;
+    }
+    else {
+        *verified = FLOOD_INVALID;
+    }
+
+    return APR_SUCCESS;
+}
+
 int round_robin_loop_condition(profile_t *profile)
 {
     round_robin_profile_t *rp;

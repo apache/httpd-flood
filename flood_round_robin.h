@@ -72,6 +72,10 @@ apr_status_t verify_200(int *verified,
                         profile_t *profile,
                         request_t *req,
                         response_t *resp);
+apr_status_t verify_status_code(int *verified,
+                                profile_t *profile,
+                                request_t *req,
+                                response_t *resp);
 int round_robin_loop_condition(profile_t *profile);
 apr_status_t round_robin_profile_destroy(profile_t *profile);
 
