@@ -55,6 +55,7 @@
  */
 
 #include "flood_report_relative_times.h"
+#include <unistd.h>
 #include <apr.h>
 #include <apr_portable.h>
 #include <apr_strings.h>
@@ -100,7 +101,11 @@ apr_status_t relative_times_process_stats(report_t *report, int verified, reques
     }
 
     /* FIXME: this call may need to be in a critical section */
+#if APR_HAS_THREADS
     apr_file_printf(local_stdout, "%s %ld %s\n", buf, apr_os_thread_current(), req->uri);
+#else
+    apr_file_printf(local_stdout, "%s %d %s\n", buf, getpid(), req->uri);
+#endif
 
     return APR_SUCCESS;
 }

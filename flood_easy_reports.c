@@ -58,6 +58,7 @@
 #include <apr.h>
 #include <apr_portable.h>
 #include <apr_strings.h>
+#include <unistd.h>
 
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
@@ -107,8 +108,12 @@ apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, 
         foo = apr_psprintf(easy->pool, "%s %d", foo, verified);
     }
 
+#if APR_HAS_THREADS
     foo = apr_psprintf(easy->pool, "%s %d %s", foo, apr_os_thread_current(), 
                        req->uri);
+#else
+    foo = apr_psprintf(easy->pool, "%s %d %s", foo, getpid(), req->uri);
+#endif
 
     apr_file_printf(local_stdout, "%s\n", foo);
 

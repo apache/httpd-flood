@@ -118,10 +118,6 @@ apr_status_t set_seed(config_t *config)
     return APR_SUCCESS;
 }
 
-#if HAVE_FORK
-/* FIXME: Add Forking support */
-#endif  /* HAVE_FORK */
-
 int main(int argc, char** argv)
 {
     apr_status_t stat;
@@ -159,11 +155,6 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-#if HAVE_FORK
-    /* do fork()ing if asked */
-#endif  /* HAVE_FORK */
-
-#if FLOOD_USE_THREADS && APR_HAS_THREADS
     if ((stat = run_farm(config, "Bingo", local_pool)) != APR_SUCCESS) {
         char buf[256];
         apr_strerror(stat, (char*) &buf, 256);
@@ -171,18 +162,6 @@ int main(int argc, char** argv)
                         (char*)&buf);
         exit(-1);
     }
-#else
-    /* just run one query */
-    /* FIXME: For now this is incomplete, since we can only run a single profile
-     * called "RoundRobinProfile", and we can only do it once.
-     */
-    if ((stat = run_farmer(config, "Joe", local_pool)) != APR_SUCCESS) {
-        char buf[256];
-        apr_strerror(stat, (char*) &buf, 256);
-        apr_file_printf(local_stderr, "Error running test profile: %s.\n", &buf);
-        exit(-1);
-    }
-#endif  /* FLOOD_USE_THREADS */
 
     /* report results -- for now just print results to stdout */
  

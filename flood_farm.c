@@ -70,17 +70,21 @@ extern apr_file_t *local_stderr;
 struct farm_t {
     const char *name;
     int n_farmers;
+#if APR_HAS_THREADS
     apr_thread_t **farmers; /* pointer to array of threads */
+#else
+    apr_proc_t **farmers;   /* pointer to array of processes */
+#endif
 };
 typedef struct farm_t farm_t;
 
 struct farmer_worker_info_t {
     const char *farmer_name;
     config_t *config;
-    apr_thread_t **thr;
 };
 typedef struct farmer_worker_info_t farmer_worker_info_t;
 
+#if APR_HAS_THREADS
 /**
  * Worker function that is assigned to a thread. Each worker is
  * called a farmer in our system.
@@ -114,10 +118,41 @@ void * APR_THREAD_FUNC farmer_worker(apr_thread_t *thd, void *data)
 #endif
     return NULL;
 }
+#else
+void *farmer_worker(void *data)
+{
+    apr_status_t stat;
+    apr_pool_t *pool;
+    farmer_worker_info_t *info;
+
+    info = (farmer_worker_info_t *)data;
+    apr_pool_create(&pool, NULL);
+
+    /* should we create a subpool here? */
+#ifdef FARM_DEBUG
+    apr_file_printf(local_stdout, "Starting farmer_worker child '%s'.\n",
+                    info->farmer_name);
+#endif
+
+    if ((stat = run_farmer(info->config, info->farmer_name,
+                           pool)) != APR_SUCCESS) {
+        char buf[256];
+        apr_strerror(stat, (char*) &buf, 256);
+        apr_file_printf(local_stderr, "Error running farmer '%s': %s.\n",
+                        info->farmer_name, (char*) &buf);
+        /* just die for now, later try to return status */
+    }
+
+    return NULL;
+}
+#endif
 
 apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
 {
-    apr_status_t stat, child_stat;
+#if APR_HAS_THREADS
+    apr_status_t child_stat;
+#endif
+    apr_status_t stat;
     int usefarmer_count, i, j;
     long farmer_start_count;
     apr_time_t farmer_start_delay;
@@ -217,8 +252,17 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
     farm = apr_pcalloc(pool, sizeof(farm_t));
     farm->name = apr_pstrdup(pool, farm_name);
     farm->n_farmers = usefarmer_count;
+#if APR_HAS_THREADS
     farm->farmers = apr_pcalloc(pool, 
                                 sizeof(apr_thread_t*) * (usefarmer_count + 1));
+#else
+    farm->farmers = apr_pcalloc(pool, 
+                                sizeof(apr_proc_t*) * (usefarmer_count + 1));
+
+    for (i = 0; i < usefarmer_count + 1; i++)
+        farm->farmers[i] = apr_pcalloc(pool, sizeof(apr_proc_t*));
+
+#endif
 
     infovec = apr_pcalloc(pool, sizeof(farmer_worker_info_t) * usefarmer_count);
 
@@ -226,7 +270,7 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
     for (i = 0; i < usefarmer_count; i++) {
         infovec[i].farmer_name = usefarmer_names[i];
         infovec[i].config = config;
-        infovec[i].thr = &farm->farmers[i];
+#if APR_HAS_THREADS
         if ((stat = apr_thread_create(&farm->farmers[i],
                                       NULL,
                                       farmer_worker,
@@ -235,12 +279,24 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
             /* error, perhaps shutdown other threads then exit? */
             return stat;
         }
+#else
+        if (apr_proc_fork(farm->farmers[i], pool) == APR_INCHILD)
+        {
+            farmer_worker(&infovec[i]);
+            exit(0);
+        }
+#endif
         if (farmer_start_delay && (i+1) % farmer_start_count == 0)
             apr_sleep(farmer_start_delay);
     }
 
     for (i = 0; i < usefarmer_count; i++) {
+#if APR_HAS_THREADS
         if ((stat = apr_thread_join(&child_stat, farm->farmers[i])) != APR_SUCCESS) {
+#else
+        if ((stat = apr_proc_wait(farm->farmers[i], APR_WAIT)) != APR_SUCCESS) {
+#endif
+
             apr_file_printf(local_stderr, "Error joining farmer thread '%d' ('%s').\n",
                             i, usefarmer_names[i]);
             return stat;

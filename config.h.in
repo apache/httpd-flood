@@ -1,8 +1,6 @@
 #ifndef __config_h
 #define __config_h
 
-#define FLOOD_USE_THREADS @FLOOD_USE_THREADS@
-
 /* optimal buffer size on this platform, set this from autoconf later */
 #define FLOOD_IOBUF 8192
 
@@ -62,5 +60,12 @@
 #define FLOOD_USE_RAND      @prngrand@
 #define FLOOD_USE_RAND48    @prngrand48@
 #define FLOOD_USE_RANDOM    @prngrandom@
+
+#define FLOOD_HAS_STRTOLL   @hasstrtoll@
+#define FLOOD_HAS_STRTOQ    @hasstrtoq@
+
+#if !FLOOD_HAS_STRTOLL && FLOOD_HAS_STRTOQ
+#define strtoll(p, e, b) strtoq(p, e, b)
+#endif
 
 #endif  /* __config_h */

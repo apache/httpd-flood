@@ -13,22 +13,6 @@ AC_PROG_MAKE_SET
 
 AC_CANONICAL_SYSTEM
 
-AC_MSG_CHECKING([whether threads are to be enabled])
-AC_ARG_ENABLE(threads,dnl
-[  --enable-threads   enable threads (default=yes)],
-enable_threads="$enableval",
-if test ".$enable_threads" = .; then
-    enable_threads=yes
-fi
-)dnl
-if test ".$enable_threads" = .yes; then
-  FLOOD_USE_THREADS=1
-  AC_MSG_RESULT(yes)
-else
-  FLOOD_USE_THREADS=0
-  AC_MSG_RESULT(no)
-fi
-
 dnl openssl-0.9.x/{include,lib}
 AC_ARG_WITH(openssl,
   [  --with-openssl=PATH     Prefix to openssl (default /pkg/openssl-0.9.6b)],
@@ -86,6 +70,9 @@ dnl Replace `main' with a function in -lcrypto:
 AC_CHECK_LIB(crypto, SHA1)
 AC_CHECK_LIB(ssl, SSL_library_init)
 
+AC_CHECK_FUNC(strtoll, hasstrtoll="1", hasstrtoll="0")
+AC_CHECK_FUNC(strtoq, hasstrtoq="1", hasstrtoq="0")
+
 AC_CHECK_FUNC(rand, hasrand="1", hasrand="0")
 AC_CHECK_FUNC(lrand48, hasrand48="1", hasrand48="0")
 AC_CHECK_FUNC(random, hasrandom="1", hasrandom="0")
@@ -107,7 +94,6 @@ fi
 fi
 fi
 
-AC_SUBST(FLOOD_USE_THREADS)
 AC_SUBST(OPENSSL_PREFIX)
 AC_SUBST(RANDFILE)
 AC_SUBST(CAPATH)
@@ -121,10 +107,9 @@ AC_SUBST(EXTRA_LIBS)
 AC_SUBST(prngrand)
 AC_SUBST(prngrand48)
 AC_SUBST(prngrandom)
+AC_SUBST(hasstrtoll)
+AC_SUBST(hasstrtoq)
 
 dnl Makefile outputs
 dnl Note: There can only be one AC_OUTPUT command.
-AC_OUTPUT(
-  Makefile
-  config.h
-)
+AC_OUTPUT(Makefile config.h)

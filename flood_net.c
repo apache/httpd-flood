@@ -84,10 +84,11 @@ flood_socket_t* open_socket(apr_pool_t *pool, request_t *r)
             close_socket(fs);
             return NULL;
         }
-        else if (rv == EADDRNOTAVAIL)
+        else if (rv == EADDRNOTAVAIL || rv == EAGAIN)
         {
-            /* We have run out of ports available.  Sleep for four minutes,
-             * and try again. 
+            /* We have run out of ports available due to TIME_WAIT exhaustion.
+             * Sleep for four minutes, and try again. 
+             * Note: Solaris returns EADDRNOTAVAIL, Linux returns EAGAIN.
              */
             apr_sleep(4 * 60 * APR_USEC_PER_SEC);
             return open_socket(pool, r);

@@ -75,6 +75,8 @@ struct ssl_socket_t {
 };
 
 apr_pool_t *ssl_pool;
+
+#if APR_HAS_THREADS
 apr_lock_t **ssl_locks;
 
 typedef struct CRYPTO_dynlock_value { 
@@ -138,10 +140,13 @@ unsigned long ssl_id(void)
 {
     return (unsigned long) apr_os_thread_current(); 
 }
+#endif
 
 apr_status_t ssl_init_socket(apr_pool_t *pool)
 {
+#if APR_HAS_THREADS
     int i, numlocks;
+#endif
 
     ssl_pool = pool;
 
@@ -151,6 +156,7 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
     ERR_load_crypto_strings();
     RAND_load_file(RANDFILE, -1);
 
+#if APR_HAS_THREADS
     numlocks = CRYPTO_num_locks();
     ssl_locks = apr_palloc(pool, sizeof(apr_lock_t*)*numlocks);
     for (i = 0; i < numlocks; i++)
@@ -170,6 +176,7 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
     CRYPTO_set_dynlock_create_callback(ssl_dyn_create);
     CRYPTO_set_dynlock_lock_callback(ssl_dyn_lock);
     CRYPTO_set_dynlock_destroy_callback(ssl_dyn_destroy);
+#endif
 
     return APR_SUCCESS;
 }
@@ -195,7 +202,10 @@ ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r)
     /* Create a local context */
     ssl_socket->ssl_context = SSL_CTX_new(SSLv23_client_method());
     SSL_CTX_set_options(ssl_socket->ssl_context, SSL_OP_ALL);
+#ifdef SSL_MODE_AUTO_RETRY
+    /* Not all OpenSSL versions support this. */
     SSL_CTX_set_options(ssl_socket->ssl_context, SSL_MODE_AUTO_RETRY);
+#endif
     /*SSL_CTX_set_default_verify_paths(ssl_socket->ssl_context);*/
     SSL_CTX_load_verify_locations(ssl_socket->ssl_context, NULL, CAPATH);
 
