@@ -251,11 +251,13 @@ apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
     int sslError, socketsRead;
 
     /* Wait until there is something to read. */
-    socketsRead = 1;
-    e = apr_poll(s->socket->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
+    if (SSL_pending(s->ssl_connection) < *buflen) {
+        socketsRead = 1;
+        e = apr_poll(s->socket->poll, &socketsRead, LOCAL_SOCKET_TIMEOUT);
 
-    if (socketsRead != 1)
-        return APR_TIMEUP;
+        if (socketsRead != 1)
+            return APR_TIMEUP;
+    }
 
     e = SSL_read(s->ssl_connection, buf, *buflen);
     sslError = SSL_get_error(s->ssl_connection, e);
@@ -270,6 +272,10 @@ apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
         break;
     case SSL_ERROR_ZERO_RETURN: /* Peer closed connection. */
         return APR_EOF; 
+    case SSL_ERROR_SYSCALL: /* Look at errno. */
+        if (errno == 0)
+            return APR_EOF;
+        /* Continue through with the error case. */   
     case SSL_ERROR_WANT_WRITE:  /* Technically, not an error. */
     default:
         ERR_print_errors_fp(stderr);
