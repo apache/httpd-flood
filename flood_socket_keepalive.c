@@ -3,13 +3,15 @@
 
 #include "config.h"
 #include "flood_net.h"
+#include "flood_net_ssl.h"
 #include "flood_socket_keepalive.h"
 
 typedef struct {
-    flood_socket_t *s;
+    void *s;
     apr_pollfd_t *p;
     int reopen_socket; /* A boolean */
     int wantresponse;  /* A boolean */
+    int ssl;           /* A boolean */
 } keepalive_socket_t;
 
 /**
@@ -25,6 +27,8 @@ apr_status_t keepalive_socket_init(socket_t **sock, apr_pool_t *pool)
     new_ksock->s = NULL;
     new_ksock->p = NULL;
     new_ksock->reopen_socket = 1;
+    new_ksock->wantresponse = 1;
+    new_ksock->ssl = 0;
 
     *sock = new_ksock;
     return APR_SUCCESS;
@@ -38,9 +42,21 @@ apr_status_t keepalive_begin_conn(socket_t *sock, request_t *req, apr_pool_t *po
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
 
     if (ksock->reopen_socket || ksock->s == NULL) {
-        ksock->s = open_socket(pool, req);
+        if (strcasecmp(req->parsed_uri->scheme, "https") == 0)
+            ksock->ssl = 1;
+        else
+            ksock->ssl = 0;
+
+        /* The return types are not identical, so it can't be a ternary
+         * operation. */
+        if (ksock->ssl)
+            ksock->s = ssl_open_socket(pool, req);
+        else
+            ksock->s = open_socket(pool, req);
+
         if (ksock->s == NULL)
             return APR_EGENERAL;
+
         ksock->reopen_socket = 0; /* we just opened it */
     }
     req->keepalive = 1;
@@ -54,7 +70,8 @@ apr_status_t keepalive_send_req(socket_t *sock, request_t *req, apr_pool_t *pool
 {
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
     ksock->wantresponse = req->wantresponse;
-    return write_socket(ksock->s, req);
+    return ksock->ssl ? ssl_write_socket(ksock->s, req) :
+                        write_socket(ksock->s, req);
 }
 
 static apr_status_t keepalive_load_resp(response_t *resp, 
@@ -94,7 +111,8 @@ static apr_status_t keepalive_load_resp(response_t *resp,
                 i = remaining;
         }
 
-        status = read_socket(sock->s, b, &i);
+        status = sock->ssl ? ssl_read_socket(sock->s, b, &i) : 
+                             read_socket(sock->s, b, &i);
         if (resp->rbufsize + i > currentalloc)
         {
             /* You can think why this always work. */
@@ -110,7 +128,7 @@ static apr_status_t keepalive_load_resp(response_t *resp,
         cp += i;
         remaining -= i;
     }
-    while (status != APR_EOF && status != APR_TIMEUP && (!remain || remaining));
+    while (status != APR_EGENERAL && status != APR_EOF && status != APR_TIMEUP && (!remain || remaining));
 
     return status;
 }
@@ -132,7 +150,9 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     new_resp->rbufsize = MAX_DOC_LENGTH - 1;
     new_resp->rbuf = apr_pcalloc(pool, new_resp->rbufsize);
 
-    status = read_socket(ksock->s, new_resp->rbuf, &new_resp->rbufsize);
+    status = ksock->ssl ? 
+             ssl_read_socket(ksock->s, new_resp->rbuf, &new_resp->rbufsize) : 
+             read_socket(ksock->s, new_resp->rbuf, &new_resp->rbufsize);
 
     if (status != APR_SUCCESS && status != APR_EOF) {
         return status;
@@ -192,23 +212,26 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     {
         if (new_resp->keepalive)
         {
-            while (content_length && 
+            while (content_length && status != APR_EGENERAL &&
                    status != APR_EOF && status != APR_TIMEUP) {
                 if (content_length > MAX_DOC_LENGTH - 1)
                     i = MAX_DOC_LENGTH - 1;
                 else
                     i = content_length;
 
-                status = read_socket(ksock->s, b, &i);
+                status = ksock->ssl ? ssl_read_socket(ksock->s, b, &i) : 
+                                      read_socket(ksock->s, b, &i);
 
                 content_length -= i;
             }
         }
         else
         {
-            while (status != APR_EOF && status != APR_TIMEUP) {
+            while (status != APR_EGENERAL && status != APR_EOF && 
+                   status != APR_TIMEUP) {
                 i = MAX_DOC_LENGTH - 1;
-                status = read_socket(ksock->s, b, &i);
+                status = ksock->ssl ? ssl_read_socket(ksock->s, b, &i) : 
+                                      read_socket(ksock->s, b, &i);
             }
         }
     }
@@ -226,7 +249,7 @@ apr_status_t keepalive_end_conn(socket_t *sock, request_t *req, response_t *resp
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
 
     if (resp->keepalive == 0) {
-        close_socket(ksock->s);
+        ksock->ssl ? ssl_close_socket(ksock->s) : close_socket(ksock->s);
         ksock->reopen_socket = 1; /* we just closed it */
     }
         

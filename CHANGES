@@ -1,5 +1,9 @@
 Changes since milestone-0-1:
 
+* Merge SSL socket code in with the normal socket calls.  flood will
+  now determine (based on the protocol prefix) whether it should use
+  SSL or not.  [Justin Erenkrantz]
+
 * Add ability to retrieve some data from the response and place it in 
   state variables (max of 10).  These "state" variables live for the 
   life of the profile (i.e. all elements in the urllist).  They may be 

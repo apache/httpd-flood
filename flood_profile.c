@@ -71,7 +71,6 @@
 #include "flood_easy_reports.h"
 #include "flood_socket_generic.h"
 #include "flood_socket_keepalive.h"
-#include "flood_socket_ssl.h"
 #include "flood_report_relative_times.h"
 
 extern apr_file_t *local_stdout;
@@ -303,7 +302,6 @@ const char * profile_group_handler_names[] = {
 const char * report_easy_group[] = { "easy_report_init", "easy_process_stats", "easy_report_stats", "easy_destroy_report", NULL };
 const char * report_simple_group[] = { "simple_report_init", "simple_process_stats", "simple_report_stats", "simple_destroy_report", NULL };
 const char * socket_generic_group[] = { "generic_socket_init", "generic_begin_conn", "generic_send_req", "generic_recv_resp", "generic_end_conn", "generic_socket_destroy", NULL };
-const char * socket_ssl_group[] = { "ssl_socket_init", "ssl_begin_conn", "ssl_send_req", "ssl_recv_resp", "ssl_end_conn", "ssl_socket_destroy", NULL };
 const char * socket_keepalive_group[] = { "keepalive_socket_init", "keepalive_begin_conn", "keepalive_send_req", "keepalive_recv_resp", "keepalive_end_conn", "keepalive_socket_destroy", NULL };
 const char * profile_round_robin_group[] = { "round_robin_profile_init", "round_robin_get_next_url", "round_robin_create_req", "round_robin_postprocess", "round_robin_loop_condition", "round_robin_profile_destroy", NULL };
 const char * report_relative_times_group[] = { "relative_times_report_init", "relative_times_process_stats", "relative_times_report_stats", "relative_times_destroy_report", NULL };
@@ -312,7 +310,6 @@ profile_group_handler_t profile_group_handlers[] = {
     {"report", "easy", report_easy_group },
     {"report", "simple", report_simple_group },
     {"socket", "generic", socket_generic_group },
-    {"socket", "ssl", socket_ssl_group },
     {"socket", "keepalive", socket_keepalive_group },
     {"profiletype", "round_robin", profile_round_robin_group },
     {"report", "relative_times", report_relative_times_group },

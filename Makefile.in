@@ -27,7 +27,7 @@ FLOOD_OBJS = flood_round_robin.lo flood_profile.lo flood_config.lo \
 	flood_net.lo flood_net_ssl.lo \
 	flood_farmer.lo flood_simple_reports.lo flood_easy_reports.lo \
 	flood_farm.lo \
-        flood_socket_generic.lo flood_socket_keepalive.lo flood_socket_ssl.lo \
+        flood_socket_generic.lo flood_socket_keepalive.lo \
 	flood_report_relative_times.lo
 
 flood_OBJECTS = flood.lo $(FLOOD_OBJS)
