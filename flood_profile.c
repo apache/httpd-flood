@@ -120,6 +120,10 @@ static apr_status_t generic_create_req(profile_t *profile, request_t *request)
 static apr_status_t generic_open_req(socket_t **sock, request_t *req, apr_pool_t *pool)
 {
     flood_socket_t *new_sock = open_socket(pool, req);
+
+    if (!new_sock)
+        return APR_EGENERAL;
+
     *sock = new_sock;
     req->keepalive = 0;
     return APR_SUCCESS;
