@@ -1,0 +1,48 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE flood SYSTEM "flood.dtd">
+<flood configversion="1">
+  <urllist>
+    <name>Test Hosts</name>
+    <description>A bunch of hosts we want to hit</description>
+
+    <!-- Replace with your own domain (see RFC 2606, Section 3) -->
+    <baseurl>http://www.example.com</baseurl>
+
+    <!-- Simple multipart/form-data POST. Contains one plain variable 'foo' with
+         value 'bar' and file variable 'logo', which refers to file 'asf_logo.gif'.
+         Plese note, that this example has string 'XML encoded binary file
+         contents' as file body, instead of actual data. This is intended, to make
+         this example simple. In real scenario this string would have to be
+         replaced by file contents encoded as XML entities. -->
+    <url method="POST"
+         Content-Type="multipart/form-data; boundary=AaB03x"
+         payload="--AaB03x&#x0D;&#x0A;Content-Disposition: form-data; name=&quot;foo&quot;&#x0D;&#x0A;&#x0D;&#x0A;bar&#x0D;&#x0A;--AaB03x&#x0D;&#x0A;Content-Disposition: form-data; name=&quot;logo&quot;; filename=&quot;asf_logo.gif&quot;&#x0D;&#x0A;Content-Type: image/gif&#x0D;&#x0A;&#x0D;&#x0A;XML encoded binary file contents;&#x0D;&#x0A;--AaB03x--">/foo</url>
+
+    <!-- Example XML-RCP query, as found in protocol spec. It calls method
+         'examples.getStateName' with one integer argument. -->
+    <url method="POST"
+         Content-Type="text/xml"
+         payload="&lt;xml version=&quot;1.0&quot;&gt;&lt;methodCall&gt;&lt;methodName&gt;examples.getStateName&lt;/methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;i4&gt;41&lt;/i4&gt;&lt;/value&gt;&lt;/param&gt;&lt;/params&gt;&lt;/methodCall&gt;">/foo</url>
+  </urllist>
+
+  <profile>
+    <name>RoundRobinProfile</name>
+    <description>Round Robin Configuration</description>
+    <useurllist>Test Hosts</useurllist>
+    <profiletype>round_robin</profiletype>
+    <socket>generic</socket>
+    <verify_resp>verify_200</verify_resp>
+    <report>relative_times</report>
+  </profile>
+
+  <farmer>
+    <name>Joe</name>
+    <useprofile>RoundRobinProfile</useprofile>
+  </farmer>
+
+  <farm>
+    <name>Bingo</name>
+    <usefarmer>Joe</usefarmer>
+  </farm>
+
+</flood>
