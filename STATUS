@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/08/24 07:11:13 $]
+Last modified at [$Date: 2001/10/17 22:18:17 $]
 
 Release:
 
@@ -11,10 +11,13 @@ RELEASE SHOWSTOPPERS:
 
     * "Everything needs to work perfectly"
 
+    * Need to be able to build without SSL.
+
 Other bugs that need fixing:
 
     * DNS lookup failures in any <urllist> cause segfault.
        Justin says: Wow.  Why?
+       Aaron says: Is this still happening? It's been awhile.
 
     * Misformed URLs cause a segfault. When we fix this we should
       make sure to print out a helpful message when this occurs.
@@ -26,6 +29,9 @@ Other bugs that need fixing:
       before checking their values.  This isn't easy to do.  Grr.
 
     * Autoconf should check that OpenSSL is version 0.9.6a or greater.
+       Aaron says: <openssl/opensslv.h> defines OPENSSL_VERSION_NUMBER,
+                   someone just needs to write an autoconf rule to check
+                   for it.
 
 Other features that need writing:
 
