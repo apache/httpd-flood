@@ -72,6 +72,7 @@
 #include "flood_socket_generic.h"
 #include "flood_socket_keepalive.h"
 #include "flood_socket_ssl.h"
+#include "flood_report_relative_times.h"
 
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
@@ -283,6 +284,12 @@ profile_event_handler_t profile_event_handlers[] = {
     {"report_stats",     "easy_report_stats",            &easy_report_stats},
     {"destroy_report",   "easy_destroy_report",          &easy_destroy_report},
 
+    /* Relative Times Report */
+    {"report_init",      "relative_times_report_init",   &relative_times_report_init},
+    {"process_stats",    "relative_times_process_stats", &relative_times_process_stats},
+    {"report_stats",     "relative_times_report_stats",  &relative_times_report_stats},
+    {"destroy_report",   "relative_times_destroy_report",&relative_times_destroy_report},
+
     {NULL} /* sentinel value */
 };
 
@@ -299,6 +306,7 @@ const char * socket_generic_group[] = { "generic_socket_init", "generic_begin_co
 const char * socket_ssl_group[] = { "ssl_socket_init", "ssl_begin_conn", "ssl_send_req", "ssl_recv_resp", "ssl_end_conn", "ssl_socket_destroy", NULL };
 const char * socket_keepalive_group[] = { "keepalive_socket_init", "keepalive_begin_conn", "keepalive_send_req", "keepalive_recv_resp", "keepalive_end_conn", "keepalive_socket_destroy", NULL };
 const char * profile_round_robin_group[] = { "round_robin_profile_init", "round_robin_get_next_url", "round_robin_create_req", "round_robin_postprocess", "round_robin_loop_condition", "round_robin_profile_destroy", NULL };
+const char * report_relative_times_group[] = { "relative_times_report_init", "relative_times_process_stats", "relative_times_report_stats", "relative_times_destroy_report", NULL };
 
 profile_group_handler_t profile_group_handlers[] = {
     {"report", "easy", report_easy_group },
@@ -307,6 +315,7 @@ profile_group_handler_t profile_group_handlers[] = {
     {"socket", "ssl", socket_ssl_group },
     {"socket", "keepalive", socket_keepalive_group },
     {"profiletype", "round_robin", profile_round_robin_group },
+    {"report", "relative_times", report_relative_times_group },
     {NULL}
 };
 
@@ -647,13 +656,16 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
         if ((stat = events->get_next_url(&req, profile)) != APR_SUCCESS)
             return stat;
 
-        /* sample timer "main" */
-        timer->connect = apr_time_now();
+        /* sample timer "begin" */
+        timer->begin = apr_time_now();
 
         if ((stat = events->begin_conn(socket, req, pool)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "open request failed.\n");
             return stat;
         }
+
+        /* connect()ion was just made, sample it */
+        timer->connect = apr_time_now();
 
         /* FIXME: I don't like doing this after we've opened the socket.
          * But, I'm not sure how to do it otherwise.
@@ -663,12 +675,15 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
             return stat;
         }
 
+        /* If we wanted to keep track of our request generation overhead,
+         * we could take a timer sample here */
+
         if ((stat = events->send_req(socket, req, pool)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "send request failed.\n");
             return stat;
         }
 
-        /* sample timer "send_req" */
+        /* record the time at which we finished sending the entire request */
         timer->write = apr_time_now();
 
         if ((stat = events->recv_resp(&resp, socket, pool)) != APR_SUCCESS) {
@@ -676,7 +691,7 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
             return stat;
         }
 
-        /* sample timer "recv_resp" */
+        /* record the time at which we received the first chunk of response data */
         timer->read = apr_time_now();
 
         if ((stat = events->postprocess(profile, req, resp)) != APR_SUCCESS) {
@@ -694,7 +709,9 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
             return stat;
         }
 
-        /* sample timer "full_resp" */
+        /* record the time at which we had finished reading the entire response.
+         * Note: this sample includes overhead from postprocessing and verification
+         * and is not a good representation of raw server response speed. */
         timer->close = apr_time_now();
 
         if ((stat = events->process_stats(report, verified, req, resp, timer)) != APR_SUCCESS) {

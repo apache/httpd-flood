@@ -140,6 +140,7 @@ typedef struct response_t response_t;
 
 /* Define a timer. */
 struct flood_timer_t {
+    apr_time_t begin;
     apr_time_t connect;
     apr_time_t write;
     apr_time_t read;
