@@ -4,6 +4,16 @@ AC_INIT(flood.c)
 dnl Override the default prefix with /pkg/flood-0.1
 AC_PREFIX_DEFAULT(/pkg/flood-0.1)
 
+dnl m4 Macros for finding APR and APR-util
+sinclude(build/find_apr.m4)
+sinclude(build/find_apu.m4)
+
+dnl We need to know our top directory.
+top_builddir=`pwd`
+
+dnl Initially, we need no subdirs
+FLOOD_SUBDIRS=""   
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
@@ -30,7 +40,8 @@ else
   dnl Prefix these to the list, so they override env var settings
   CPPFLAGS="-I${fl_openssl_prefix}/include $CPPFLAGS"
   dnl We may need to also include $fl_openssl_prefix/openssl
-  LDFLAGS="-L${fl_openssl_prefix}/lib $LDFLAGS -R${fl_openssl_prefix}/lib"
+  LDFLAGS="-L${fl_openssl_prefix}/lib $LDFLAGS"
+  LIBTOOL_LDFLAGS="-R${fl_openssl_prefix}/lib"
 fi])
 
 dnl If the OS provides random support, use it.  Otherwise, we'll be 
@@ -82,24 +93,65 @@ if test "$enable_ssl" = "yes"; then
     ])
 fi
 
-dnl Need for now.  Remove later.
-AC_ARG_WITH(httpd,
-  [  --with-httpd=PATH       Prefix to httpd-2.0 (default /home/jerenkrantz/cvs-apache/httpd-2.0)],
-  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-httpd requires a path'); else HTTPD_SOURCE="$withval"; fi],
-  [HTTPD_SOURCE="/home/jerenkrantz/cvs-apache/httpd-2.0"])
+APR_FIND_APR(./apr)
 
-AC_ARG_WITH(apr,
-  [  --with-apr=PATH         Prefix to apr (default ${HTTPD_SOURCE}/srclib/apr)],
-  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-apr requires a path'); else APR_SOURCE="$withval"; fi],
-  [APR_SOURCE="$HTTPD_SOURCE/srclib/apr"])
+if test "$apr_found" = "no"; then
+  AC_MSG_ERROR([APR not found.  Please read the documentation.])
+fi
 
-AC_ARG_WITH(apr,
-  [  --with-apr-util=PATH    Prefix to apr-util (default ${HTTPD_SOURCE}/srclib/apr-util)],
-  [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-apr-util requires a path'); else APU_SOURCE="$withval"; fi],
-  [APU_SOURCE="$HTTPD_SOURCE/srclib/apr-util"])
+if test "$apr_found" = "reconfig"; then
+  dnl Comment out for now!
+  dnl AC_NO_NO_NO_CONFIG_SUBDIRS([apr])
+  FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr"   
+fi
 
-. $APR_SOURCE/APRVARS
-. $APU_SOURCE/export_vars.sh
+CFLAGS="$CFLAGS `$apr_config --cflags`"
+
+if test -n "$apr_includes"; then
+ CPPFLAGS="$CPPFLAGS $apr_includes"
+fi
+CPPFLAGS="$CPPFLAGS `$apr_config --cppflags`"
+
+if test -n "$apr_libdir"; then
+  LDFLAGS="$LDFLAGS -L$apr_libdir"
+  LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS -R$apr_libdir"
+fi
+LDFLAGS="$LDFLAGS `$apr_config --ldflags`"
+
+if test -n "$apr_la_file"; then
+  LIBTOOL_LIBS="$LIBTOOL_LIBS $apr_la_file"
+else
+  LIBS="$LIBS -lapr"
+fi
+LIBS="$LIBS `$apr_config --libs`"
+
+if test -n "$apr_libtool"; then
+  LIBTOOL_PATH="$apr_libtool"
+else
+  AC_ERROR([flood requires a libtool-enabled APR.])
+fi
+
+dnl Hack until find_apu.m4 is added
+APR_FIND_APU(./apr-util)
+
+if test "$apu_found" = "no"; then
+  AC_MSG_ERROR([APR-util not found.  Please read the documentation.])
+fi
+if test "$apu_found" = "reconfig"; then
+  dnl Comment out for now!
+  dnl AC_NO_NO_NO_CONFIG_SUBDIRS([apr-util])
+  FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr-util"
+fi
+
+if test -n "$apu_la_file"; then
+  LIBTOOL_LIBS="$LIBTOOL_LIBS $apu_la_file"
+else
+  LIBS="$LIBS -laprutil"
+fi
+
+dnl FIXME: Hack until the split occurs in apr-util to put expat somewhere
+dnl else!
+LIBTOOL_LIBS="$LIBTOOL_LIBS `$apu_config --libs`"
 
 AC_CHECK_FUNC(strtoll, hasstrtoll="1", hasstrtoll="0")
 AC_CHECK_FUNC(strtoq, hasstrtoq="1", hasstrtoq="0")
@@ -112,34 +164,28 @@ AC_MSG_CHECKING([random number generator to use])
 prngrand="0"
 prngrand48="0"
 prngrandom="0"
-if test $hasrandom = "1"; then
+if test "$hasrandom" = "1"; then
     prngrandom="1"
     AC_MSG_RESULT([random])
-else if $hasrand48 = "1"; then
+else if test "$hasrand48" = "1"; then
     prngrand48="1"
     AC_MSG_RESULT([rand48])
-else if $hasrand = "1"; then
+else if test "$hasrand" = "1"; then
     prngrand="1"
     AC_MSG_RESULT([rand])
+else
+    AC_ERROR([No suitable PRNG detected])
 fi
 fi
 fi
-
-EXTRA_CFLAGS="$CFLAGS $EXTRA_CFLAGS"
-EXTRA_CPPFLAGS="$CPPFLAGS $EXTRA_CPPFLAGS"
-EXTRA_LDFLAGS="$LDFLAGS $EXTRA_LDFLAGS"
-EXTRA_LIBS="$LIBS $EXTRA_LIBS $APRUTIL_EXPORT_LIBS"
 
 AC_SUBST(OPENSSL_PREFIX)
 AC_SUBST(RANDFILE)
 AC_SUBST(CAPATH)
-AC_SUBST(HTTPD_SOURCE)
-AC_SUBST(APR_SOURCE)
-AC_SUBST(APU_SOURCE)
-AC_SUBST(EXTRA_CFLAGS)
-AC_SUBST(EXTRA_CPPFLAGS)
-AC_SUBST(EXTRA_LDFLAGS)
-AC_SUBST(EXTRA_LIBS)
+AC_SUBST(FLOOD_SUBDIRS)
+AC_SUBST(LIBTOOL_PATH)
+AC_SUBST(LIBTOOL_LDFLAGS)
+AC_SUBST(LIBTOOL_LIBS)
 AC_SUBST(prngrand)
 AC_SUBST(prngrand48)
 AC_SUBST(prngrandom)
@@ -147,7 +193,16 @@ AC_SUBST(hasstrtoll)
 AC_SUBST(hasstrtoq)
 AC_SUBST(flood_has_openssl)
 AC_SUBST(flood_has_devrand)
+AC_SUBST(top_builddir)
+
+dnl Required for source compatibility with build/rules.mk of httpd-2.0
+LTFLAGS="--silent"
+LTCFLAGS=""
+SHLTCFLAGS=""
+AC_SUBST(LTFLAGS)
+AC_SUBST(LTCFLAGS)
+AC_SUBST(SHLTCFLAGS)
 
 dnl Makefile outputs
 dnl Note: There can only be one AC_OUTPUT command.
-AC_OUTPUT(Makefile config.h)
+AC_OUTPUT(Makefile config.h build/rules.mk build/config_vars.mk)
