@@ -322,30 +322,30 @@ profile_event_handler_t profile_event_handlers[] = {
     {"destroy_report",   "generic_destroy_report",       &generic_destroy_report},
     {"profile_destroy",  "generic_profile_destroy",      &generic_profile_destroy},
 
-/* Alternative Implementations that are currently available: */
+    /* Alternative Implementations that are currently available: */
 
-/* SSL support */
+    /* SSL support */
     {"send_req",         "ssl_send_req",             &ssl_send_req},
     {"recv_resp",        "ssl_recv_resp",            &ssl_recv_resp},
     {"socket_destroy",   "ssl_socket_destroy",       &ssl_socket_destroy},
 
-/* Round Robin */
+    /* Round Robin */
     {"profile_init",     "round_robin_profile_init",     &round_robin_profile_init},
     {"get_next_url",     "round_robin_get_next_url",     &round_robin_get_next_url},
     {"postprocess",      "round_robin_postprocess",      &round_robin_postprocess},
     {"loop_condition",   "round_robin_loop_condition",   &round_robin_loop_condition},
     {"profile_destroy",  "round_robin_profile_destroy",  &round_robin_profile_destroy},
 
-/* Verification by OK/200 */
+    /* Verification by OK/200 */
     {"verify_resp",      "verify_200",                   &verify_200},
 
-/* Simple Reports */
+    /* Simple Reports */
     {"report_init",      "simple_report_init",           &simple_report_init},
     {"process_stats",    "simple_process_stats",         &simple_process_stats},
     {"report_stats",     "simple_report_stats",          &simple_report_stats},
     {"destroy_report",   "simple_destroy_report",        &simple_destroy_report},
 
-/* Easy Reports */
+    /* Easy Reports */
     {"report_init",      "easy_report_init",             &easy_report_init},
     {"process_stats",    "easy_process_stats",           &easy_process_stats},
     {"report_stats",     "easy_report_stats",            &easy_report_stats},
@@ -432,64 +432,64 @@ static apr_status_t create_profile_events(profile_events_t **events, apr_pool_t 
         return APR_ENOMEM;
 
     if ((stat = assign_profile_event_handler(new_events,
-             "profile_init",
-             "generic_profile_init")) != APR_SUCCESS)
+                                             "profile_init",
+                                             "generic_profile_init")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "report_init",
-             "generic_report_init")) != APR_SUCCESS)
+                                             "report_init",
+                                             "generic_report_init")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "get_next_url",
-             "generic_get_next_url")) != APR_SUCCESS)
+                                             "get_next_url",
+                                             "generic_get_next_url")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "send_req",
-             "generic_send_req")) != APR_SUCCESS)
+                                             "send_req",
+                                             "generic_send_req")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "recv_resp",
-             "generic_recv_resp")) != APR_SUCCESS)
+                                             "recv_resp",
+                                             "generic_recv_resp")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "verify_resp",
-             "generic_verify_resp")) != APR_SUCCESS)
+                                             "verify_resp",
+                                             "generic_verify_resp")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "postprocess",
-             "generic_postprocess")) != APR_SUCCESS)
+                                             "postprocess",
+                                             "generic_postprocess")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "process_stats",
-             "generic_process_stats")) != APR_SUCCESS)
+                                             "process_stats",
+                                             "generic_process_stats")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "loop_condition",
-             "generic_loop_condition")) != APR_SUCCESS)
+                                             "loop_condition",
+                                             "generic_loop_condition")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "request_destroy",
-             "generic_request_destroy")) != APR_SUCCESS)
+                                             "request_destroy",
+                                             "generic_request_destroy")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "response_destroy",
-             "generic_response_destroy")) != APR_SUCCESS)
+                                             "response_destroy",
+                                             "generic_response_destroy")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "socket_destroy",
-             "generic_socket_destroy")) != APR_SUCCESS)
+                                             "socket_destroy",
+                                             "generic_socket_destroy")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "report_stats",
-             "generic_report_stats")) != APR_SUCCESS)
+                                             "report_stats",
+                                             "generic_report_stats")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "destroy_report",
-             "generic_destroy_report")) != APR_SUCCESS)
+                                             "destroy_report",
+                                             "generic_destroy_report")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
-             "profile_destroy",
-             "generic_profile_destroy")) != APR_SUCCESS)
+                                             "profile_destroy",
+                                             "generic_profile_destroy")) != APR_SUCCESS)
         return stat;
 
     *events = new_events;

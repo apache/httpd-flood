@@ -109,6 +109,7 @@ void * APR_THREAD_FUNC farmer_worker(apr_thread_param_t *parms)
         /* just die for now, later try to return status */
     }
 
+    apr_thread_exit(thread, APR_SUCCESS);
     return NULL;
 }
 
@@ -137,15 +138,15 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
     /* count the number of "usefarmer" children */
     usefarmer_count = 0;
     for (e = farm_elem->first_child; e; e = e->next) {
-      if (strncasecmp(e->name, XML_FARM_USEFARMER, FLOOD_STRLEN_MAX) == 0) {
-	if (e->attr && e->attr->name &&
-	    strncasecmp(e->attr->name, XML_FARM_USEFARMER_COUNT, FLOOD_STRLEN_MAX) == 0) {
-	  usefarmer_count += strtol(e->attr->value, NULL, 10);
-	  continue; /* only deal with the first attribute of this name per usefarmer */
-	} else {
-	  ++usefarmer_count;
-	}
-      }
+        if (strncasecmp(e->name, XML_FARM_USEFARMER, FLOOD_STRLEN_MAX) == 0) {
+            if (e->attr && e->attr->name &&
+                strncasecmp(e->attr->name, XML_FARM_USEFARMER_COUNT, FLOOD_STRLEN_MAX) == 0) {
+                usefarmer_count += strtol(e->attr->value, NULL, 10);
+                continue; /* only deal with the first attribute of this name per usefarmer */
+            } else {
+                ++usefarmer_count;
+            }
+        }
     }
     /*    usefarmer_count = count_xml_elem_child(farm_elem, XML_FARM_USEFARMER); */
 
@@ -155,20 +156,20 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
     usefarmer_names[usefarmer_count] = NULL; 
     i = 0;
     for (e = farm_elem->first_child; e; e = e->next) {
-      if (strncasecmp(e->name, XML_FARM_USEFARMER, FLOOD_STRLEN_MAX) == 0) {
-	if (e->attr && e->attr->name &&
-	    strncasecmp(e->attr->name, XML_FARM_USEFARMER_COUNT, FLOOD_STRLEN_MAX) == 0) {
-	  for (j = strtol(e->attr->value, NULL, 10); j > 0; j--) {
-            usefarmer_names[i++] = apr_pstrdup(pool, 
-                                               e->first_cdata.first->text);
-	  }
+        if (strncasecmp(e->name, XML_FARM_USEFARMER, FLOOD_STRLEN_MAX) == 0) {
+            if (e->attr && e->attr->name &&
+                strncasecmp(e->attr->name, XML_FARM_USEFARMER_COUNT, FLOOD_STRLEN_MAX) == 0) {
+                for (j = strtol(e->attr->value, NULL, 10); j > 0; j--) {
+                    usefarmer_names[i++] = apr_pstrdup(pool, 
+                                                       e->first_cdata.first->text);
+                }
 
-	  continue; /* only deal with the first attribute of this name per usefarmer */
-	} else {
-	  usefarmer_names[i++] = apr_pstrdup(pool, 
-					     e->first_cdata.first->text);
-	}
-      }
+                continue; /* only deal with the first attribute of this name per usefarmer */
+            } else {
+                usefarmer_names[i++] = apr_pstrdup(pool, 
+                                                   e->first_cdata.first->text);
+            }
+        }
     }
 
     /* create the farm object */
