@@ -1,5 +1,10 @@
 Changes since milestone-03:
 
+* Add config.nice support from apr_common.m4.  [Justin Erenkrantz]
+
+* Add apr_common.m4 and fix up building/configuration of source
+  apr/apr-util.  [Justin Erenkrantz]
+
 * Introduce sequence tag to urllist element.  This tag has the following
   form:
 

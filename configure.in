@@ -4,6 +4,9 @@ AC_INIT(flood.c)
 dnl Override the default prefix with /pkg/flood-0.1
 AC_PREFIX_DEFAULT(/pkg/flood-0.1)
 
+dnl m4 Macros from APR
+sinclude(build/apr_common.m4)
+
 dnl m4 Macros for finding APR and APR-util
 sinclude(build/find_apr.m4)
 sinclude(build/find_apu.m4)
@@ -13,6 +16,9 @@ top_builddir=`pwd`
 
 dnl Initially, we need no subdirs
 FLOOD_SUBDIRS=""   
+
+dnl Generate ./config.nice for reproducing runs of configure
+APR_CONFIG_NICE(config.nice)
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -66,7 +72,7 @@ AC_ARG_ENABLE(ssl,
 flood_has_openssl=0
 if test "$enable_ssl" = "yes"; then
   AC_CHECK_HEADERS(openssl/ssl.h openssl/opensslv.h,,
-    AC_MSG_ERROR('OpenSSL Headers not found at patch specified'))
+    AC_MSG_ERROR('OpenSSL Headers not found at path specified'))
   AC_TRY_COMPILE([#include <openssl/opensslv.h>],
     [#if (OPENSSL_VERSION_NUMBER < 0x0090600fL)
      #error You need OpenSSL version 0.9.6 or greater.
@@ -103,7 +109,7 @@ if test "$apr_found" = "no"; then
 fi
 
 if test "$apr_found" = "reconfig"; then
-  AC_CONFIG_SUBDIRS([apr])
+  APR_SUBDIR_CONFIG(apr, "$apache_apr_flags --prefix=$prefix")
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr"   
 fi
 
@@ -119,7 +125,9 @@ if test "$apu_found" = "no"; then
   AC_MSG_ERROR([APR-util not found.  Please read the documentation.])
 fi
 if test "$apu_found" = "reconfig"; then
-  AC_CONFIG_SUBDIRS([apr-util])
+  dnl If we are configuring apr-util as source, APR must be source
+  dnl configured.
+  APR_SUBDIR_CONFIG(apr-util, "$apache_apr_flags --with-apr=../apr --prefix=$prefix")
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr-util"
 fi
 
