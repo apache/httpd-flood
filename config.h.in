@@ -42,6 +42,6 @@
 /* FIXME: replace the apr_recv logic with something sane. */
 #define MAX_DOC_LENGTH 8192
 
-#define LOCAL_SOCKET_TIMEOUT 30 * APR_USEC_PER_SEC
+#define LOCAL_SOCKET_TIMEOUT 3 * APR_USEC_PER_SEC
 
 #endif  /* __config_h */
