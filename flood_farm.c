@@ -193,10 +193,10 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
                     farmer_start_delay *= APR_USEC_PER_SEC;
                 }
                 else if (use_elem->name && 
-                         strncasecmp(e->attr->name, XML_FARM_USEFARMER_START, 
+                         strncasecmp(use_elem->name, XML_FARM_USEFARMER_START, 
                                      FLOOD_STRLEN_MAX) == 0) {
                     char *endptr;
-                    farmer_start_count = strtol(e->attr->value, &endptr, 10);
+                    farmer_start_count = strtol(use_elem->value, &endptr, 10);
                     if (*endptr != '\0')
                     {
                         apr_file_printf(local_stderr,
@@ -235,7 +235,7 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
             /* error, perhaps shutdown other threads then exit? */
             return stat;
         }
-        if (farmer_start_delay && (i - 1) % farmer_start_count == 0)
+        if (farmer_start_delay && (i+1) % farmer_start_count == 0)
             apr_sleep(farmer_start_delay);
     }
 
