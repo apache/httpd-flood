@@ -8,6 +8,8 @@
 #define FLOOD_STRLEN_MAX 256
 
 /* XML symbolic roots to the various objects we define. */
+#define XML_FLOOD "flood"
+#define XML_FLOOD_CONFIG_VERSION "configversion"
 #define XML_SEED "seed"
 #define XML_URLLIST "urllist"
 #define XML_URLLIST_SEQUENCE "sequence"
@@ -52,6 +54,7 @@
 #define XML_ELEM_DELIM "."
 
 #define FLOOD_VERSION "1.1-dev"
+#define CONFIG_VERSION "1"
 
 #define CRLF "\r\n"
 

@@ -127,6 +127,50 @@ static apr_status_t set_seed(config_t *config)
     return APR_SUCCESS;
 }
 
+/* check if config file version matches flood config file version */
+static apr_status_t check_versions(config_t *config)
+{
+    apr_status_t stat;
+    char *endptr = NULL;
+    apr_int64_t flood_version = 0;
+    apr_int64_t config_version = 0;
+    struct apr_xml_elem *root_elem;
+
+    /* we assume that CONFIG_VERSION is sane */
+    flood_version = apr_strtoi64(CONFIG_VERSION, NULL, 0);
+
+    /* get the root element */
+    if ((stat = retrieve_root_xml_elem(&root_elem, config)) != APR_SUCCESS) {
+        return stat;
+    }
+
+    if (root_elem->attr) {
+        apr_xml_attr *attr = root_elem->attr;
+        while (attr) {
+            if (!strncasecmp(attr->name, XML_FLOOD_CONFIG_VERSION,
+                            FLOOD_STRLEN_MAX)) {
+                config_version = apr_strtoi64(attr->value, &endptr, 0);
+                if (*endptr != '\0') {
+                    apr_file_printf(local_stderr,
+                                    "invalid config version '%s'.\n",
+                                    attr->value);
+                    return APR_EGENERAL;
+                }
+            }
+            attr = attr->next;
+        }
+    }
+
+    if (config_version != flood_version) {
+        apr_file_printf(local_stderr,
+                        "your config file version '%lli' doesn't match flood config file version '%lli'.\n",
+                        config_version, flood_version);
+    }
+
+    return APR_SUCCESS;
+
+}
+
 int main(int argc, char** argv)
 {
     apr_status_t stat;
@@ -169,6 +213,10 @@ int main(int argc, char** argv)
         apr_strerror(stat, (char*) &buf, 256);
         apr_file_printf(local_stderr, "Error running test profile: %s.\n", 
                         (char*)&buf);
+        exit(-1);
+    }
+
+    if ((stat = check_versions(config)) != APR_SUCCESS) {
         exit(-1);
     }
 
