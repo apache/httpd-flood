@@ -156,6 +156,7 @@ apr_status_t keepalive_end_conn(socket_t *sock, request_t *req, response_t *resp
 
     if (resp->keepalive == 0) {
         close_socket(ksock->s);
+        ksock->reopen_socket = 1; /* we just closed it */
     }
         
     return APR_SUCCESS;
