@@ -100,7 +100,6 @@ if test "$apr_found" = "no"; then
 fi
 
 if test "$apr_found" = "reconfig"; then
-  dnl Comment out for now!
   AC_CONFIG_SUBDIRS([apr])
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr"   
 fi
@@ -117,7 +116,6 @@ if test "$apu_found" = "no"; then
   AC_MSG_ERROR([APR-util not found.  Please read the documentation.])
 fi
 if test "$apu_found" = "reconfig"; then
-  dnl Comment out for now!
   AC_CONFIG_SUBDIRS([apr-util])
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr-util"
 fi
