@@ -101,37 +101,21 @@ fi
 
 if test "$apr_found" = "reconfig"; then
   dnl Comment out for now!
-  dnl AC_NO_NO_NO_CONFIG_SUBDIRS([apr])
+  AC_CONFIG_SUBDIRS([apr])
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr"   
 fi
 
 CFLAGS="$CFLAGS `$apr_config --cflags`"
-
-if test -n "$apr_includes"; then
- CPPFLAGS="$CPPFLAGS $apr_includes"
-fi
-CPPFLAGS="$CPPFLAGS `$apr_config --cppflags`"
-
-if test -n "$apr_libdir"; then
-  LDFLAGS="$LDFLAGS -L$apr_libdir"
-  LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS -R$apr_libdir"
-fi
+CPPFLAGS="$CPPFLAGS `$apr_config --cppflags --includes`"
 LDFLAGS="$LDFLAGS `$apr_config --ldflags`"
+LIBTOOL_LIBS="$LIBTOOL_LIBS `$apr_config --link-libtool --libs`"
 
-if test -n "$apr_la_file"; then
-  LIBTOOL_LIBS="$LIBTOOL_LIBS $apr_la_file"
-else
-  LIBS="$LIBS -lapr"
-fi
-LIBS="$LIBS `$apr_config --libs`"
-
-if test -n "$apr_libtool"; then
-  LIBTOOL_PATH="$apr_libtool"
+if test -x "`$apr_config --prefix`/build/libtool"; then
+  LIBTOOL_PATH="`$apr_config --prefix`/build/libtool"
 else
   AC_ERROR([flood requires a libtool-enabled APR.])
 fi
 
-dnl Hack until find_apu.m4 is added
 APR_FIND_APU(./apr-util)
 
 if test "$apu_found" = "no"; then
@@ -139,19 +123,12 @@ if test "$apu_found" = "no"; then
 fi
 if test "$apu_found" = "reconfig"; then
   dnl Comment out for now!
-  dnl AC_NO_NO_NO_CONFIG_SUBDIRS([apr-util])
+  AC_CONFIG_SUBDIRS([apr-util])
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr-util"
 fi
 
-if test -n "$apu_la_file"; then
-  LIBTOOL_LIBS="$LIBTOOL_LIBS $apu_la_file"
-else
-  LIBS="$LIBS -laprutil"
-fi
-
-dnl FIXME: Hack until the split occurs in apr-util to put expat somewhere
-dnl else!
-LIBTOOL_LIBS="$LIBTOOL_LIBS `$apu_config --libs`"
+LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS `$apr_config --ldflags`"
+LIBTOOL_LIBS="$LIBTOOL_LIBS `$apu_config --link-libtool --libs`"
 
 AC_CHECK_FUNC(strtoll, hasstrtoll="1", hasstrtoll="0")
 AC_CHECK_FUNC(strtoq, hasstrtoq="1", hasstrtoq="0")
