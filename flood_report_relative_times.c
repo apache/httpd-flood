@@ -66,13 +66,9 @@
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
 
-typedef void relative_times_report_t;
-
 apr_status_t relative_times_report_init(report_t **report, config_t *config, 
                               const char *profile_name, apr_pool_t *pool)
 {
-    *report = apr_palloc(pool, sizeof(relative_times_report_t));
-
     return APR_SUCCESS;
 }
 

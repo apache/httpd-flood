@@ -139,7 +139,7 @@ if test "$apu_found" = "reconfig"; then
 fi
 
 CPPFLAGS="$CPPFLAGS `$apu_config --includes`"
-LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS `$apr_config --ldflags`"
+LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS `$apu_config --ldflags`"
 dnl Since libaprutil relies on libapr, it *must* appear before -lapr.
 LIBTOOL_LIBS="`$apu_config --link-libtool --libs` $LIBTOOL_LIBS"
 
