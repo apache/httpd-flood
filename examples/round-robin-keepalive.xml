@@ -1,0 +1,55 @@
+<!-- Hi, I'm a flood config file.  
+     This is a keepalive-enabled profile.  -->
+<flood>
+  <!-- A urllist describes which hosts and which methods we want to hit. -->
+  <urllist>
+    <name>Test Hosts</name>
+    <description>A bunch of hosts we want to hit</description>
+    <!-- Three static non-MultiView URLs that are included in Apache 2.0 -->
+    <url>http://localhost:8080/index.html.en</url>
+    <url>http://localhost:8080/manual/index.html.en</url>
+    <url>http://localhost:8080/manual/mod/index-bytype.html</url>
+  </urllist>
+
+  <!-- The profile describes how we will hit the urllists. 
+       Round robin runs all of the URLs in the urllist in order once. -->
+  <profile>
+    <name>RoundRobinProfile</name>
+    <description>Round Robin Configuration</description>
+    <useurllist>Test Hosts</useurllist>
+    <profile_init>round_robin_profile_init</profile_init>
+    <get_next_url>round_robin_get_next_url</get_next_url>
+    <open_req>keepalive_open_req</open_req>
+    <create_req>round_robin_create_req</create_req>
+    <send_req>keepalive_send_req</send_req>
+    <recv_resp>keepalive_recv_resp</recv_resp>
+    <verify_resp>verify_200</verify_resp>
+    <loop_condition>round_robin_loop_condition</loop_condition>
+    <!-- request_destroy uses default -->
+    <!-- response_destroy uses default -->
+    <!-- <socket_destroy>ssl_socket_destroy</socket_destroy> -->
+    <profile_destroy>round_robin_profile_destroy</profile_destroy>
+
+    <!-- Simple Reporting -->
+    <report_init>easy_report_init</report_init>
+    <process_stats>easy_process_stats</process_stats>
+    <report_stats>easy_report_stats</report_stats>
+    <destroy_report>easy_destroy_report</destroy_report>
+  </profile>
+
+  <!-- A farmer runs one profile a certain number of times.  -->
+  <farmer>
+    <name>Joe</name>
+    <!-- run the Joe farmer 1000 times -->
+    <count>1000</count>
+    <!-- Joe uses this profile -->
+    <useprofile>RoundRobinProfile</useprofile>
+  </farmer>
+
+  <!-- A farm contains a bunch of farmers - each farmer is a thread.  -->
+  <farm>
+    <name>Bingo</name>
+    <!-- Create 10 identical Joe farmers executing in parallel. -->
+    <usefarmer count="10">Joe</usefarmer>
+  </farm>
+</flood>
