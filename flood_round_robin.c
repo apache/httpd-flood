@@ -485,11 +485,6 @@ char *parse_param_string(round_robin_profile_t *rp, char *template,
         cur = strstr(prev, "$");
         if (!cur)
             return NULL;
-        /* May be 0, but that's okay. */
-        if (cur-prev)
-            cpy = apr_pmemdup(rp->pool, prev, cur - prev);
-        else
-            cpy = "";
 
         /* What do we want to fill in? */
         if (*(cur+1) == '$')
@@ -511,17 +506,35 @@ char *parse_param_string(round_robin_profile_t *rp, char *template,
         else
             return NULL;
 
-        if (!returnValue) 
-            returnValue = apr_pstrcat(rp->pool, cpy, data, NULL);
+        /* May be 0, but that's okay. */
+        if (cur-prev)
+        {
+            /* Copy the $ character, but we'll set it to NULL soon. */
+            cpy = apr_pmemdup(rp->pool, prev, cur - prev + 1);
+            cpy[cur-prev] = '\0';
+
+            if (!returnValue) 
+                returnValue = apr_pstrcat(rp->pool, cpy, data, NULL);
+            else
+                returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, NULL);
+        }
         else
-            returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, NULL);
+        {
+            if (!returnValue) 
+                returnValue = apr_pstrdup(rp->pool, data);
+            else
+                returnValue = apr_pstrcat(rp->pool, returnValue, data, NULL);
+        }
+
         prev = cur + 2;
     }
-    if (!returnValue) 
-        returnValue = apr_pstrcat(rp->pool, prev, NULL);
-    else
-        returnValue = apr_pstrcat(rp->pool, returnValue, prev, NULL);
-
+    if (*prev)
+    { 
+        if (!returnValue) 
+            returnValue = apr_pstrdup(rp->pool, prev);
+        else
+            returnValue = apr_pstrcat(rp->pool, returnValue, prev, NULL);
+    }
     return returnValue;
 }
 
