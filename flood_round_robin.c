@@ -659,22 +659,32 @@ apr_status_t round_robin_postprocess(profile_t *profile,
     }
     if (rp->url[rp->current_url].responsetemplate)
     {
-        char *c, *ec, *bc;
+        char *c, *endfirsthalf, *secondhalf, *ec, *bc;
         c = apr_pstrdup(rp->pool, rp->url[rp->current_url].responsetemplate);
-        ec = strstr(c,"$$"); 
-        if (!ec)
+        endfirsthalf = strstr(c,"$$"); 
+        if (!endfirsthalf)
             return APR_EGENERAL;
-        *ec = '\0';
-
-        bc = strstr(resp->rbuf, c);
-        if (!bc)
-            return APR_EGENERAL;
-        /* Skip the part that was given. */
-        bc += ec - c;
-        c = ec + 2;
-        ec = strstr(bc, c);
-        if (!ec)
-            return APR_EGENERAL;
+        *endfirsthalf = '\0';
+        secondhalf = endfirsthalf + 2;
+        bc = resp->rbuf;
+        /* The response pattern must be on the same line. 
+         * Consider this a lameo maximal regular expression match.
+         */
+        do
+        {
+            bc = strstr(bc, c);
+            if (!bc)
+                return APR_EGENERAL;
+            /* Skip the part that was given. */
+            bc += endfirsthalf - c;
+            /* Now search for the second half. */
+            ec = strstr(bc, secondhalf);
+            if (!ec)
+                return APR_EGENERAL;
+        }
+        while (memchr(bc, '\n', ec - bc));
+       
+        /* Increment it by one, so that we copy everything. */ 
         ec++;
         rp->state[rp->states] = apr_palloc(rp->pool, ec - bc);
         apr_cpystrn(rp->state[rp->states++], bc, ec - bc);
