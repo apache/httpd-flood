@@ -1,5 +1,15 @@
 Changes since 1.0:
 
+* Flood manual (DocBook based). [Jacek Prucia]
+
+* Added <baseurl> element. When present, it's contents are copied in front
+  of every <url> element, which makes relative urllist's possible.
+  [Jacek Prucia]
+
+* Added basic auth support. When user and passowrd attributes of <url>
+  element are present and non-empty, flood sends auth data with request.
+  [Jacek Prucia]
+
 * Added generic_fullresp_recv_resp() to force full response.
   [Phi-Long Tran <ptran@pobox.com>]
 
