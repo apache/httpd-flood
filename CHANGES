@@ -5,7 +5,10 @@ Changes since milestone-0-1:
   is a bunch of functions that all need to be overriden together
   to add some new functionality. This logical grouping may
   become enforced in code at some later time (it will make
-  it easier for users to build configurations).
+  it easier for users to build configurations). Currently
+  the groupings we have are:
+  profile events, socket events, reporting events, and
+  verification events.
 
 * Added delay support for urllist. A urllist entry can now be
   given a delay (in seconds) that happens each time that URL
