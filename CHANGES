@@ -1,5 +1,7 @@
 Changes since milestone-03:
 
+* Fix return value in parse_xml_url_info.  [Justin Erenkrantz]
+
 * Fix linking problems due to misordering of libraries on Solaris.
   [Justin Erenkrantz]
 

@@ -463,6 +463,8 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
         url->method = GET;
         url->payload = NULL;
     }
+
+    return APR_SUCCESS;
 }
         
 static apr_status_t parse_xml_seq_info(apr_xml_elem *e,
