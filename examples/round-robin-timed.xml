@@ -1,0 +1,49 @@
+<!-- Hi, I'm a flood config file.  -->
+<flood>
+  <!-- A urllist describes which hosts and which methods we want to hit. -->
+  <urllist>
+    <name>Test Hosts</name>
+    <description>A bunch of hosts we want to hit</description>
+    <url method="POST" payload="version=2&amp;keyword=foo&amp;results=20&amp;what=apr.apache.org">http://search.apache.org/index.cgi</url>
+    <url method="HEAD">http://www.apache.org/</url>
+    <url method="GET">http://dev.apache.org/</url>
+    <url>http://apr.apache.org/</url>
+  </urllist>
+
+  <!-- The profile describes how we will hit the urllists. 
+       Round robin runs all of the URLs in the urllist in order once. -->
+  <profile>
+    <name>RoundRobinProfile</name>
+    <description>Round Robin Configuration</description>
+
+    <useurllist>Test Hosts</useurllist>
+
+    <!-- Specifies that we will use round_robin profile logic -->
+    <profiletype>round_robin</profiletype>
+    <!-- Specifies that we will use generic socket logic -->
+    <socket>generic</socket>
+    <!-- Specifies that we will use the "easy" report generation -->
+    <report>easy</report>
+    <!-- Specifies that we will use verify_200 for response verification -->
+    <verify_resp>verify_200</verify_resp>
+
+  </profile>
+
+  <!-- A farmer runs one profile a certain number of times.  -->
+  <farmer>
+    <name>Joe</name>
+    <!-- run the Joe farmer for 30 seconds -->
+    <time>30</time>
+    <!-- Joe uses this profile -->
+    <useprofile>RoundRobinProfile</useprofile>
+  </farmer>
+
+  <!-- A farm contains a bunch of farmers - each farmer is a thread.  -->
+  <farm>
+    <name>Bingo</name>
+    <usefarmer count="1">Joe</usefarmer>
+  </farm>
+
+  <!-- Set the seed to a known value so we can reproduce the same tests -->
+  <seed>23</seed>
+</flood>
