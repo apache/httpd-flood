@@ -84,10 +84,13 @@ if test "$enable_ssl" = "yes"; then
     [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-capath requires a path'); else CAPATH="$withval"; fi],
     [if test -d "$fl_openssl_prefix/certs"; then
         CAPATH="$fl_openssl_prefix/certs"
+     else if test -d "$fl_openssl_prefix/ssl/certs"; then
+        CAPATH="$fl_openssl_prefix/ssl/certs"
      else if test -d "/usr/lib/ssl/certs"; then
         CAPATH="/usr/lib/ssl/certs"
      else
         AC_MSG_ERROR('option --with-capath must be specified')
+     fi
      fi
      fi
     ])
