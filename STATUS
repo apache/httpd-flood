@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2002/01/17 01:09:45 $]
+Last modified at [$Date: 2002/06/06 07:52:52 $]
 
 Release:
 
@@ -48,7 +48,18 @@ Other bugs that need fixing:
       and create/destroy/clear pools for each level of our model:
       farm, farmer, profile, url/request-cycle, etc.
 
+    * APR needs to have a unified interface for ephemeral port
+      exhaustion, but aparently Solaris and Linux return different
+      errors at the moment. Fix this in APR then take advantage of
+      it in flood.
+      Status: Aaron volunteers
+
 Other features that need writing:
+
+    * It would be nice of a url in a urllist could handle basic
+      authentication.
+
+    * More analysis and graphing scripts are needed
 
     * Write robust tool (using tethereal perhaps) to take network dumps 
       and convert them to flood's XML format.
@@ -62,8 +73,6 @@ Other features that need writing:
 
     * Maybe we should make randfile and capath runtime directives that
       come out of the XML, instead of autoconf parameters.
-
-    * Migrate all locks to APRs new lock api.
 
     * We are using apr_os_thread_current() and getpid() in some places
       when what we really want is a GUID. The GUID will be used to
