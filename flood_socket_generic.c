@@ -201,6 +201,26 @@ apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *po
 }
 
 /**
+ * This implementation always retrieves the full response.
+ * We temporarily set the "wantresponse" flag to true and
+ * call generic_recv_resp() to do the real work.
+ */
+apr_status_t generic_fullresp_recv_resp(response_t **resp,
+                                        socket_t *sock,
+                                        apr_pool_t *pool)
+{
+    generic_socket_t *gsock = (generic_socket_t *)sock;
+    int orig_wantresponse   = gsock->wantresponse;
+    apr_status_t status;
+
+    gsock->wantresponse = 1;
+    status = generic_recv_resp(resp, sock, pool);
+    gsock->wantresponse = orig_wantresponse;
+
+    return status;
+}
+
+/**
  * Generic implementation for end_conn.
  */
 apr_status_t generic_end_conn(socket_t *sock, request_t *req, response_t *resp)

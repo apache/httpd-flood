@@ -252,6 +252,9 @@ profile_event_handler_t profile_event_handlers[] = {
 
     /* Alternative Implementations that are currently available: */
 
+    /* Always retrieve the full response */
+    {"recv_resp",        "generic_fullresp_recv_resp",   &generic_fullresp_recv_resp},
+
     /* Keep-Alive support */
     {"socket_init",      "keepalive_socket_init",    &keepalive_socket_init},
     {"begin_conn",       "keepalive_begin_conn",     &keepalive_begin_conn},

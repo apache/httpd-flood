@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Added generic_fullresp_recv_resp() to force full response.
+  [Phi-Long Tran <ptran@pobox.com>]
+
 * Fixed compiler warning about signed/unsigned mismatch in generic_recv_resp.
   [Phi-Long Tran <ptran@pobox.com>]
 
