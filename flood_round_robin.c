@@ -102,10 +102,13 @@ typedef struct {
 } round_robin_profile_t;
 
 /* Construct a request */
-static void construct_request(round_robin_profile_t *p, request_t *r)
+apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
 {
+    round_robin_profile_t *p;
     char *cookies;
     cookie_t *cook;
+   
+    p = (round_robin_profile_t*)profile; 
 
     /* FIXME: This algorithm sucks. */
     if (p->cookie)
@@ -126,19 +129,19 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
     else
         cookies = "";
 
-    /* FIXME: Handle keepalives. */
     switch (r->method)
     {
     case GET:
         r->rbuf = apr_psprintf(r->pool, 
                                "GET %s%s%s HTTP/1.1" CRLF
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
-                               "Connection: Close" CRLF
+                               "Connection: %s" CRLF
                                "Host: %s" CRLF 
                                "%s" CRLF,
                                r->parsed_uri->path, 
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
+                               r->keepalive ? "Keep-Alive" : "Close",
                                r->parsed_uri->hostinfo,
                                cookies);
         r->rbuftype = POOL;
@@ -148,12 +151,13 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
         r->rbuf = apr_psprintf(r->pool, 
                                "HEAD %s%s%s HTTP/1.1" CRLF
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
-                               "Connection: Close" CRLF
+                               "Connection: %s" CRLF
                                "Host: %s" CRLF 
                                "%s" CRLF,
                                r->parsed_uri->path, 
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
+                               r->keepalive ? "Keep-Alive" : "Close",
                                r->parsed_uri->hostinfo,
                                cookies);
         r->rbuftype = POOL;
@@ -164,7 +168,7 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
         r->rbuf = apr_psprintf(r->pool, 
                                "POST %s%s%s HTTP/1.1" CRLF
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
-                               "Connection: Close" CRLF
+                               "Connection: %s" CRLF
                                "Host: %s" CRLF
                                "Content-Length: %d" CRLF 
                                "Content-type: application/x-www-form-urlencoded" CRLF
@@ -173,6 +177,7 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
                                r->parsed_uri->path, 
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
+                               r->keepalive ? "Keep-Alive" : "Close",
                                r->parsed_uri->hostinfo,
                                r->payloadsize,
                                cookies,
@@ -181,6 +186,8 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
         r->rbufsize = strlen(r->rbuf);
         break;
     }
+
+    return APR_SUCCESS;
 }
 
 apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, const char *profile_name, apr_pool_t *pool)
@@ -188,7 +195,7 @@ apr_status_t round_robin_profile_init(profile_t **profile, config_t *config, con
     apr_status_t stat;
     int i;
     struct apr_xml_elem *root_elem, *profile_elem,
-        *urllist_elem, *count_elem, *useurllist_elem, *e;
+           *urllist_elem, *count_elem, *useurllist_elem, *e;
     round_robin_profile_t *p;
     char *xml_profile, *xml_urllist, *urllist_name;
 
@@ -360,15 +367,6 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     }
     if (!r->parsed_uri->path) /* If / is not there, be nice.  */
         r->parsed_uri->path = "/";
-
-    construct_request(profile, r);
-
-    /* FIXME: We don't implement keep alive. */
-    /* FIXME: Proper pool lifetimes may do this for us.  Later... */
-    /* XXX: Commented out by Aaron -- "We have a handler for this now"
-    if (old_req && old_req->rsock)
-        close_socket(old_req->rsock);
-    */
 
     /* Adjust counters for profile */
     if (rp->current_url >= rp->urls) {

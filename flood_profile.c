@@ -107,14 +107,30 @@ static apr_status_t generic_get_next_url(request_t **request, profile_t *profile
 }
 
 /**
- * Generic implementation for send_req.
+ * Generic implementation for create_req.
  */
-static apr_status_t generic_send_req(socket_t **sock, request_t *req, apr_pool_t *pool)
+static apr_status_t generic_create_req(profile_t *profile, request_t *request)
+{
+    return APR_ENOTIMPL;
+}
+
+/**
+ * Generic implementation for open_req.
+ */
+static apr_status_t generic_open_req(socket_t **sock, request_t *req, apr_pool_t *pool)
 {
     flood_socket_t *new_sock = open_socket(pool, req);
-    write_socket(new_sock, req);
     *sock = new_sock;
+    req->keepalive = 0;
     return APR_SUCCESS;
+}
+
+/**
+ * Generic implementation for send_req.
+ */
+static apr_status_t generic_send_req(socket_t *sock, request_t *req, apr_pool_t *pool)
+{
+    return write_socket((flood_socket_t*)sock, req);
 }
 
 /**
@@ -237,18 +253,22 @@ static apr_status_t generic_profile_destroy(profile_t *p)
     return APR_SUCCESS;
 }
 
-static apr_status_t ssl_send_req(socket_t **sock, request_t *req, apr_pool_t *pool)
+static apr_status_t ssl_open_req(socket_t **sock, request_t *req, apr_pool_t *pool)
 {
     ssl_socket_t *s = ssl_open_socket(pool, req);
 
     if (!s)
         return APR_EGENERAL;
 
-    ssl_write_socket(s, req);
-
     *sock = s;
+    req->keepalive = 0;
 
     return APR_SUCCESS;
+}
+
+static apr_status_t ssl_send_req(socket_t *sock, request_t *req, apr_pool_t *pool)
+{
+    return ssl_write_socket((ssl_socket_t*)sock, req);
 }
 
 static apr_status_t ssl_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *pool)
@@ -286,10 +306,128 @@ static apr_status_t ssl_socket_destroy(socket_t *socket)
     return APR_SUCCESS;
 }
 
+/**
+ * Keep-alive implementation for open_req.
+ */
+static apr_status_t keepalive_open_req(socket_t **sock, request_t *req, apr_pool_t *pool)
+{
+    if (!*sock)
+    {
+        *sock = open_socket(pool, req);
+        if (!*sock)
+            return APR_EGENERAL;
+    }
+    req->keepalive = 1;
+    return APR_SUCCESS;
+}
+
+/**
+ * Keep-alive implementation for send_req.
+ */
+static apr_status_t keepalive_send_req(socket_t *sock, request_t *req, apr_pool_t *pool)
+{
+    return write_socket((flood_socket_t*)sock, req);
+}
+
+/**
+ * Keep-alive implementation for recv_resp.
+ */
+static apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *pool)
+{
+    char b[MAX_DOC_LENGTH], *cl, *ecl, cls[17];
+    int i;
+    response_t *new_resp;
+    apr_status_t status;
+    long content_length;
+
+    flood_socket_t *s = (flood_socket_t*)sock;
+
+    new_resp = apr_pcalloc(pool, sizeof(response_t));
+    new_resp->rbuftype = POOL;
+    new_resp->rbufsize = MAX_DOC_LENGTH - 1;
+    new_resp->rbuf = apr_pcalloc(pool, new_resp->rbufsize);
+
+    status = read_socket(s, new_resp->rbuf, &new_resp->rbufsize);
+
+    if (status != APR_SUCCESS && status != APR_EOF) {
+        return status;
+    }
+
+    /* FIXME: Deal with chunking, too */
+    /* FIXME: Assume we got the full header for now. */
+
+    /* If this exists, we aren't keepalive anymore. */
+    cl = strstr(new_resp->rbuf, "Connection: Close");
+    if (cl)
+       new_resp->keepalive = 0; 
+    else
+    {
+        new_resp->keepalive = 1; 
+    
+        cl = strstr(new_resp->rbuf, "Content-Length: ");
+        if (!cl)
+            new_resp->keepalive = 0; 
+        else 
+        {
+            cl += sizeof("Content-Length: ") - 1;
+            ecl = strstr(cl, CRLF);
+            if (ecl && ecl - cl < 16)
+            {
+                strncpy(cls, cl, ecl - cl);
+                cls[ecl-cl] = '\0';
+                content_length = strtol(cls, &ecl, 10);
+                if (*ecl != '\0')
+                    new_resp->keepalive = 0; 
+            }
+        }
+
+        if (new_resp->keepalive)
+        {
+            /* Find where we ended */
+            ecl = strstr(new_resp->rbuf, CRLF CRLF);
+
+            /* We didn't get full headers.  Crap. */
+            if (!ecl)
+                new_resp->keepalive = 0; 
+            {
+                ecl += sizeof(CRLF CRLF) - 1;
+                content_length -= new_resp->rbufsize - (ecl - (char*)new_resp->rbuf);
+            } 
+        }
+    }
+    
+    if (new_resp->keepalive)
+    {
+        while (content_length && status != APR_EOF && status != APR_TIMEUP) {
+            if (content_length > MAX_DOC_LENGTH - 1)
+                i = MAX_DOC_LENGTH - 1;
+            else
+                i = content_length;
+
+            status = read_socket(s, b, &i);
+
+            content_length -= i;
+        }
+    }
+    else
+    {
+        while (status != APR_EOF && status != APR_TIMEUP) {
+            i = MAX_DOC_LENGTH - 1;
+            status = read_socket(s, b, &i);
+        }
+    }
+
+    *resp = new_resp;
+
+    return APR_SUCCESS;
+}
+
 const char * profile_event_handler_names[] = {
     "profile_init",
     "report_init",
     "get_next_url",
+    "open_req",
+    "create_req",
     "send_req",
     "recv_resp",
     "postprocess",
@@ -309,6 +447,8 @@ profile_event_handler_t profile_event_handlers[] = {
     {"profile_init",     "generic_profile_init",         &generic_profile_init},
     {"report_init",      "generic_report_init",          &generic_report_init},
     {"get_next_url",     "generic_get_next_url",         &generic_get_next_url},
+    {"open_req",         "generic_open_req",             &generic_open_req},
+    {"create_req",       "generic_create_req",           &generic_create_req},
     {"send_req",         "generic_send_req",             &generic_send_req},
     {"recv_resp",        "generic_recv_resp",            &generic_recv_resp},
     {"postprocess",      "generic_postprocess",          &generic_postprocess},
@@ -325,16 +465,23 @@ profile_event_handler_t profile_event_handlers[] = {
     /* Alternative Implementations that are currently available: */
 
     /* SSL support */
+    {"open_req",         "ssl_open_req",             &ssl_open_req},
     {"send_req",         "ssl_send_req",             &ssl_send_req},
     {"recv_resp",        "ssl_recv_resp",            &ssl_recv_resp},
     {"socket_destroy",   "ssl_socket_destroy",       &ssl_socket_destroy},
 
+    /* Keep-Alive support */
+    {"open_req",         "keepalive_open_req",       &keepalive_open_req},
+    {"send_req",         "keepalive_send_req",       &keepalive_send_req},
+    {"recv_resp",        "keepalive_recv_resp",      &keepalive_recv_resp},
+
     /* Round Robin */
-    {"profile_init",     "round_robin_profile_init",     &round_robin_profile_init},
-    {"get_next_url",     "round_robin_get_next_url",     &round_robin_get_next_url},
-    {"postprocess",      "round_robin_postprocess",      &round_robin_postprocess},
-    {"loop_condition",   "round_robin_loop_condition",   &round_robin_loop_condition},
-    {"profile_destroy",  "round_robin_profile_destroy",  &round_robin_profile_destroy},
+    {"profile_init",     "round_robin_profile_init", &round_robin_profile_init},
+    {"get_next_url",     "round_robin_get_next_url", &round_robin_get_next_url},
+    {"create_req",       "round_robin_create_req",   &round_robin_create_req},
+    {"postprocess",      "round_robin_postprocess",  &round_robin_postprocess},
+    {"loop_condition",   "round_robin_loop_condition", &round_robin_loop_condition},
+    {"profile_destroy",  "round_robin_profile_destroy",&round_robin_profile_destroy},
 
     /* Verification by OK/200 */
     {"verify_resp",      "verify_200",                   &verify_200},
@@ -381,6 +528,10 @@ static apr_status_t assign_profile_event_handler(profile_events_t *events,
                     events->report_init = (*p).handler;
                 } else if (strncasecmp(handler_name, "get_next_url", FLOOD_STRLEN_MAX) == 0){ 
                     events->get_next_url = (*p).handler;
+                } else if (strncasecmp(handler_name, "open_req", FLOOD_STRLEN_MAX) == 0) {
+                    events->open_req = (*p).handler;
+                } else if (strncasecmp(handler_name, "create_req", FLOOD_STRLEN_MAX) == 0) {
+                    events->create_req = (*p).handler;
                 } else if (strncasecmp(handler_name, "send_req", FLOOD_STRLEN_MAX) == 0) {
                     events->send_req = (*p).handler;
                 } else if (strncasecmp(handler_name, "recv_resp", FLOOD_STRLEN_MAX) == 0) {
@@ -442,6 +593,14 @@ static apr_status_t create_profile_events(profile_events_t **events, apr_pool_t 
     if ((stat = assign_profile_event_handler(new_events,
                                              "get_next_url",
                                              "generic_get_next_url")) != APR_SUCCESS)
+        return stat;
+    if ((stat = assign_profile_event_handler(new_events,
+                                             "create_req",
+                                             "generic_create_req")) != APR_SUCCESS)
+        return stat;
+    if ((stat = assign_profile_event_handler(new_events,
+                                             "open_req",
+                                             "generic_open_req")) != APR_SUCCESS)
         return stat;
     if ((stat = assign_profile_event_handler(new_events,
                                              "send_req",
@@ -611,7 +770,20 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
 
         /* sample timer "main" */
 
-        if ((stat = events->send_req(&socket, req, pool)) != APR_SUCCESS) {
+        if ((stat = events->open_req(&socket, req, pool)) != APR_SUCCESS) {
+            apr_file_printf(local_stderr, "open request failed.\n");
+            return stat;
+        }
+
+        /* FIXME: I don't like doing this after we've opened the socket.
+         * But, I'm not sure how to do it otherwise.
+         */
+        if ((stat = events->create_req(profile, req)) != APR_SUCCESS) {
+            apr_file_printf(local_stderr, "create request failed.\n");
+            return stat;
+        }
+
+        if ((stat = events->send_req(socket, req, pool)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "send request failed.\n");
             return stat;
         }
@@ -652,11 +824,12 @@ apr_status_t run_profile(apr_pool_t *pool, config_t *config, const char * profil
             return stat;
         }
 
-        if ((stat = events->socket_destroy(socket)) != APR_SUCCESS) {
+        /* Only destroy the socket when we aren't keepalive. */
+        if (!resp->keepalive && 
+            (stat = events->socket_destroy(socket)) != APR_SUCCESS) {
             apr_file_printf(local_stderr, "Error cleaning up Socket.\n");
             return stat;
         }
-	    
 
     } while (events->loop_condition(profile));
 

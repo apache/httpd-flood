@@ -1,5 +1,5 @@
 flood STATUS:							-*-text-*-
-Last modified at [$Date: 2001/07/29 15:36:11 $]
+Last modified at [$Date: 2001/07/29 15:43:07 $]
 
 Release:
 
@@ -33,14 +33,6 @@ Other features that need writing:
 
     * Validation of responses (known C-L, specific strings in response)
        Status: Justin volunteers
-
-    * HTTP Keepalive
-       Justin says: We'll try and get this to work by 7/13, but this is
-                    pushing it.  There's a lot of stuff to getting
-                    keepalive right (edge cases).  May try to push this
-                    off until we've had some real-world experience with 
-                    the flood code.  I'm still not sure how this will
-                    work.
 
     * HTTP/SSL Keepalive
        Justin says: This is more important than HTTP Keepalive.

@@ -63,6 +63,8 @@ apr_status_t round_robin_profile_init(profile_t **profile,
                                       apr_pool_t *pool);
 apr_status_t round_robin_get_next_url(request_t **request,
                                       profile_t *profile);
+apr_status_t round_robin_create_req(profile_t *profile,
+                                    request_t *request);
 apr_status_t round_robin_postprocess(profile_t *profile,
                                      request_t *req,
                                      response_t *resp);

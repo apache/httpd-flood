@@ -127,6 +127,9 @@ typedef struct request_t request_t;
 /* Define a single response that may be returned with the flood
  * architecture. */
 struct response_t {
+    /* a boolean */
+    int keepalive; 
+
     /* Raw buffer connection 
      * FIXME: apr_bucket_t? */ 
     buffer_type_e rbuftype;
@@ -177,11 +180,22 @@ struct profile_events_t {
     apr_status_t (*get_next_url)(request_t **request, profile_t *profile);
 
     /**
+     * Opens the communication channel to the server.
+     * Returns: The bi-directional socket used for this HTTP transaction.
+     */
+    apr_status_t (*open_req)(socket_t **sock, request_t *req, apr_pool_t *pool);
+
+    /**
+     * Construct the request to be sent to the server.
+     */
+    apr_status_t (*create_req)(profile_t *p, request_t *r);
+
+    /**
      * Actually sends the request to the server. Implementation will fit
      * an HTTP function or some OS performance capability.
      * Returns: The bi-directional socket used for this HTTP transaction.
      */
-    apr_status_t (*send_req)(socket_t **sock, request_t *req, apr_pool_t *pool);
+    apr_status_t (*send_req)(socket_t *sock, request_t *req, apr_pool_t *pool);
 
     /**
      * Receives the request from the server. Implementation will test
