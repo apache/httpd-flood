@@ -22,6 +22,7 @@
 #define XML_URLLIST_METHOD_POST "post"
 #define XML_URLLIST_METHOD_HEAD "head"
 #define XML_URLLIST_PAYLOAD "payload"
+#define XML_URLLIST_CONTENT_TYPE "content-type"
 #define XML_URLLIST_PAYLOAD_TEMPLATE "payloadtemplate"
 #define XML_URLLIST_REQUEST_TEMPLATE "requesttemplate"
 #define XML_URLLIST_RESPONSE_TEMPLATE "responsetemplate"

@@ -69,6 +69,9 @@ struct request_t {
     /* Following only valid when method == POST */
     apr_size_t payloadsize;
     void * payload;
+
+    apr_size_t contenttypesize;
+    char * contenttype;
     
     apr_uri_t *parsed_uri;
 

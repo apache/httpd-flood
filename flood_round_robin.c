@@ -70,6 +70,7 @@ typedef struct {
     char *url;
     method_e method;
     char *payload;
+    char *contenttype;
     apr_int64_t predelay;
     apr_int64_t predelayprecision;
     apr_int64_t postdelay;
@@ -307,7 +308,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                    "Connection: %s" CRLF
                                    "Host: %s" CRLF
                                    "Content-Length: %d" CRLF 
-                                   "Content-type: application/x-www-form-urlencoded" CRLF
+                                   "Content-type: %s" CRLF 
                                    "%s"
                                    "%s" CRLF
                                    "%s",
@@ -317,6 +318,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
                                    r->keepalive ? "Keep-Alive" : "Close",
                                    r->parsed_uri->hostinfo,
                                    r->payloadsize,
+				   r->contenttype ? r->contenttype : "application/x-www-form-urlencoded", 
                                    authz_hdr ? authz_hdr : "",
                                    cookies,
                                    (char*)r->payload);
@@ -393,6 +395,10 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
                                  FLOOD_STRLEN_MAX) == 0) {
                 url->payload = (char*)attr->value;
             }
+	    else if (strncasecmp(attr->name,XML_URLLIST_CONTENT_TYPE,
+				 FLOOD_STRLEN_MAX) == 0) {
+		url->contenttype = (char*)attr->value;
+	    }
             else if (strncasecmp(attr->name, XML_URLLIST_PREDELAY,
                                  FLOOD_STRLEN_MAX) == 0) {
                 char *endptr;
@@ -488,6 +494,7 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
     {
         url->method = GET;
         url->payload = NULL;
+        url->contenttype = NULL;
     }
 
     return APR_SUCCESS;
@@ -782,6 +789,12 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
         r->payload = parse_param_string(rp, 
                                     rp->url[rp->current_url].payloadtemplate);
         r->payloadsize = strlen(r->payload);
+    }
+
+    if (rp->url[rp->current_url].contenttype)
+    {
+        r->contenttype = parse_param_string(rp, rp->url[rp->current_url].contenttype);
+	r->contenttypesize = strlen(r->contenttype);
     }
 
     /* If they want a sleep, do it now. */
