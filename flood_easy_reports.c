@@ -73,9 +73,9 @@ apr_status_t easy_report_init(report_t **report, config_t *config,
 
 apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, response_t *resp, flood_timer_t *timer)
 {
-    apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %" APR_INT64_T_FMT 
-                    " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT,
-                    timer->connect, timer->write, timer->read, timer->close);
+    apr_file_printf(local_stdout, "%" APR_INT64_T_FMT " %" APR_INT64_T_FMT
+                    " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT " %" APR_INT64_T_FMT,
+                    timer->begin, timer->connect, timer->write, timer->read, timer->close);
 
     switch (verified)
     {
@@ -89,7 +89,7 @@ apr_status_t easy_process_stats(report_t *report, int verified, request_t *req, 
         apr_file_printf(local_stdout, " %d ", verified);
     }
 
-    apr_file_printf(local_stdout, "%d %s\n", apr_os_thread_current(), req->uri);
+    apr_file_printf(local_stdout, "%ld %s\n", apr_os_thread_current(), req->uri);
 
     return APR_SUCCESS;
 }
