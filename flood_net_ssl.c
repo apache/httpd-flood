@@ -357,4 +357,4 @@ apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
     return APR_ENOTIMPL;
 }
 
-#endif
+#endif /* FLOOD_HAS_OPENSSL */
