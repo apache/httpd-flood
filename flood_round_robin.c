@@ -143,7 +143,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
         while (cook)
         {
             if (cook != p->cookie)
-                cookies = apr_pstrcat(p->pool, cookies, ";");
+                cookies = apr_pstrcat(p->pool, cookies, ";", NULL);
 
             cookies = apr_pstrcat(p->pool, cookies, cook->name, "=", 
                                   cook->value, NULL);
