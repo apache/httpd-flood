@@ -218,12 +218,12 @@ int main(int argc, char** argv)
     r.uri = "http://www.apachelabs.org/";
     r.method = GET;
 
-    r.parsed_uri = apr_pcalloc(local_pool, sizeof(uri_components));
+    r.parsed_uri = apr_pcalloc(local_pool, sizeof(*r.parsed_uri));
 
     /* FIXME: This is the private copy. */
-    ap_parse_uri_components(local_pool, r.uri, r.parsed_uri);
+    apr_uri_parse(local_pool, r.uri, r.parsed_uri);
     if (!r.parsed_uri->port)
-        r.parsed_uri->port = DEFAULT_HTTP_PORT;
+        r.parsed_uri->port = 80;
 
     apr_file_printf(local_stdout, "%s\n", r.parsed_uri->hostname);
 
