@@ -193,23 +193,39 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
         break;
     case POST:
         /* FIXME */
-        r->rbuf = apr_psprintf(r->pool, 
-                               "POST %s%s%s HTTP/1.1" CRLF
-                               "User-Agent: Flood/" FLOOD_VERSION CRLF
-                               "Connection: %s" CRLF
-                               "Host: %s" CRLF
-                               "Content-Length: %d" CRLF 
-                               "Content-type: application/x-www-form-urlencoded" CRLF
-                               "%s" CRLF
-                               "%s",
-                               r->parsed_uri->path, 
-                               r->parsed_uri->query ? "?" : "",
-                               r->parsed_uri->query ? r->parsed_uri->query : "",
-                               r->keepalive ? "Keep-Alive" : "Close",
-                               r->parsed_uri->hostinfo,
-                               r->payloadsize,
-                               cookies,
-                               (char*)r->payload);
+        if (r->payload) {
+            r->rbuf = apr_psprintf(r->pool, 
+                                   "POST %s%s%s HTTP/1.1" CRLF
+                                   "User-Agent: Flood/" FLOOD_VERSION CRLF
+                                   "Connection: %s" CRLF
+                                   "Host: %s" CRLF
+                                   "Content-Length: %d" CRLF 
+                                   "Content-type: application/x-www-form-urlencoded" CRLF
+                                   "%s" CRLF
+                                   "%s",
+                                   r->parsed_uri->path, 
+                                   r->parsed_uri->query ? "?" : "",
+                                   r->parsed_uri->query ? r->parsed_uri->query : "",
+                                   r->keepalive ? "Keep-Alive" : "Close",
+                                   r->parsed_uri->hostinfo,
+                                   r->payloadsize,
+                                   cookies,
+                                   (char*)r->payload);
+        } else { /* There is no payload, but it's still a POST */
+            r->rbuf = apr_psprintf(r->pool, 
+                                   "POST %s%s%s HTTP/1.1" CRLF
+                                   "User-Agent: Flood/" FLOOD_VERSION CRLF
+                                   "Connection: %s" CRLF
+                                   "Host: %s" CRLF
+
+                                   "%s" CRLF "",
+                                   r->parsed_uri->path, 
+                                   r->parsed_uri->query ? "?" : "",
+                                   r->parsed_uri->query ? r->parsed_uri->query : "",
+                                   r->keepalive ? "Keep-Alive" : "Close",
+                                   r->parsed_uri->hostinfo,
+                                   cookies);
+        }
         r->rbuftype = POOL;
         r->rbufsize = strlen(r->rbuf);
         break;
