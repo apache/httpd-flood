@@ -1,5 +1,30 @@
 Changes since milestone-03:
 
+* Introduce sequence tag to urllist element.  This tag has the following
+  form:
+
+  <urllist> 
+    <sequence sequencename="myseq" sequencelist="bob, jane, joe">
+        <url requesttemplate="http://www.you.com/~${myseq}/" />
+        <url requesttemplate="http://www.you.com/~${myseq}/index.html" />
+    </sequence>
+  </urllist>
+
+    This will hit:
+        http://www.you.com/~bob/
+        http://www.you.com/~bob/index.html
+        http://www.you.com/~jane/
+        http://www.you.com/~jane/index.html
+        http://www.you.com/~joe/
+        http://www.you.com/~joe/index.html
+
+  This allows certain URL patterns to be simplified.  [Justin Erenkrantz]
+
+* Remove shadow declaration of stat in flood_round_robin.c.
+  [Justin Erenkrantz]
+
+* Factor out handling of URI XML fields. [Justin Erenkrantz]
+
 * Properly detect and use APR's libtool.  [Justin Erenkrantz]
 
 * Reworked build system to ease integration with APR/apr-util.

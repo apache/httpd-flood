@@ -81,6 +81,12 @@
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
 
+typedef enum {
+    EXPAND,
+    EXPAND_SET,
+    PASSTHROUGH
+} expand_param_e;
+
 typedef struct {
     char *url;
     method_e method;
@@ -122,6 +128,103 @@ typedef struct {
     int current_url;
 
 } round_robin_profile_t;
+
+static char *handle_param_string(round_robin_profile_t *rp, char *template, 
+                                 expand_param_e set)
+{
+    char *cpy, *cur, *prev, *data, *returnValue, *pattern;
+    int size, matchsize;
+    regex_t re;
+    regmatch_t match[2];
+         
+    prev = template;
+    returnValue = NULL;
+
+    pattern = "\\$\\{([^\\}]+)\\}";
+    regcomp(&re, pattern, REG_EXTENDED);
+    cur = template;
+    while (regexec(&re, cur, 2, match, 0) == REG_OK)
+    {
+        /* We must backup over the ${ characters. */
+        size = match[1].rm_so - 2;
+        if (size++)
+        {
+            cpy = apr_palloc(rp->pool, size);
+            apr_cpystrn(cpy, cur, size);
+        }
+        else
+            cpy = NULL;
+
+        if (*(cur+match[1].rm_so) == '=')
+        {
+            if (set)
+            {
+                /* We need to assign it a random value. */
+#if FLOOD_USE_RAND
+                data = apr_psprintf(rp->pool, "%d", rand());
+#elif FLOOD_USE_RAND48
+                data = apr_psprintf(rp->pool, "%ld", lrand48());
+#elif FLOOD_USE_RANDOM
+                data = apr_psprintf(rp->pool, "%ld", (long)random());
+#endif
+                matchsize = match[1].rm_eo - match[1].rm_so - 1;
+                apr_hash_set(rp->state, cur+match[1].rm_so+1, matchsize, data);
+            }
+            else
+                data = NULL;
+        }
+        else
+        {
+            matchsize = match[1].rm_eo - match[1].rm_so;
+            data = apr_hash_get(rp->state, cur+match[1].rm_so, matchsize);
+        }
+
+        /* If there is no data, place the original string back. */
+        if (!data) {
+            data = apr_psprintf(rp->pool, "${%s}", 
+                                apr_pstrmemdup(rp->pool, cur+match[1].rm_so,
+                                match[1].rm_eo - match[1].rm_so));
+        }
+
+        if (!returnValue)
+        {
+            if (cpy)
+                returnValue = apr_pstrcat(rp->pool, cpy, data, NULL);
+            else
+                returnValue = apr_pstrdup(rp->pool, data);
+        }
+        else
+        {
+            if (cpy)
+                returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, 
+                                          NULL);
+            else
+                returnValue = apr_pstrcat(rp->pool, returnValue, data, NULL);
+            
+        }
+
+        /* Skip over the trailing } */
+        cur += match[1].rm_eo + 1;
+    }
+
+    if (!returnValue)
+        returnValue = apr_pstrdup(rp->pool, cur);
+    else
+        returnValue = apr_pstrcat(rp->pool, returnValue, cur, NULL);
+
+    regfree(&re);
+    return returnValue;
+}
+
+static char *expand_param_string(round_robin_profile_t *rp, char *template)
+{
+    return handle_param_string(rp, template, EXPAND);
+}
+
+static char *parse_param_string(round_robin_profile_t *rp, char *template)
+{
+    return handle_param_string(rp, template, EXPAND_SET);
+}
 
 /* Construct a request */
 apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
@@ -231,12 +334,143 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
     return APR_SUCCESS;
 }
 
+static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
+                                       apr_pool_t *pool)
+{
+    /* Grab the url from the text section. */
+    if (e->first_cdata.first && e->first_cdata.first->text)
+    {
+        if (e->first_cdata.first->next)
+        {
+            apr_text *t;
+            t = e->first_cdata.first; 
+            url->url = apr_pstrdup(pool, t->text);
+            while ((t = t->next))
+            {
+                url->url = apr_pstrcat(pool, url->url, t->text, NULL);
+            }
+        }
+        else {
+            url->url = apr_pstrdup(pool, e->first_cdata.first->text);
+        }
+    }
+
+    /* Parse any attributes. */
+    if (e->attr)
+    {
+        apr_xml_attr *attr = e->attr;
+        while (attr)
+        {
+            if (strncasecmp(attr->name, XML_URLLIST_METHOD, 
+                            FLOOD_STRLEN_MAX) == 0) {
+                if (strncasecmp(attr->value, XML_URLLIST_METHOD_POST, 4) == 0)
+                    url->method = POST;
+                else if (strncasecmp(attr->value, XML_URLLIST_METHOD_HEAD,
+                                     4) == 0)
+                    url->method = HEAD;
+                else if (strncasecmp(attr->value, XML_URLLIST_METHOD_GET,
+                                     3) == 0)
+                    url->method = GET;
+                else {
+                    apr_file_printf(local_stderr,
+                                    "Attribute %s has invalid value %s.\n",
+                                    XML_URLLIST_METHOD, attr->value);
+                    return APR_EGENERAL;
+                }
+            }
+            else if (strncasecmp(attr->name, XML_URLLIST_PAYLOAD, 
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->payload = (char*)attr->value;
+            }
+            else if (strncasecmp(attr->name, XML_URLLIST_PREDELAY,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                char *endptr;
+                url->predelay = strtoll(attr->value, &endptr, 10);
+                if (*endptr != '\0')
+                {
+                    apr_file_printf(local_stderr, 
+                                    "Attribute %s has invalid value %s.\n",
+                                    XML_URLLIST_PREDELAY, attr->value);
+                    return APR_EGENERAL;
+                }
+                url->predelay *= APR_USEC_PER_SEC;
+            }
+            else if (strncasecmp(attr->name, XML_URLLIST_PREDELAYPRECISION,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                char *endptr;
+                url->predelayprecision = strtoll(attr->value, &endptr, 10);
+                if (*endptr != '\0')
+                {
+                    apr_file_printf(local_stderr,
+                                    "Attribute %s has invalid value %s.\n",
+                                    XML_URLLIST_PREDELAYPRECISION, attr->value);
+                    return APR_EGENERAL;
+                }
+                url->predelayprecision *= APR_USEC_PER_SEC;
+            }
+            else if (strncasecmp(attr->name, XML_URLLIST_POSTDELAY,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                char *endptr;
+                url->postdelay = strtoll(attr->value, &endptr, 10);
+                if (*endptr != '\0')
+                {
+                    apr_file_printf(local_stderr, 
+                                    "Attribute %s has invalid value %s.\n",
+                                    XML_URLLIST_POSTDELAY, attr->value);
+                    return APR_EGENERAL;
+                }
+                url->postdelay *= APR_USEC_PER_SEC;
+            }
+            else if (strncasecmp(attr->name, XML_URLLIST_POSTDELAYPRECISION,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                char *endptr;
+                url->postdelayprecision = strtoll(attr->value, &endptr, 10);
+                if (*endptr != '\0')
+                {
+                    apr_file_printf(local_stderr,
+                                    "Attribute %s has invalid value %s.\n",
+                                    XML_URLLIST_POSTDELAYPRECISION, attr->value);
+                    return APR_EGENERAL;
+                }
+                url->postdelayprecision *= APR_USEC_PER_SEC;
+            }
+            else if (strncasecmp(attr->name, 
+                                 XML_URLLIST_PAYLOAD_TEMPLATE, 
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->payloadtemplate = (char*)attr->value;
+            }
+            else if (strncasecmp(attr->name, 
+                                 XML_URLLIST_REQUEST_TEMPLATE, 
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->requesttemplate = (char*)attr->value;
+            }
+            else if (strncasecmp(attr->name, 
+                                 XML_URLLIST_RESPONSE_TEMPLATE, 
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->responsetemplate = (char*)attr->value;
+            }
+            else if (strncasecmp(attr->name, 
+                                 XML_URLLIST_RESPONSE_NAME,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->responsename = (char*)attr->value;
+                url->responselen = strlen((char*)attr->value);
+            }
+            attr = attr->next;
+        }
+    }
+    else
+    {
+        url->method = GET;
+        url->payload = NULL;
+    }
+}
+        
 apr_status_t round_robin_profile_init(profile_t **profile,
                                       config_t *config,
                                       const char *profile_name,
                                       apr_pool_t *pool)
 {
-    apr_status_t stat;
+    apr_status_t rv;
     int i;
     struct apr_xml_elem *root_elem, *profile_elem,
            *urllist_elem, *count_elem, *useurllist_elem, *e;
@@ -255,18 +489,18 @@ apr_status_t round_robin_profile_init(profile_t **profile,
     xml_profile = apr_pstrdup(pool, XML_PROFILE);
     xml_urllist = apr_pstrdup(pool, XML_URLLIST);
 
-    if ((stat = retrieve_root_xml_elem(&root_elem, config)) != APR_SUCCESS) {
-        return stat;
+    if ((rv = retrieve_root_xml_elem(&root_elem, config)) != APR_SUCCESS) {
+        return rv;
     }
 
     /* retrieve our profile xml element */
-    if ((stat = retrieve_xml_elem_with_childmatch(
+    if ((rv = retrieve_xml_elem_with_childmatch(
              &profile_elem, root_elem,
              xml_profile, "name", profile_name)) != APR_SUCCESS)
-        return stat;
+        return rv;
 
     /* find the count */
-    if ((stat = retrieve_xml_elem_child(
+    if ((rv = retrieve_xml_elem_child(
              &count_elem, profile_elem, XML_PROFILE_COUNT)) != APR_SUCCESS) {
         /* if it's missing, just default to 1 */
         p->execute_rounds = 1;
@@ -290,7 +524,7 @@ apr_status_t round_robin_profile_init(profile_t **profile,
 #endif /* PROFILE_DEBUG */
 
     /* find out what the name of our urllist is */
-    if ((stat = retrieve_xml_elem_child(
+    if ((rv = retrieve_xml_elem_child(
              &useurllist_elem, profile_elem, XML_PROFILE_USEURLLIST)) != APR_SUCCESS) {
         /* useurllist is a required parameter, error */
         apr_file_printf(local_stderr,
@@ -302,13 +536,46 @@ apr_status_t round_robin_profile_init(profile_t **profile,
     }
 
     /* retrieve our urllist xml element */
-    if ((stat = retrieve_xml_elem_with_childmatch(
+    if ((rv = retrieve_xml_elem_with_childmatch(
              &urllist_elem, root_elem,
              xml_urllist, XML_URLLIST_NAME, urllist_name)) != APR_SUCCESS)
-        return stat;
+        return rv;
+
+    p->urls = 0;
+    /* Include sequences.  We'll expand them later. */
+    for (e = urllist_elem->first_child; e; e = e->next) {
+        if (strncasecmp(e->name, XML_URLLIST_SEQUENCE, FLOOD_STRLEN_MAX) == 0) {
+            int items = 0;
+            if (e->attr) {
+                apr_xml_attr *attr = e->attr;
+                while (attr) {
+                    if (strncasecmp(attr->name, 
+                                    XML_URLLIST_SEQUENCE_LIST,
+                                    FLOOD_STRLEN_MAX) == 0) {
+                        char *end = (char*)attr->value;
+                        items++;
+                        while (*end && (end = strchr(end, ','))) {
+                            items++;
+                            end++;
+                        }
+                    }
+                    attr = attr->next;
+                }
+            }
+            if (!items) {
+                apr_file_printf(local_stderr,
+                                "Sequence doesn't have any items!\n");
+            }
+            if ((items *= count_xml_elem_child(e, XML_URLLIST_URL)) <= 0) {
+                apr_file_printf(local_stderr, 
+                                "Sequence doesn't have any urls!\n");
+            }
+            p->urls += items;
+        }
+    }
 
     /* find the urllist for this profile, put 'em in this list */
-    if ((p->urls = count_xml_elem_child(urllist_elem, XML_URLLIST_URL)) <= 0) {
+    if ((p->urls += count_xml_elem_child(urllist_elem, XML_URLLIST_URL)) <= 0) {
         apr_file_printf(local_stderr, "Urllist '%s' doesn't have any urls!\n", urllist_name);
         return APR_EGENERAL;
     }
@@ -316,227 +583,98 @@ apr_status_t round_robin_profile_init(profile_t **profile,
 
     i = 0;
     for (e = urllist_elem->first_child; e; e = e->next) {
-        if (strncasecmp(e->name, XML_URLLIST_URL, FLOOD_STRLEN_MAX) == 0) {
-            /* Do we need strdup? */
-            if (e->first_cdata.first && e->first_cdata.first->text)
-            {
-                if (e->first_cdata.first->next)
-                {
-                    apr_text *t;
-                    t = e->first_cdata.first; 
-                    p->url[i].url = apr_pstrdup(pool, t->text);
-                    while ((t = t->next))
-                    {
-                        p->url[i].url = apr_pstrcat(pool, p->url[i].url, 
-                                                    t->text, NULL);
-                    }
-                }
-                else
-                    p->url[i].url = apr_pstrdup(pool, 
-                                                e->first_cdata.first->text);
-            }
-            if (e->attr)
-            {
+        if (strncasecmp(e->name, XML_URLLIST_SEQUENCE, FLOOD_STRLEN_MAX) == 0) {
+            char *seqname, **seqlist;
+            int seqnamelen, seqcount, curseq;
+            struct apr_xml_elem *child_url_elem;
+            if (e->attr) {
                 apr_xml_attr *attr = e->attr;
-                while (attr)
-                {
-                    if (strncasecmp(attr->name, XML_URLLIST_METHOD, 
-                                FLOOD_STRLEN_MAX) == 0) {
-                        if (strncasecmp(attr->value, XML_URLLIST_METHOD_POST, 4) == 0)
-                            p->url[i].method = POST;
-                        else if (strncasecmp(attr->value, XML_URLLIST_METHOD_HEAD, 4) == 0)
-                            p->url[i].method = HEAD;
-                        else if (strncasecmp(attr->value, XML_URLLIST_METHOD_GET, 3) == 0)
-                            p->url[i].method = GET;
-                        else {
-                            apr_file_printf(local_stderr, "Attribute %s has invalid value %s.\n",
-                                            XML_URLLIST_METHOD, attr->value);
-                            return APR_EGENERAL;
-                        }
-                    }
-                    else if (strncasecmp(attr->name, XML_URLLIST_PAYLOAD, 
-                                     FLOOD_STRLEN_MAX) == 0) {
-                        p->url[i].payload = (char*)attr->value;
-                    }
-                    else if (strncasecmp(attr->name, XML_URLLIST_PREDELAY,
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        char *endptr;
-                        p->url[i].predelay = strtoll(attr->value, &endptr, 10);
-                        if (*endptr != '\0')
-                        {
-                            apr_file_printf(local_stderr, 
-                                        "Attribute %s has invalid value %s.\n",
-                                        XML_URLLIST_PREDELAY, attr->value);
-                            return APR_EGENERAL;
-                        }
-                        p->url[i].predelay *= APR_USEC_PER_SEC;
-                    }
-                    else if (strncasecmp(attr->name, XML_URLLIST_PREDELAYPRECISION,
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        char *endptr;
-                        p->url[i].predelayprecision = strtoll(attr->value, &endptr, 10);
-                        if (*endptr != '\0')
-                        {
-                            apr_file_printf(local_stderr,
-                                            "Attribute %s has invalid value %s.\n",
-                                            XML_URLLIST_PREDELAYPRECISION, attr->value);
-                            return APR_EGENERAL;
-                        }
-                        p->url[i].predelayprecision *= APR_USEC_PER_SEC;
-                    }
-                    else if (strncasecmp(attr->name, XML_URLLIST_POSTDELAY,
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        char *endptr;
-                        p->url[i].postdelay = strtoll(attr->value, &endptr, 10);
-                        if (*endptr != '\0')
-                        {
-                            apr_file_printf(local_stderr, 
-                                        "Attribute %s has invalid value %s.\n",
-                                        XML_URLLIST_POSTDELAY, attr->value);
-                            return APR_EGENERAL;
-                        }
-                        p->url[i].postdelay *= APR_USEC_PER_SEC;
-                    }
-                    else if (strncasecmp(attr->name, XML_URLLIST_POSTDELAYPRECISION,
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        char *endptr;
-                        p->url[i].postdelayprecision = strtoll(attr->value, &endptr, 10);
-                        if (*endptr != '\0')
-                        {
-                            apr_file_printf(local_stderr,
-                                            "Attribute %s has invalid value %s.\n",
-                                            XML_URLLIST_POSTDELAYPRECISION, attr->value);
-                            return APR_EGENERAL;
-                        }
-                        p->url[i].postdelayprecision *= APR_USEC_PER_SEC;
-                    }
+                while (attr) {
+                    if (strncasecmp(attr->name, XML_URLLIST_SEQUENCE_NAME,
+                                    FLOOD_STRLEN_MAX) == 0) {
+                        seqname = (char*)attr->value;
+                        seqnamelen = strlen(seqname);
+                    }             
                     else if (strncasecmp(attr->name, 
-                                         XML_URLLIST_PAYLOAD_TEMPLATE, 
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        p->url[i].payloadtemplate = (char*)attr->value;
+                                 XML_URLLIST_SEQUENCE_LIST,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                        /* FIXME: ap_getword needs to be in apr-util! */
+                        char *end, *cur;
+                        int count = 1, num = 0;
+                        end = (char*)attr->value;
+                        while (*end && (end = strchr(end, ','))) {
+                            count++;
+                            end++;
+                        } 
+                        seqlist = apr_palloc(pool, sizeof(char*) * count);
+                        seqcount = count;
+
+                        cur = (char*)attr->value;
+                        end = strchr(cur, ',');
+                        for (num = 0; num < count; num++) {
+                            while (apr_isspace(*cur)) { 
+                                cur++;
+                            }
+                            if (end) {
+                                seqlist[num] = apr_pstrmemdup(pool, cur,
+                                                              end - cur);
+                                cur = ++end;
+                                end = strchr(cur, ',');
+                            }
+                            else {
+                                seqlist[num] = apr_pstrdup(pool, cur);
+                            }
+                        }
+                    } 
+                    attr = attr->next; 
+                }
+            }             
+            for (curseq = 0; curseq < seqcount; curseq++) {
+                apr_hash_set(p->state, seqname, seqnamelen, seqlist[curseq]);
+                for (child_url_elem = e->first_child; child_url_elem;
+                     child_url_elem = child_url_elem->next) {
+                    if (strncasecmp(child_url_elem->name, XML_URLLIST_URL,
+                                    FLOOD_STRLEN_MAX) == 0) {
+                        rv = parse_xml_url_info(child_url_elem, &p->url[i],
+                                                pool);
+                        if (rv != APR_SUCCESS) {
+                            return rv;
+                        }
+                        /* Expand them. */
+                        if (p->url[i].payloadtemplate) {
+                            p->url[i].payloadtemplate = 
+                                handle_param_string(p,
+                                                    p->url[i].payloadtemplate,
+                                                    PASSTHROUGH);
+                        }
+                        if (p->url[i].requesttemplate) {
+                            p->url[i].requesttemplate = 
+                                handle_param_string(p,
+                                                    p->url[i].requesttemplate,
+                                                    PASSTHROUGH);
+                        }
+                        if (p->url[i].responsetemplate) {
+                            p->url[i].responsetemplate = 
+                                handle_param_string(p,
+                                                    p->url[i].responsetemplate,
+                                                    PASSTHROUGH);
+                        }
+                        i++;
                     }
-                    else if (strncasecmp(attr->name, 
-                                         XML_URLLIST_REQUEST_TEMPLATE, 
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        p->url[i].requesttemplate = (char*)attr->value;
-                    }
-                    else if (strncasecmp(attr->name, 
-                                         XML_URLLIST_RESPONSE_TEMPLATE, 
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        p->url[i].responsetemplate = (char*)attr->value;
-                    }
-                    else if (strncasecmp(attr->name, 
-                                         XML_URLLIST_RESPONSE_NAME,
-                                         FLOOD_STRLEN_MAX) == 0) {
-                        p->url[i].responsename = (char*)attr->value;
-                        p->url[i].responselen = strlen((char*)attr->value);
-                    }
-                    
-                    attr = attr->next;
                 }
             }
-            else
-            {
-                p->url[i].method = GET;
-                p->url[i].payload = NULL;
+        }
+        if (strncasecmp(e->name, XML_URLLIST_URL, FLOOD_STRLEN_MAX) == 0) {
+            rv = parse_xml_url_info(e, &p->url[i++], pool);
+            if (rv != APR_SUCCESS) {
+                return rv;
             }
-
-            i++;
         }
     }
 
     *profile = p;
 
     return APR_SUCCESS;
-}
-
-static char *handle_param_string(round_robin_profile_t *rp, char *template, int set)
-{
-    char *cpy, *cur, *prev, *data, *returnValue, *pattern;
-    int size, matchsize;
-    regex_t re;
-    regmatch_t match[2];
-         
-    prev = template;
-    returnValue = NULL;
-
-    pattern = "\\$\\{([^\\}]+)\\}";
-    regcomp(&re, pattern, REG_EXTENDED);
-    cur = template;
-    while (regexec(&re, cur, 2, match, 0) == REG_OK)
-    {
-        /* We must backup over the ${ characters. */
-        size = match[1].rm_so - 2;
-        if (size++)
-        {
-            cpy = apr_palloc(rp->pool, size);
-            apr_cpystrn(cpy, cur, size);
-        }
-        else
-            cpy = NULL;
-
-        if (*(cur+match[1].rm_so) == '=')
-        {
-            if (set)
-            {
-                /* We need to assign it a random value. */
-#if FLOOD_USE_RAND
-                data = apr_psprintf(rp->pool, "%d", rand());
-#elif FLOOD_USE_RAND48
-                data = apr_psprintf(rp->pool, "%ld", lrand48());
-#elif FLOOD_USE_RANDOM
-                data = apr_psprintf(rp->pool, "%ld", (long)random());
-#endif
-                matchsize = match[1].rm_eo - match[1].rm_so - 1;
-                apr_hash_set(rp->state, cur+match[1].rm_so+1, matchsize, data);
-            }
-            else
-                data = NULL;
-        }
-        else
-        {
-            matchsize = match[1].rm_eo - match[1].rm_so;
-            data = apr_hash_get(rp->state, cur+match[1].rm_so, matchsize);
-        }
-
-        if (!returnValue)
-        {
-            if (cpy)
-                returnValue = apr_pstrcat(rp->pool, cpy, data, NULL);
-            else
-                returnValue = apr_pstrdup(rp->pool, data);
-        }
-        else
-        {
-            if (cpy)
-                returnValue = apr_pstrcat(rp->pool, returnValue, cpy, data, 
-                                          NULL);
-            else
-                returnValue = apr_pstrcat(rp->pool, returnValue, data, NULL);
-            
-        }
-
-        /* Skip over the trailing } */
-        cur += match[1].rm_eo + 1;
-    }
-
-    if (!returnValue)
-        returnValue = apr_pstrdup(rp->pool, cur);
-    else
-        returnValue = apr_pstrcat(rp->pool, returnValue, cur, NULL);
-
-    regfree(&re);
-    return returnValue;
-}
-
-static char *expand_param_string(round_robin_profile_t *rp, char *template)
-{
-    return handle_param_string(rp, template, 0);
-}
-
-static char *parse_param_string(round_robin_profile_t *rp, char *template)
-{
-    return handle_param_string(rp, template, 1);
 }
 
 apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)

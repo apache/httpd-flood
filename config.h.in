@@ -10,6 +10,9 @@
 /* XML symbolic roots to the various objects we define. */
 #define XML_SEED "seed"
 #define XML_URLLIST "urllist"
+#define XML_URLLIST_SEQUENCE "sequence"
+#define XML_URLLIST_SEQUENCE_NAME "sequencename"
+#define XML_URLLIST_SEQUENCE_LIST "sequencelist"
 #define XML_URLLIST_URL "url"
 #define XML_URLLIST_METHOD "method"
 #define XML_URLLIST_METHOD_GET "get"
