@@ -204,8 +204,10 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
                             i, usefarmer_names[i]);
             return stat;
         } else {
+#ifdef FARM_DEBUG
             apr_file_printf(local_stdout, "Farmer '%d' ('%s') completed successfully.\n",
                             i, usefarmer_names[i]);
+#endif
         }
     }
 
