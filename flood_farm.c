@@ -95,8 +95,10 @@ void * APR_THREAD_FUNC farmer_worker(apr_thread_t *thd, void *data)
     pool = apr_thread_pool_get(thd);
 
     /* should we create a subpool here? */
+#ifdef FARM_DEBUG
     apr_file_printf(local_stdout, "Starting farmer_worker thread '%s'.\n",
                     info->farmer_name);
+#endif
 
     if ((stat = run_farmer(info->config, info->farmer_name,
                            pool)) != APR_SUCCESS) {
