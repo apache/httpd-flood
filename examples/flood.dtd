@@ -39,6 +39,7 @@
 <!ATTLIST url postdelayprecision CDATA #IMPLIED>
 <!ATTLIST url user CDATA #IMPLIED>
 <!ATTLIST url password CDATA #IMPLIED>
+<!ATTLIST url Content-Type CDATA #IMPLIED>
 
 <!ELEMENT sequence (url+)>
 
