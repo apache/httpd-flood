@@ -111,7 +111,7 @@ static apr_status_t generic_get_next_url(request_t **request, profile_t *profile
  */
 static apr_status_t generic_send_req(socket_t **sock, request_t *req, apr_pool_t *pool)
 {
-    apr_socket_t *new_sock = open_socket(pool, req);
+    flood_socket_t *new_sock = open_socket(pool, req);
     write_socket(new_sock, req);
     *sock = new_sock;
     return APR_SUCCESS;
@@ -127,7 +127,7 @@ static apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_poo
     response_t *new_resp;
     apr_status_t status;
 
-    apr_socket_t *s = (apr_socket_t*)sock;
+    flood_socket_t *s = (flood_socket_t*)sock;
 
     new_resp = apr_pcalloc(pool, sizeof(response_t));
     new_resp->rbuftype = POOL;
@@ -140,7 +140,7 @@ static apr_status_t generic_recv_resp(response_t **resp, socket_t *sock, apr_poo
         return status;
     }
 
-    while (status != APR_EOF) {
+    while (status != APR_EOF && status != APR_TIMEUP) {
         i = MAX_DOC_LENGTH - 1;
         status = read_socket(s, b, &i);
     }
@@ -204,7 +204,7 @@ static apr_status_t generic_response_destroy(response_t *resp)
  */
 static apr_status_t generic_socket_destroy(socket_t *socket)
 {
-    apr_socket_t *s = (apr_socket_t*)socket;
+    flood_socket_t *s = (flood_socket_t*)socket;
 
     /* this is a generic recv resp, no keepalive support */
     close_socket(s); 
