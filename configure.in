@@ -42,6 +42,7 @@ AC_ARG_ENABLE(ssl,
 [enable_ssl=no])
 
 flood_has_openssl=0
+flood_has_devrand=0
 if test "$enable_ssl" = "yes"; then
   AC_CHECK_HEADERS(openssl/ssl.h openssl/opensslv.h,,
     AC_MSG_ERROR('OpenSSL Headers not found at patch specified'))
@@ -56,15 +57,32 @@ if test "$enable_ssl" = "yes"; then
   AC_CHECK_LIB(ssl, BIO_next, LIBS="$LIBS -lssl")
   flood_has_openssl=1
 
+  dnl Extra OpenSSL specific options
+  AC_ARG_WITH(capath,
+    [  --with-capath=PATH      Path to a directory with c_rehash'd CA files used by OpenSSL (default $OPENSSL_PREFIX/certs)],
+    [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-capath requires a path'); else CAPATH="$withval"; fi],
+    [if test -d "$fl_openssl_prefix/certs"; then
+        CAPATH="$fl_openssl_prefix/certs"
+     else if test -d "/usr/lib/ssl/certs"; then
+        CAPATH="/usr/lib/ssl/certs"
+     else
+        AC_MSG_ERROR('option --with-capath must be specified')
+     fi
+     fi
+    ])
+
   AC_ARG_WITH(randfile,
     [  --with-randfile=PATH    Path to a random file used by OpenSSL],
     [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-randfile requires a path'); else RANDFILE="$withval"; fi],
-    [AC_MSG_ERROR('option --with-randfile must be specified')])
-
-  AC_ARG_WITH(capath,
-    [  --with-capath=PATH      Path to a directory with c_rehash'd CA files used by OpenSSL],
-    [if test "$withval" = "yes"; then AC_MSG_ERROR('option --with-capath requires a path'); else CAPATH="$withval"; fi],
-    [AC_MSG_ERROR('option --with-capath must be specified')])
+    [if test -c "/dev/random"; then
+        flood_has_devrand=1
+     else if test -c "/dev/urandom"; then
+        flood_has_devrand=1
+     else
+        AC_MSG_ERROR(option --with-randfile must be specified to point at a random file used to seed OpenSSL)
+     fi
+     fi
+    ])
 fi
 
 dnl Need for now.  Remove later.
@@ -131,6 +149,7 @@ AC_SUBST(prngrandom)
 AC_SUBST(hasstrtoll)
 AC_SUBST(hasstrtoq)
 AC_SUBST(flood_has_openssl)
+AC_SUBST(flood_has_devrand)
 
 dnl Makefile outputs
 dnl Note: There can only be one AC_OUTPUT command.

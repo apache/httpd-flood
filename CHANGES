@@ -1,6 +1,6 @@
 Changes since milestone-02:
 
-* Make randfile and capath mandatory options (no default) when SSL is
+* Allow better detection of randfile and capath options when SSL is 
   enabled.  [Justin Erenkrantz]
 
 * Detect when we have a https URL and don't have SSL support built in.

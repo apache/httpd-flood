@@ -161,7 +161,9 @@ apr_status_t ssl_init_socket(apr_pool_t *pool)
     OpenSSL_add_ssl_algorithms();
     SSL_load_error_strings();
     ERR_load_crypto_strings();
+#if !FLOOD_HAS_DEVRAND
     RAND_load_file(RANDFILE, -1);
+#endif
 
 #if APR_HAS_THREADS
     numlocks = CRYPTO_num_locks();
