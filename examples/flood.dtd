@@ -55,9 +55,9 @@
 
 <!ELEMENT profile (name,(description)?,useurllist,
                    (profiletype|%profile.events;),
-		   (socket|%socket.events;),
-		   verify_resp,
-		   (report|%report.events;))>
+                   (socket|%socket.events;),
+                   verify_resp,
+                   (report|%report.events;))>
 
 <!ELEMENT useurllist (#PCDATA)>
 <!ELEMENT profiletype (#PCDATA)>
@@ -88,7 +88,7 @@
 
 <!-- farmer -->
 
-<!ELEMENT farmer (name,description?,(count|time),useprofile)>
+<!ELEMENT farmer (name,description?,(count|time),useprofile+)>
 
 <!ELEMENT count (#PCDATA)>
 <!ELEMENT time (#PCDATA)>
@@ -96,7 +96,7 @@
 
 <!-- farm -->
 
-<!ELEMENT farm (name,description?,usefarmer)>
+<!ELEMENT farm (name,description?,usefarmer+)>
 
 <!ELEMENT usefarmer (#PCDATA)>
 
