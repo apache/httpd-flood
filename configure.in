@@ -1,6 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(flood.c)
 
+dnl Location for config.guess, config.sub, install.sh, etc.
+AC_CONFIG_AUX_DIR(build)
+
 dnl Override the default prefix with /pkg/flood-0.1
 AC_PREFIX_DEFAULT(/pkg/flood-0.1)
 
