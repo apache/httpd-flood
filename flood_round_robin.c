@@ -130,12 +130,14 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
     {
     case GET:
         r->rbuf = apr_psprintf(r->pool, 
-                               "GET %s HTTP/1.1" CRLF
+                               "GET %s%s%s HTTP/1.1" CRLF
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
                                "Connection: Close" CRLF
                                "Host: %s" CRLF 
                                "%s" CRLF,
                                r->parsed_uri->path, 
+                               r->parsed_uri->query ? "?" : "",
+                               r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->parsed_uri->hostinfo,
                                cookies);
         r->rbuftype = POOL;
@@ -143,12 +145,14 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
         break;
     case HEAD:
         r->rbuf = apr_psprintf(r->pool, 
-                               "HEAD %s HTTP/1.1" CRLF
+                               "HEAD %s%s%s HTTP/1.1" CRLF
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
                                "Connection: Close" CRLF
                                "Host: %s" CRLF 
                                "%s" CRLF,
                                r->parsed_uri->path, 
+                               r->parsed_uri->query ? "?" : "",
+                               r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->parsed_uri->hostinfo,
                                cookies);
         r->rbuftype = POOL;
@@ -157,7 +161,7 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
     case POST:
         /* FIXME */
         r->rbuf = apr_psprintf(r->pool, 
-                               "POST %s HTTP/1.1" CRLF
+                               "POST %s%s%s HTTP/1.1" CRLF
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
                                "Connection: Close" CRLF
                                "Host: %s" CRLF
@@ -166,6 +170,8 @@ static void construct_request(round_robin_profile_t *p, request_t *r)
                                "%s" CRLF
                                "%s",
                                r->parsed_uri->path, 
+                               r->parsed_uri->query ? "?" : "",
+                               r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->parsed_uri->hostinfo,
                                r->payloadsize,
                                cookies,
