@@ -63,6 +63,7 @@
 #include <apr_base64.h>
 #include <apr_poll.h>
 #include <apr_thread_proc.h>
+#include <apr_errno.h>
 
 #if APR_HAVE_STRINGS_H
 #include <strings.h>    /* strncasecmp */
@@ -969,31 +970,36 @@ apr_status_t round_robin_postprocess(profile_t *profile,
         apr_pollset_t *pollset;
         apr_procattr_t *procattr;
         apr_size_t nbytes, wbytes;
+        char buf[255];
 
         char **args;
         const char *progname;
         
 
-        if (apr_procattr_create(&procattr, rp->pool) != APR_SUCCESS) {
+        if ((rv = apr_procattr_create(&procattr, rp->pool)) != APR_SUCCESS) {
             apr_file_printf(local_stderr,
-                            "apr_procattr_create failed for '%s'\n",
-                            rp->url[rp->current_url].responsescript);
-            return APR_EGENERAL;
+                            "apr_procattr_create failed for '%s': %s\n",
+                            rp->url[rp->current_url].responsescript,
+                            apr_strerror(rv, buf, sizeof(buf)));
+            return rv;
         }
 
-        if (apr_procattr_io_set(procattr, APR_FULL_BLOCK, APR_NO_PIPE,
-                                  APR_NO_PIPE) != APR_SUCCESS) {
+        if ((rv = apr_procattr_io_set(procattr, APR_FULL_BLOCK, APR_NO_PIPE,
+                                      APR_NO_PIPE)) != APR_SUCCESS) {
             apr_file_printf(local_stderr,
-                            "apr_procattr_io_set failed for '%s'\n",
-                            rp->url[rp->current_url].responsescript);
-            return APR_EGENERAL;
+                            "apr_procattr_io_set failed for '%s': %s\n",
+                            rp->url[rp->current_url].responsescript,
+                            apr_strerror(rv, buf, sizeof(buf)));
+            return rv;
         }
 
-        if (apr_procattr_error_check_set(procattr, 1)) {
+        if ((rv = apr_procattr_error_check_set(procattr, 1)) != APR_SUCCESS) {
             apr_file_printf(local_stderr,
-                            "apr_procattr_error_check_set failed for '%s'\n",
-                            rp->url[rp->current_url].responsescript);
-            return APR_EGENERAL;
+                            "apr_procattr_error_check_set failed "
+                            "for '%s': %s\n",
+                            rp->url[rp->current_url].responsescript,
+                            apr_strerror(rv, buf, sizeof(buf)));
+            return rv;
         }
 
         apr_tokenize_to_argv(rp->url[rp->current_url].responsescript, &args,
@@ -1003,20 +1009,22 @@ apr_status_t round_robin_postprocess(profile_t *profile,
         proc = (apr_proc_t *)apr_pcalloc(rp->pool, sizeof(*proc));
 
         /* create process */
-        if (apr_proc_create(proc, progname, (const char * const *)args, NULL,
-                                procattr, rp->pool) != APR_SUCCESS) {
+        if ((rv = apr_proc_create(proc, progname, (const char * const *)args,
+                                  NULL, procattr, rp->pool)) != APR_SUCCESS) {
             apr_file_printf(local_stderr,
-                            "Can't spawn postprocess script '%s'\n",
-                            rp->url[rp->current_url].responsescript);
-            return APR_EGENERAL;
+                            "Can't spawn postprocess script '%s': %s\n",
+                            rp->url[rp->current_url].responsescript,
+                            apr_strerror(rv, buf, sizeof(buf)));
+            return rv;
         }
 
-        if (apr_file_pipe_timeout_set(proc->in, apr_time_from_sec(10))
-                                != APR_SUCCESS) {
+        if ((rv = apr_file_pipe_timeout_set(proc->in, apr_time_from_sec(10)))
+                                    != APR_SUCCESS) {
             apr_file_printf(local_stderr,
-                            "apr_file_pipe_timeout_set failed for '%s'\n",
-                            rp->url[rp->current_url].responsescript);
-            return APR_EGENERAL;
+                            "apr_file_pipe_timeout_set failed for '%s': %s\n",
+                            rp->url[rp->current_url].responsescript,
+                            apr_strerror(rv, buf, sizeof(buf)));
+            return rv;
         }
 
         apr_pollset_create(&pollset, 1, rp->pool, 0);
@@ -1036,18 +1044,19 @@ apr_status_t round_robin_postprocess(profile_t *profile,
             int bytes;
             apr_int32_t nrdes;
             const apr_pollfd_t *ardes = NULL;
+            const apr_pollfd_t *rdes;
 
-            apr_pollset_poll(pollset, apr_time_from_sec(10), &nrdes, &ardes);
-
-            if (!nrdes) {
+            if ((rv = apr_pollset_poll(pollset, apr_time_from_sec(10),
+                                       &nrdes, &ardes)) != APR_SUCCESS) {
                 apr_file_printf(local_stderr,
-                                "timeout writing data to script '%s'\n",
-                                rp->url[rp->current_url].responsescript);
-                return APR_EGENERAL;
+                                "error writing data to script '%s': %s\n",
+                                rp->url[rp->current_url].responsescript,
+                                apr_strerror(rv, buf, sizeof(buf)));
+                return rv;
             }
 
             /* there can be only one descriptor... */
-            const apr_pollfd_t *rdes = &(ardes[0]);
+            rdes = &(ardes[0]);
 
             bytes = nbytes;
             apr_file_write(rdes->desc.f, resp->rbuf, &bytes);
@@ -1059,14 +1068,14 @@ apr_status_t round_robin_postprocess(profile_t *profile,
         apr_pollset_remove(pollset, &pipeout);
         apr_file_close(proc->in);
 
-        rv = apr_proc_wait(proc, &exitcode, NULL, APR_WAIT);
 
-        /* child may be gone already... */
-        if (!rv & (APR_CHILD_DONE | APR_SUCCESS)) {
+        if ((rv = apr_proc_wait(proc, &exitcode, NULL, APR_WAIT))
+                                                    != APR_CHILD_DONE) {
             apr_file_printf(local_stderr,
-                            "apr_proc_wait failed for '%s'\n",
-                            rp->url[rp->current_url].responsescript);
-            return APR_EGENERAL;
+                            "apr_proc_wait failed for '%s': %s\n",
+                            rp->url[rp->current_url].responsescript,
+                            apr_strerror(rv, buf, sizeof(buf)));
+            return rv;
         }
 
         if (exitcode != 0) {
