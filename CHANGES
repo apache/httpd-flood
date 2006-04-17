@@ -1,5 +1,13 @@
 Changes since 1.0:
 
+* Add extraheader attribute to url's to allow custom headers to be set.
+  [Justin Erenkrantz]
+
+* Add payloadfile attribute to url's to allow the body to be read from a file.
+  [Justin Erenkrantz]
+
+* Support custom HTTP methods. [Justin Erenkrantz]
+
 * Fix corruption when we have multiple usefarmer's without a count.
   [Justin Erenkrantz]
 

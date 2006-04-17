@@ -69,8 +69,10 @@ typedef enum {
 typedef struct {
     char *url;
     method_e method;
+    const char *method_string;
     char *payload;
     char *contenttype;
+    char *extra_headers;
     apr_int64_t predelay;
     apr_int64_t predelayprecision;
     apr_int64_t postdelay;
@@ -216,7 +218,7 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
 {
     round_robin_profile_t *p;
     char *cookies, *path;
-    char *enc_credtls, *credtls, *authz_hdr = NULL;
+    char *enc_credtls, *credtls, *authz_hdr = NULL, *extra_hdr = NULL;
     cookie_t *cook;
    
     p = (round_robin_profile_t*)profile; 
@@ -262,6 +264,10 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
         }
     }
 
+    if (p->url[p->current_url].extra_headers) {
+        extra_hdr = p->url[p->current_url].extra_headers;
+    }
+
     if (p->proxy_url != NULL) {
         path = apr_pstrcat(r->pool, r->parsed_uri->scheme, "://",
                                     r->parsed_uri->hostinfo,
@@ -274,78 +280,75 @@ apr_status_t round_robin_create_req(profile_t *profile, request_t *r)
     switch (r->method)
     {
     case GET:
+    case HEAD:
         r->rbuf = apr_psprintf(r->pool, 
-                               "GET %s%s%s HTTP/1.1" CRLF
+                               "%s %s%s%s HTTP/1.1" CRLF
                                "User-Agent: Flood/" FLOOD_VERSION CRLF
                                "Connection: %s" CRLF
                                "Host: %s" CRLF 
-                               "%s"
-                               "%s" CRLF,
+                               "%s" /* Extra headers */
+                               "%s" /* Authz */
+                               "%s" /* Cookies */
+                               CRLF, /* End of HTTP request headers */
+                               p->url[p->current_url].method_string,
                                path,
                                r->parsed_uri->query ? "?" : "",
                                r->parsed_uri->query ? r->parsed_uri->query : "",
                                r->keepalive ? "Keep-Alive" : "Close",
                                r->parsed_uri->hostinfo,
-                               authz_hdr ? authz_hdr : "",
-                               cookies);
-        r->rbuftype = POOL;
-        r->rbufsize = strlen(r->rbuf);
-        break;
-    case HEAD:
-        r->rbuf = apr_psprintf(r->pool, 
-                               "HEAD %s%s%s HTTP/1.1" CRLF
-                               "User-Agent: Flood/" FLOOD_VERSION CRLF
-                               "Connection: %s" CRLF
-                               "Host: %s" CRLF 
-                               "%s"
-                               "%s" CRLF,
-                               path, 
-                               r->parsed_uri->query ? "?" : "",
-                               r->parsed_uri->query ? r->parsed_uri->query : "",
-                               r->keepalive ? "Keep-Alive" : "Close",
-                               r->parsed_uri->hostinfo,
+                               extra_hdr ? extra_hdr : "",
                                authz_hdr ? authz_hdr : "",
                                cookies);
         r->rbuftype = POOL;
         r->rbufsize = strlen(r->rbuf);
         break;
     case POST:
-        /* FIXME */
+    case OTHER:
         if (r->payload) {
             r->rbuf = apr_psprintf(r->pool, 
-                                   "POST %s%s%s HTTP/1.1" CRLF
+                                   "%s %s%s%s HTTP/1.1" CRLF
                                    "User-Agent: Flood/" FLOOD_VERSION CRLF
                                    "Connection: %s" CRLF
                                    "Host: %s" CRLF
                                    "Content-Length: %d" CRLF 
-                                   "Content-type: %s" CRLF 
-                                   "%s"
-                                   "%s" CRLF
-                                   "%s",
+                                   "Content-Type: %s" CRLF 
+                                   "%s" /* Extra headers */
+                                   "%s" /* Authz */
+                                   "%s" /* Cookies */
+                                   CRLF /* End of HTTP request headers */
+                                   "%s" /* Body */,
+                                   p->url[p->current_url].method_string,
                                    path, 
                                    r->parsed_uri->query ? "?" : "",
-                                   r->parsed_uri->query ? r->parsed_uri->query : "",
+                                   r->parsed_uri->query ?
+                                       r->parsed_uri->query : "",
                                    r->keepalive ? "Keep-Alive" : "Close",
                                    r->parsed_uri->hostinfo,
                                    r->payloadsize,
-				   r->contenttype ? r->contenttype : "application/x-www-form-urlencoded", 
+                                   r->contenttype ? r->contenttype :
+                                       "application/x-www-form-urlencoded", 
+                                   extra_hdr ? extra_hdr : "",
                                    authz_hdr ? authz_hdr : "",
                                    cookies,
                                    (char*)r->payload);
         } else { /* There is no payload, but it's still a POST */
             r->rbuf = apr_psprintf(r->pool, 
-                                   "POST %s%s%s HTTP/1.1" CRLF
+                                   "%s %s%s%s HTTP/1.1" CRLF
                                    "User-Agent: Flood/" FLOOD_VERSION CRLF
                                    "Connection: %s" CRLF
                                    "Host: %s" CRLF
-
-                                   "%s"
-                                   "%s" CRLF "",
+                                   "%s" /* Extra headers */
+                                   "%s" /* Authz */
+                                   "%s" /* Cookies */
+                                   CRLF /* End of HTTP request headers */
+                                   "" /* No body */,
+                                   p->url[p->current_url].method_string,
                                    path, 
                                    r->parsed_uri->query ? "?" : "",
                                    r->parsed_uri->query ? r->parsed_uri->query : "",
                                    r->keepalive ? "Keep-Alive" : "Close",
                                    r->parsed_uri->hostinfo,
+                                   extra_hdr ? extra_hdr : "",
                                    authz_hdr ? authz_hdr : "",
                                    cookies);
         }
@@ -386,29 +389,82 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
         {
             if (strncasecmp(attr->name, XML_URLLIST_METHOD, 
                             FLOOD_STRLEN_MAX) == 0) {
-                if (strncasecmp(attr->value, XML_URLLIST_METHOD_POST, 4) == 0)
+                if (strncasecmp(attr->value, XML_URLLIST_METHOD_POST, 4) == 0) {
                     url->method = POST;
+                    url->method_string = "POST";
+                }
                 else if (strncasecmp(attr->value, XML_URLLIST_METHOD_HEAD,
                                      4) == 0)
+                {
                     url->method = HEAD;
+                    url->method_string = "HEAD";
+                }
                 else if (strncasecmp(attr->value, XML_URLLIST_METHOD_GET,
-                                     3) == 0)
+                                     3) == 0) {
                     url->method = GET;
+                    url->method_string = "GET";
+                }
                 else {
-                    apr_file_printf(local_stderr,
-                                    "Attribute %s has invalid value %s.\n",
-                                    XML_URLLIST_METHOD, attr->value);
-                    return APR_EGENERAL;
+                    url->method = OTHER;
+                    url->method_string = apr_pstrdup(pool, attr->value);
                 }
             }
             else if (strncasecmp(attr->name, XML_URLLIST_PAYLOAD, 
                                  FLOOD_STRLEN_MAX) == 0) {
                 url->payload = (char*)attr->value;
             }
-	    else if (strncasecmp(attr->name,XML_URLLIST_CONTENT_TYPE,
-				 FLOOD_STRLEN_MAX) == 0) {
-		url->contenttype = (char*)attr->value;
-	    }
+            else if (strncasecmp(attr->name, XML_URLLIST_PAYLOAD_FILE,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                apr_status_t status;
+                const char *fname;
+                apr_finfo_t finfo;
+                apr_file_t *file;
+                apr_size_t len;
+
+                fname = attr->value;
+
+                status = apr_stat(&finfo, fname, APR_FINFO_MIN, pool);
+                if (status != APR_SUCCESS)
+                    return status;
+               
+                status = apr_file_open(&file, fname, APR_READ, APR_OS_DEFAULT,
+                                       pool);
+                if (status != APR_SUCCESS)
+                    return status;
+
+                url->payload = apr_palloc(pool, finfo.size + 1);
+
+                status = apr_file_read_full(file, url->payload, finfo.size,
+                                            &len);
+                if (len != finfo.size)
+                    return status;
+
+                apr_file_close(file);
+            }
+            else if (strncasecmp(attr->name,XML_URLLIST_CONTENT_TYPE,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                url->contenttype = (char*)attr->value;
+            }
+            else if (strncasecmp(attr->name,XML_URLLIST_EXTRA_HEADERS,
+                                 FLOOD_STRLEN_MAX) == 0) {
+                char *last, *header;
+
+                header = apr_strtok((char*)attr->value, ";", &last);
+                while (header) {
+                    apr_collapse_spaces(header, header);
+                    if (url->extra_headers) {
+                        url->extra_headers = apr_pstrcat(pool,
+                                                         url->extra_headers,
+                                                         header, CRLF, NULL);
+                    }
+                    else {
+                        url->extra_headers = apr_pstrcat(pool,
+                                                         header, CRLF, NULL);
+                    }
+
+                    header = apr_strtok(NULL, ";", &last);
+                }
+            }
             else if (strncasecmp(attr->name, XML_URLLIST_PREDELAY,
                                  FLOOD_STRLEN_MAX) == 0) {
                 char *endptr;
@@ -816,7 +872,7 @@ apr_status_t round_robin_get_next_url(request_t **request, profile_t *profile)
     if (rp->url[rp->current_url].contenttype)
     {
         r->contenttype = parse_param_string(rp, rp->url[rp->current_url].contenttype);
-	r->contenttypesize = strlen(r->contenttype);
+        r->contenttypesize = strlen(r->contenttype);
     }
 
     /* If they want a sleep, do it now. */

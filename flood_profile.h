@@ -47,7 +47,8 @@ typedef enum buffer_type_e buffer_type_e;
 enum method_e {
     GET,
     POST,
-    HEAD
+    HEAD,
+    OTHER
 };
 typedef enum method_e method_e;
 
