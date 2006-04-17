@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Fix corruption when we have multiple usefarmer's without a count.
+  [Justin Erenkrantz]
+
 * Sync with latest find_apr.m4 and find_apu.m4 to detect 1.0 APR and APR-util.
   [Justin Erenkrantz]
 

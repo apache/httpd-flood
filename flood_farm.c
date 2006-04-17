@@ -151,12 +151,17 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
     usefarmer_count = 0;
     for (e = farm_elem->first_child; e; e = e->next) {
         if (strncasecmp(e->name, XML_FARM_USEFARMER, FLOOD_STRLEN_MAX) == 0) {
+            int found_count = 0;
             for (use_elem = e->attr; use_elem; use_elem = use_elem->next) {
                 if (use_elem->name &&
                     strncasecmp(use_elem->name, XML_FARM_USEFARMER_COUNT, 
                                 FLOOD_STRLEN_MAX) == 0) {
+                    found_count = 1;
                     usefarmer_count += strtol(use_elem->value, NULL, 10);
                 } 
+            }
+            if (!found_count) {
+                usefarmer_count++;
             }
         }
     }
