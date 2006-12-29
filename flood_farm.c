@@ -267,7 +267,8 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
 
     for (i = 0; i < usefarmer_count; i++) {
 #if APR_HAS_THREADS
-        if ((stat = apr_thread_join(&child_stat, farm->farmers[i])) != APR_SUCCESS) {
+        stat = apr_thread_join(&child_stat, farm->farmers[i]);
+        if (stat != APR_SUCCESS && stat != APR_INCOMPLETE) {
 #else
         if ((stat = apr_proc_wait(farm->farmers[i], NULL, NULL, APR_WAIT)) != APR_CHILD_DONE) {
 #endif

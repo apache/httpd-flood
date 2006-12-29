@@ -1,3 +1,11 @@
-This product includes software developed by
+Apache Flood
+Copyright 2006 The Apache Software Foundation.
+
+This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
+Regular expression support is provided by the PCRE library package,
+which is open source software, written by Philip Hazel, and copyright
+by the University of Cambridge, England. The original software is
+available from
+   ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/

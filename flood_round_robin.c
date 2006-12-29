@@ -45,7 +45,11 @@
 #include <limits.h>
 #endif
 #include <assert.h>
+#ifdef FLOOD_USE_PCRE
+#include "flood_pcre.h"
+#else
 #include "regex.h"
+#endif
 
 #include "config.h"
 #include "flood_net.h"
