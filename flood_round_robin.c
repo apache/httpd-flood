@@ -559,6 +559,7 @@ static apr_status_t parse_xml_url_info(apr_xml_elem *e, url_t *url,
     else
     {
         url->method = GET;
+        url->method_string = "GET";
         url->payload = NULL;
         url->contenttype = NULL;
     }
