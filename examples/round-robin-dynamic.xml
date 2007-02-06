@@ -8,15 +8,15 @@
     <description>A bunch of hosts we want to hit</description>
     <!-- Find FAQ on HTTPD project page -->
     <url method="GET" responsetemplate="&lt;a href=&quot;([^&quot;]*)&quot;&gt;FAQ&lt;/a&gt;" responsename="faq">http://httpd.apache.org/</url>
-    <url method="GET" requestparamcount="1" requesttemplate="http://httpd.apache.org${faq}" />
+    <url method="GET" requesttemplate="http://httpd.apache.org${faq}" />
     <!-- Search for httpd-2.0 commit access.
     <url method="POST" payload="method=and&amp;format=builtin-long&amp;sort=score&amp;config=htdig&amp;restrict=&amp;exclude=&amp;words=httpd-2.0+commit+access" responsetemplate="&lt;a href=&quot;([^&quot;]*)&quot;&gt;" responsename="id">http://www.apachelabs.org/cgi-bin/htsearch</url>
     <url method="GET" requesttemplate="${id}" responsetemplate="Prev&lt;/A&gt; &lt;A HREF=&quot;([^&quot;]*)&quot;&gt;" responsename="next" />
-    <url method="GET" requestparamcount="1" requesttemplate="http://www.apachelabs.org${next}" />
+    <url method="GET" requesttemplate="http://www.apachelabs.org${next}" />
     -->
     <!-- Search google.com for "foo" and go to the first search result. 
     <url method="GET" responsetemplate="&lt;a href=http://([^&gt;]*)&gt;" responsename="foo">http://www.google.com/search?q=foo</url>
-    <url method="GET" requestparamcount="1" requesttemplate="http://${foo}" />
+    <url method="GET" requesttemplate="http://${foo}" />
     -->
   </urllist>
 
