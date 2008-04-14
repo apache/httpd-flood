@@ -1,5 +1,15 @@
 Changes since 1.0:
 
+* Implement a random substitution feature; requires a requesttemplate,
+  one or more substitution variables of the form ${varname) in the
+  requesttemplate and a substitution file formatted with one value
+  per newline delimited line (more than one variable per URL permitted).
+  The variables and files are referred to as subst variables and subst
+  files.  Each time the URL is sent the subst variable is replaced with
+  one line randomly selected from the subst file.  Any part of the
+  requesttemplate can be randomly substituted, protocol, host, port, etc.
+  [Guy Ferraiolo <guyf cnet.com>]
+
 * Add extraheader attribute to url's to allow custom headers to be set.
   [Justin Erenkrantz]
 

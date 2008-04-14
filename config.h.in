@@ -53,6 +53,10 @@
 #define XML_FARM_USEFARMER_COUNT "count"
 #define XML_FARM_USEFARMER_DELAY "startdelay"
 #define XML_FARM_USEFARMER_START "startcount"
+#define XML_SUBST_LIST "subst_list"
+#define XML_SUBST_ENTRY "subst_entry"
+#define XML_SUBST_VAR "subst_var"
+#define XML_SUBST_FILE "subst_file"
 
 /* The delimiter (used above) between XML elements */
 #define XML_ELEM_DELIM "."

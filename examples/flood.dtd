@@ -1,5 +1,3 @@
-<?xml version="1.0" ?>
-
 <!--
 
      This is a DTD for flood configuration files.
@@ -12,8 +10,7 @@
      is valid (in contrast to just "well-formed").
 
 -->
-
-<!ELEMENT flood (urllist+,profile+,farmer+,farm+,seed?)>
+<!ELEMENT flood (urllist+,profile+,farmer+,farm+,seed?,subst_list?)>
 
 <!-- urllist -->
 <!ELEMENT urllist (name,description?,baseurl?,(url|sequence)+)>
@@ -46,6 +43,15 @@
 <!ATTLIST sequence sequencename CDATA #REQUIRED>
 <!ATTLIST sequence sequencelist CDATA #REQUIRED>
 
+<!-- subst_list -->
+<!--
+<!ELEMENT subst_list (subst_entry|subst_seq)>
+<!ELEMENT subst_entry (subst_file, subst_var)>
+<!ELEMENT subst_file (#PCDATA)>
+<!ELEMENT subst_var (#PCDATA)>
+<!ELEMENT subst_seq (subst_list+)>
+
+-->
 <!-- profile -->
 
 <!ENTITY % profile.events "(profile_init?,get_next_url?,create_req?,postprocess?,loop_condition?,profile_destroy?)+">

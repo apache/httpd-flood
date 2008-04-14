@@ -1,0 +1,29 @@
+<flood configversion="1">
+  <urllist><name>Test Hosts</name><description>A bunch of hosts we want to hit</description><url method="GET" requesttemplate="http://httpd.apache.org/${subproject}">http://httpd.apache.org/${subproject}</url></urllist>
+  <farm>
+    <name>Bingo</name>
+    <usefarmer count="1">Joe</usefarmer>
+  </farm>
+  <subst_list>
+    <subst_entry>
+      <subst_file>./subprojects</subst_file>
+      <subst_var>subproject</subst_var>
+    </subst_entry>
+  </subst_list>
+  <profile>
+    <name>RoundRobinProfile</name>
+    <profiletype>round_robin</profiletype>
+    <description>A Test Round Robin Configuration</description>
+    <verify_resp>verify_200</verify_resp>
+    <socket>generic</socket>
+    <report>easy</report>
+    <useurllist>Test Hosts</useurllist>
+  </profile>
+  <seed>1</seed>
+  <farmer>
+    <name>Joe</name>
+    <useprofile>RoundRobinProfile</useprofile>
+    <time>23</time>
+  </farmer>
+  <test_description>lab split test 2</test_description>
+</flood>

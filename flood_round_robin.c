@@ -55,6 +55,7 @@
 #include "config.h"
 #include "flood_net.h"
 #include "flood_round_robin.h"
+#include "flood_subst_file.h"
 #include "flood_profile.h"
 
 /* On FreeBSD, the return of regexec() is 0 or REG_NOMATCH, and REG_OK is undefined */
@@ -116,6 +117,9 @@ typedef struct {
 
     apr_hash_t *state;
 
+    int subst_count;
+    subst_rec_t* subst_list;
+
     int current_round;
     int current_url;
 
@@ -128,6 +132,16 @@ static char *handle_param_string(round_robin_profile_t *rp, char *template,
     int size, matchsize;
     regex_t re;
     regmatch_t match[2];
+    subst_rec_t* subst_rec_p;
+    char* lookup_val;
+    char subst_buf[8096];
+    apr_pool_t *local_pool;
+
+    if (apr_pool_create(&local_pool, NULL) != APR_SUCCESS) {
+      apr_file_printf(local_stderr, "Failed apr_pool_create!\n");
+      exit(-1);
+    }
+         
          
     prev = template;
     returnValue = NULL;
@@ -171,6 +185,26 @@ static char *handle_param_string(round_robin_profile_t *rp, char *template,
             data = apr_hash_get(rp->state, cur+match[1].rm_so, matchsize);
         }
 
+        /* if there is no data, maybe it's a random string subst */
+        /* try to do the substition */
+	if (!data) {
+	  matchsize = match[1].rm_eo - match[1].rm_so;
+	  lookup_val = apr_pstrndup(local_pool, cur+match[1].rm_so, matchsize);
+
+	  memset(subst_buf, 0, sizeof(subst_buf));
+	  subst_rec_p = subst_file_get(lookup_val, rp->subst_list);
+	  subst_file_entry_get(&subst_rec_p->subst_file, 
+			       &subst_rec_p->fsize, subst_buf, 
+			       sizeof(subst_buf));
+
+	  if (!strlen(subst_buf)) {
+            apr_file_printf(local_stderr, 
+                            "substitution didn't return data!\n");
+            exit(-1);
+	  } 
+	  data = apr_pstrdup(rp->pool, subst_buf);
+	}
+
         /* If there is no data, place the original string back. */
         if (!data) {
             data = apr_psprintf(rp->pool, "${%s}", 
@@ -204,7 +238,10 @@ static char *handle_param_string(round_robin_profile_t *rp, char *template,
     else
         returnValue = apr_pstrcat(rp->pool, returnValue, cur, NULL);
 
+    subst_file_entry_unescape(returnValue, sizeof(returnValue));
+
     regfree(&re);
+    apr_pool_destroy(local_pool);
     return returnValue;
 }
 
@@ -715,9 +752,13 @@ apr_status_t round_robin_profile_init(profile_t **profile,
     int i;
     struct apr_xml_elem *root_elem, *profile_elem,
            *urllist_elem, *count_elem, *useurllist_elem, *baseurl_elem,
+      *subst_list_elem, *subst_entry_elem, *subst_entry_child,
            *proxyurl_elem, *e;
     round_robin_profile_t *p;
     char *xml_profile, *xml_urllist, *urllist_name;
+    char *xml_subst_list, *subst_list_name;
+    subst_rec_t* subst_rec_p; 
+    int valid_substs = 0; 
 
     p = apr_pcalloc(pool, sizeof(round_robin_profile_t));
     p->pool = pool;
@@ -833,6 +874,79 @@ apr_status_t round_robin_profile_init(profile_t **profile,
 
     /* Reset this back to 0. */
     p->current_url = 0;
+    /* now initialize the subst_list for random text substitution */    
+    /* get the subst_list from the config file */    
+    /* the subst_list has pairs or substitution variables and files */    
+    /* later on, in handle_param_string(), when a substitution variable */    
+    /* is found, it will be substituted with a randomly chosen line from */    
+    /* the subsitution file */    
+    /* there can be an arbitrary number of such pairs */    
+    /* the pairs scope is the entire configuration file */    
+    /* they are not specific to a profile, url or urllist */    
+    
+    xml_subst_list = apr_pstrdup(pool, XML_SUBST_LIST);    
+
+    if ((rv = retrieve_xml_elem_child(
+         &subst_list_elem, root_elem, XML_SUBST_LIST)) == APR_SUCCESS) {
+      /* count the subst_entries for this config file and allocate space */
+      p->subst_count = 0;      
+      p->subst_count += count_xml_elem_child(subst_list_elem, XML_SUBST_ENTRY);
+      p->subst_list = apr_pcalloc(p->pool, sizeof(subst_rec_t) * (p->subst_count + 1));
+
+      /* get the subst_list info and populate the data structures */
+      subst_rec_p = p->subst_list;      
+      for (e = subst_list_elem->first_child; e; e = e->next) {
+        if (strncasecmp(e->name, XML_SUBST_ENTRY, FLOOD_STRLEN_MAX) == 0) {
+          subst_entry_elem = e;
+          for (subst_entry_child = subst_entry_elem->first_child; 
+                                   subst_entry_child; 
+                                   subst_entry_child = subst_entry_child->next) {
+            if (strncasecmp(subst_entry_child->name, 
+                            XML_SUBST_VAR, FLOOD_STRLEN_MAX) == 0) {
+              if (subst_entry_child->first_cdata.first 
+                  && subst_entry_child->first_cdata.first->text) {
+                (subst_rec_t*)subst_rec_p->subst_var = 
+                    apr_pstrdup(pool, 
+                                subst_entry_child->first_cdata.first->text);
+              }
+            }
+
+            if (strncasecmp(subst_entry_child->name, 
+                            XML_SUBST_FILE, FLOOD_STRLEN_MAX) == 0) {
+              if (subst_entry_child->first_cdata.first 
+                  && subst_entry_child->first_cdata.first->text) {
+                (subst_rec_t*)subst_rec_p->subst_file_name = 
+                    apr_pstrdup(pool, 
+                                subst_entry_child->first_cdata.first->text);
+              }
+            }
+          }
+        }
+        /* this is the end of each subst_entry fetch */
+        /* at this point we should have the subst_var and subst_file_name */
+        if (subst_rec_p->subst_var && subst_rec_p->subst_file_name) {
+          subst_rec_p->valid = 1;
+        }
+        /* we should have the same number of valid substs as */
+        /* the subst_count above */
+        valid_substs++;
+        subst_rec_p++;
+      }
+      if (valid_substs != p->subst_count) {
+          apr_file_printf(local_stderr,
+          "Profile '%s' valid substs: %d inconsistent with subst count %d.\n",
+          profile_name, valid_substs, p->subst_count);
+        return APR_EGENERAL;
+      }
+      /* now open all the substitution files */
+      subst_rec_p = p->subst_list;
+      while(subst_rec_p->valid) {
+        subst_file_open(&(subst_rec_p->subst_file), 
+                        subst_rec_p->subst_file_name, 
+                        &(subst_rec_p->fsize), pool);
+        subst_rec_p++;
+      }
+    }
 
     *profile = p;
 
