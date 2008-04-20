@@ -187,5 +187,5 @@ protocol must be designed to facilitate IPC.
 [ propose a protocol here, perhaps XML? ]
 
 ----------------------------------------
-$Id: DESIGN,v 1.1 2001/07/18 03:33:36 jerenkrantz Exp $
+$Id$
 
