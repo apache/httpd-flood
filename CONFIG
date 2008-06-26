@@ -47,7 +47,7 @@ Example XML:
      <uri>http://foo.com/</uri>
      <verify>
        <module>libgrep.so</module>
-       <expect>die bill gates</expect>
+       <expect>It works!</expect>
      </verify>
   </url>
   <url>http://foo.net/</url>
