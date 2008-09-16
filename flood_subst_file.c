@@ -205,7 +205,6 @@ int close_subst_file(apr_file_t* subst_file) {
 }
 
 int main(int argc, char** argv) {
-  //# why mess around, therefore static
   char line[SUBST_FILE_MAX_URL_SIZE];
   int i = 20;
   int list = 0;
