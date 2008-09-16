@@ -1,14 +1,31 @@
-#include <assert.h>
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 #include <apr_general.h>
 #include <apr_file_io.h>
+
 #include "flood_subst_file.h"
+
+#include <assert.h>
+#include <stdlib.h>
+
 #define IS_NUM(c)       (('0' <= (c)) && ('9' >= (c)))
 
-apr_file_t* subst_file = NULL;
 extern apr_file_t *local_stdout;
 extern apr_file_t *local_stderr;
-apr_off_t fsize;
-char * pp = "thisis\nmytest";
 
 void subst_list_init(subst_rec_t *subst_list, int subst_list_size) {
   int i;
@@ -23,43 +40,20 @@ void subst_list_init(subst_rec_t *subst_list, int subst_list_size) {
   }
 }
 
-void subst_list_make(subst_rec_t *subst_list) {
-  int i2 = 0;
-
-  subst_list[0].subst_var = "name";
-  subst_list[0].subst_file_name = "/pmalab1/temphome/guyf/work/replace_mc5/flood_stuff/build/flood-0.4/test";
-  subst_list[0].subst_mode = 0;
-  subst_list[0].valid = 1;
-  i2++;
-
-  subst_list[i2].subst_var = "foot";
-  subst_list[i2].subst_file_name = "/pmalab1/temphome/guyf/work/replace_mc5/flood_stuff/build/flood-0.4/blort";
-  subst_list[i2].subst_mode = 0;
-  subst_list[i2].valid = 1;
-
-  i2++;
-  subst_list[i2].subst_var = "nerve";
-  subst_list[i2].subst_file_name = "/pmalab1/temphome/guyf/work/replace_mc5/flood_stuff/build/flood-0.4/cavort";
-  subst_list[i2].subst_mode = 0;
-  subst_list[i2].valid = 1;
-}
-
 subst_rec_t* subst_file_get(const char* varname, subst_rec_t* subst_list) {
   int i;
 
   for (i = 0; i < SUBST_FILE_ARR_MAX; i++) {
     if ((strcmp(subst_list[i].subst_var, varname) == 0)
-	&& subst_list[i].valid) {
+        && subst_list[i].valid) {
       return &(subst_list[i]);
     }
   }
   return NULL;
 }
 
-
 void subst_file_err(const char* msgtext, const char* vartext, apr_status_t errcode) {
   char errtext[SUBST_FILE_ERROR_BUF];
-  apr_file_t* local_stderr;
   apr_pool_t *err_pool;
 
   if (apr_pool_create(&err_pool, NULL) != APR_SUCCESS) {
@@ -68,25 +62,23 @@ void subst_file_err(const char* msgtext, const char* vartext, apr_status_t errco
   }
 
   apr_strerror(errcode, (char *) &errtext, SUBST_FILE_ERROR_BUF);
-  apr_file_open_stderr(&local_stderr, err_pool);
 
   apr_file_printf(local_stderr, "%s %s %s\n", msgtext, vartext, errtext);
-  apr_file_close(local_stderr);
 
   apr_pool_destroy(err_pool);
 }
 
-
-int subst_file_open(apr_file_t** subst_file, const char* fname, apr_off_t* fsize, apr_pool_t* pool) {
+int subst_file_open(apr_file_t** subst_file, const char* fname,
+                    apr_off_t* fsize, apr_pool_t* pool) {
   apr_finfo_t finfo;
   apr_status_t rc = 0;
   apr_int32_t wanted = APR_FINFO_SIZE;
 
-  rc  = apr_file_open(subst_file, fname, APR_READ, APR_OS_DEFAULT, pool);
+  rc = apr_file_open(subst_file, fname, APR_READ, APR_OS_DEFAULT, pool);
 
   if (rc) {
     subst_file_err("Couldn't open file", fname, rc);
-    exit(-1 );
+    exit(-1);
   }
 
   rc = 0;
@@ -100,17 +92,6 @@ int subst_file_open(apr_file_t** subst_file, const char* fname, apr_off_t* fsize
   return 0;
 }
 
-
-int close_subst_file(apr_file_t* subst_file) {
-  apr_status_t rc = 0;
-
-  if (subst_file) {
-    rc = apr_file_close(subst_file);
-  }
-  return rc;
-}
-
- 
 char* subst_file_entry_get(apr_file_t** subst_file, apr_off_t *fsize, char* line, int line_size) {
   apr_off_t seek_val;
   apr_off_t zero = 0;
@@ -142,7 +123,6 @@ char* subst_file_entry_get(apr_file_t** subst_file, apr_off_t *fsize, char* line
   return line;
 }
 
-
 /* a substitution file entry (nomimally a single line) can now contain */
 /* escaped characters such as \n, \t, \012 so that the entry can be */
 /* a multi-line POST payload */
@@ -161,26 +141,26 @@ char* subst_file_entry_unescape(char* line, int line_size)
     if (*from == '\\') {
       ++from;
       if (IS_NUM(*from)) {
-	num = *from++ - '0';
-	if (IS_NUM(*from))
-	  num = num*10 + (*from++ - '0');
-	if (IS_NUM(*from))
-	  num = num*10 + (*from++ - '0');
-	if (num != 0) {
-	  *to++ = num;
-	} else {
-	  *to++ = '\\';
-	  *to++ = '0';
-	}
+          num = *from++ - '0';
+          if (IS_NUM(*from))
+              num = num*10 + (*from++ - '0');
+          if (IS_NUM(*from))
+              num = num*10 + (*from++ - '0');
+          if (num != 0) {
+              *to++ = num;
+          } else {
+              *to++ = '\\';
+              *to++ = '0';
+          }
       } else {
-	switch (*from) {
-	case '\0': continue;
-	case 'n': *to++ = '\n'; break;
-	case 'r': *to++ = '\r'; break;
-	case 't': *to++ = '\t'; break;
-	default: *to++ = *from; break;
-	}
-	++from;
+        switch (*from) {
+        case '\0': continue;
+        case 'n': *to++ = '\n'; break;
+        case 'r': *to++ = '\r'; break;
+        case 't': *to++ = '\t'; break;
+        default: *to++ = *from; break;
+        }
+        ++from;
       }
     } else {
       *to++ = *from++;
@@ -192,8 +172,41 @@ char* subst_file_entry_unescape(char* line, int line_size)
 }
 
 #ifdef SUBST_MAIN
+subst_rec_t subst_list[SUBST_FILE_ARR_MAX];
+
+void subst_list_make(subst_rec_t *subst_list) {
+  int i2 = 0;
+
+  subst_list[0].subst_var = "name";
+  subst_list[0].subst_file_name = "/pmalab1/temphome/guyf/work/replace_mc5/flood_stuff/build/flood-0.4/test";
+  subst_list[0].subst_mode = 0;
+  subst_list[0].valid = 1;
+  i2++;
+
+  subst_list[i2].subst_var = "foot";
+  subst_list[i2].subst_file_name = "/pmalab1/temphome/guyf/work/replace_mc5/flood_stuff/build/flood-0.4/blort";
+  subst_list[i2].subst_mode = 0;
+  subst_list[i2].valid = 1;
+
+  i2++;
+  subst_list[i2].subst_var = "nerve";
+  subst_list[i2].subst_file_name = "/pmalab1/temphome/guyf/work/replace_mc5/flood_stuff/build/flood-0.4/cavort";
+  subst_list[i2].subst_mode = 0;
+  subst_list[i2].valid = 1;
+}
+
+int close_subst_file(apr_file_t* subst_file) {
+  apr_status_t rc = 0;
+
+  if (subst_file) {
+    rc = apr_file_close(subst_file);
+  }
+  return rc;
+}
+
 int main(int argc, char** argv) {
-  char line[SUBST_FILE_MAX_URL_SIZE];    # why mess around, therefore static
+  //# why mess around, therefore static
+  char line[SUBST_FILE_MAX_URL_SIZE];
   int i = 20;
   int list = 0;
   char* the_name;
@@ -201,6 +214,8 @@ int main(int argc, char** argv) {
 
   apr_initialize();
   atexit(apr_terminate);
+
+  apr_file_open_stderr(&local_stderr, err_pool);
 
   if (apr_pool_create(&pool, NULL) != APR_SUCCESS) {
     printf("Failed apr_pool_create\n");
