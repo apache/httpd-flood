@@ -32,8 +32,6 @@ typedef struct subst_rec_t subst_rec_t;
 
 void subst_file_err(const char*, const char*, apr_status_t);
 int subst_file_open(apr_file_t**, const char*, apr_off_t*, apr_pool_t*);
-int close_subst_file(apr_file_t*);
 char* subst_file_entry_get(apr_file_t**, apr_off_t*, char*, int);
 subst_rec_t* subst_file_get(const char*, subst_rec_t*);
-
 #endif
