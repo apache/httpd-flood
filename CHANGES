@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Fix compilation error with newer gcc versions.
+  [Ohad Lutzky <ohad lutzky.net>]
+
 * Implement a random substitution feature; requires a requesttemplate,
   one or more substitution variables of the form ${varname) in the
   requesttemplate and a substitution file formatted with one value

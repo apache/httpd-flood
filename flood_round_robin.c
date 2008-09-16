@@ -905,7 +905,7 @@ apr_status_t round_robin_profile_init(profile_t **profile,
                             XML_SUBST_VAR, FLOOD_STRLEN_MAX) == 0) {
               if (subst_entry_child->first_cdata.first 
                   && subst_entry_child->first_cdata.first->text) {
-                (subst_rec_t*)subst_rec_p->subst_var = 
+                ((subst_rec_t*)subst_rec_p)->subst_var = 
                     apr_pstrdup(pool, 
                                 subst_entry_child->first_cdata.first->text);
               }
@@ -915,7 +915,7 @@ apr_status_t round_robin_profile_init(profile_t **profile,
                             XML_SUBST_FILE, FLOOD_STRLEN_MAX) == 0) {
               if (subst_entry_child->first_cdata.first 
                   && subst_entry_child->first_cdata.first->text) {
-                (subst_rec_t*)subst_rec_p->subst_file_name = 
+                ((subst_rec_t*)subst_rec_p)->subst_file_name = 
                     apr_pstrdup(pool, 
                                 subst_entry_child->first_cdata.first->text);
               }
