@@ -169,7 +169,7 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
 
     do {
         /* Sentinel value */
-        int blen = 0;
+        apr_size_t blen = 0;
         char *start_chunk, *end_chunk, *b;
 
         /* Always reset the b. */
@@ -276,7 +276,8 @@ static apr_status_t keepalive_load_resp(response_t *resp,
                                         apr_size_t remaining, apr_pool_t *pool)
 {
     /* Ugh, we want everything. */
-    int currentalloc, remain, i;
+    int currentalloc, remain;
+    apr_size_t i;
     char *cp, *op, b[MAX_DOC_LENGTH];
     apr_status_t status;
 
@@ -338,7 +339,7 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
     char *cl, *ecl, cls[17];
     char *current_line;
-    int i;
+    apr_size_t i;
     response_t *new_resp;
     apr_status_t status;
     long content_length = 0, chunk_length;

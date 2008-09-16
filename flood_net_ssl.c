@@ -237,7 +237,7 @@ void ssl_close_socket(ssl_socket_t *s)
     close_socket(s->socket);
 }
 
-apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
+apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, apr_size_t *buflen)
 {
     apr_status_t e;
     int sslError;
@@ -340,7 +340,7 @@ apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r)
     return APR_ENOTIMPL;
 }
 
-apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, int *buflen)
+apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, apr_size_t *buflen)
 {
     return APR_ENOTIMPL;
 }

@@ -100,7 +100,7 @@ void close_socket(flood_socket_t *s)
     apr_socket_close(s->socket);
 }
 
-apr_status_t read_socket(flood_socket_t *s, char *buf, int *buflen)
+apr_status_t read_socket(flood_socket_t *s, char *buf, apr_size_t *buflen)
 {
     apr_status_t e;
     apr_int32_t socketsRead;

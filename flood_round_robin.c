@@ -1215,7 +1215,7 @@ apr_status_t round_robin_postprocess(profile_t *profile,
 
         while (wbytes < nbytes) {
 
-            int bytes;
+            apr_size_t bytes;
             apr_int32_t nrdes;
             const apr_pollfd_t *ardes = NULL;
             const apr_pollfd_t *rdes;
