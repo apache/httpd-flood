@@ -19,7 +19,7 @@ END {
     for (i in ht) {
         printf("%.4f\t%.4f\t%.4f\t%.4f\t%d\t%s\n", co[i]/cou[i], wr[i]/cou[i], re[i]/cou[i], cl[i]/cou[i], cou[i], i)
     }
-}' - | sort -rn +3 | head -5
+}' - | sort -rn -k3 | head -5
 #echo "Most frequently hit pages (top 5):"
 #tail +1 $1 | gawk '/OK.*https?/ {
 #    split($8, urlarray, /\?/); url = urlarray[1]; ht[url] = url;
