@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Update relative times report to use appropriate APR format string.
+  [Justin Erenkrantz]
+
 * Protect relative times report output with a mutex to avoid overlap.
   [Justin Erenkrantz]
 

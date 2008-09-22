@@ -73,7 +73,7 @@ apr_status_t relative_times_process_stats(report_t *report, int verified, reques
 
 #if APR_HAS_THREADS
     apr_thread_mutex_lock(rr->config->mutex);
-    apr_file_printf(local_stdout, "%s %ld %s\n", buf, apr_os_thread_current(), req->uri);
+    apr_file_printf(local_stdout, "%s %pT %s\n", buf, apr_os_thread_current(), req->uri);
     apr_thread_mutex_unlock(rr->config->mutex);
 #else
     apr_file_printf(local_stdout, "%s %d %s\n", buf, getpid(), req->uri);
