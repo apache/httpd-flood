@@ -231,6 +231,7 @@ apr_status_t run_farm(config_t *config, const char *farm_name, apr_pool_t *pool)
 #if APR_HAS_THREADS
     farm->farmers = apr_pcalloc(pool, 
                                 sizeof(apr_thread_t*) * (usefarmer_count + 1));
+    apr_thread_mutex_create(&config->mutex, APR_THREAD_MUTEX_DEFAULT, pool);
 #else
     farm->farmers = apr_pcalloc(pool, 
                                 sizeof(apr_proc_t*) * (usefarmer_count + 1));

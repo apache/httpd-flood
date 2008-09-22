@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Protect relative times report output with a mutex to avoid overlap.
+  [Justin Erenkrantz]
+
 * Fix compilation error with newer gcc versions.
   [Ohad Lutzky <ohad lutzky.net>]
 

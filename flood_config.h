@@ -31,6 +31,9 @@
 typedef struct {
     apr_xml_doc *doc;
     apr_pool_t *pool;
+#if APR_HAS_THREADS
+    apr_thread_mutex_t *mutex;
+#endif
 } config_t;
 
 /**
