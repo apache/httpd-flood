@@ -109,7 +109,7 @@ if test "$enable_ssl" = "yes"; then
     ])
 fi
 
-APR_FIND_APR(./apr,,,[1 0])
+APR_FIND_APR(./apr,,1,[1 0])
 
 if test "$apr_found" = "no"; then
   AC_MSG_ERROR([APR not found.  Please read the documentation.])
@@ -120,6 +120,7 @@ if test "$apr_found" = "reconfig"; then
   FLOOD_SUBDIRS="$FLOOD_SUBDIRS apr"   
 fi
 
+CC="`$apr_config --cc`"
 CFLAGS="$CFLAGS `$apr_config --cflags`"
 CPPFLAGS="$CPPFLAGS `$apr_config --cppflags --includes`"
 LDFLAGS="$LDFLAGS `$apr_config --ldflags`"
@@ -127,7 +128,7 @@ LIBTOOL="`$apr_config --apr-libtool`"
 LIBTOOL_LIBS="$LIBTOOL_LIBS `$apr_config --link-libtool --libs`"
 APR_CONFIG="$apr_config"
 
-APR_FIND_APU(./apr-util,,,[1 0])
+APR_FIND_APU(./apr-util,,1,[1 0])
 
 if test "$apu_found" = "no"; then
   AC_MSG_ERROR([APR-util not found.  Please read the documentation.])

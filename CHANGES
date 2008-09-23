@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Support building against installed Ubuntu APR packages.
+  [Justin Erenkrantz]
+
 * Update relative times report to use appropriate APR format string.
   [Justin Erenkrantz]
 
