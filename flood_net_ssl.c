@@ -318,6 +318,11 @@ apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r)
     return APR_SUCCESS;     
 }
 
+apr_status_t ssl_check_socket(ssl_socket_t *s, apr_pool_t *pool)
+{
+    return check_socket(s->socket, pool);
+}
+
 #else /* FLOOD_HAS_OPENSSL */
 
 apr_status_t ssl_init_socket(apr_pool_t *pool)
@@ -341,6 +346,11 @@ apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r)
 }
 
 apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, apr_size_t *buflen)
+{
+    return APR_ENOTIMPL;
+}
+
+apr_status_t ssl_check_socket(ssl_socket_t *s, apr_pool_t *pool)
 {
     return APR_ENOTIMPL;
 }

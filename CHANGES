@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Fix HTTP keepalives over SSL.
+  [Justin Erenkrantz]
+
 * Support building against installed Ubuntu APR packages.
   [Justin Erenkrantz]
 

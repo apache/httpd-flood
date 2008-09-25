@@ -40,6 +40,15 @@
     ksock->ssl ? ssl_write_socket(ksock->s, req) : \
                  write_socket(ksock->s, req)
 
+#define ksock_check_socket(ksock, pool) \
+    ksock->ssl ? ssl_check_socket(ksock->s, pool) : \
+                 check_socket(ksock->s, pool)
+
+#define ksock_close_socket(ksock) \
+    ksock->ssl ? ssl_close_socket(ksock->s) : \
+                 close_socket(ksock->s)
+
+
 typedef struct {
     void *s;
     apr_pollfd_t *p;
@@ -78,7 +87,7 @@ apr_status_t keepalive_begin_conn(socket_t *sock, request_t *req, apr_pool_t *po
 
     if (!ksock->reopen_socket && ksock->s) {
         apr_status_t e;
-        e = check_socket(ksock->s, pool);
+        e = ksock_check_socket(ksock, pool);
         if (e != APR_SUCCESS) {
             ksock->reopen_socket = 1;
         }
@@ -544,7 +553,7 @@ apr_status_t keepalive_end_conn(socket_t *sock, request_t *req, response_t *resp
     keepalive_socket_t *ksock = (keepalive_socket_t *)sock;
 
     if (resp->keepalive == 0) {
-        ksock->ssl ? ssl_close_socket(ksock->s) : close_socket(ksock->s);
+        ksock_close_socket(ksock);
         ksock->reopen_socket = 1; /* we just closed it */
     }
         

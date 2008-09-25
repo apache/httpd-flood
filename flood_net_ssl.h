@@ -30,5 +30,6 @@ ssl_socket_t* ssl_open_socket(apr_pool_t *pool, request_t *r,
 void ssl_close_socket(ssl_socket_t *s);
 apr_status_t ssl_write_socket(ssl_socket_t *s, request_t *r);
 apr_status_t ssl_read_socket(ssl_socket_t *s, char *buf, apr_size_t *buflen);
+apr_status_t ssl_check_socket(ssl_socket_t *s, apr_pool_t *pool);
 
 #endif  /* __flood_net_socket_h */
