@@ -163,17 +163,13 @@ static apr_status_t keepalive_read_chunk(response_t *resp,
     apr_status_t status = APR_SUCCESS;
     int old_length = 0;
 
-    if (!chunk_length) {
-        return status;
-    }
-
-    if (!resp->chunk || !*resp->chunk) {
+    if (!resp->chunk) {
         chunk_length = 0;
-    }
-
-    if (chunk_length < 0) {
+    } else if (chunk_length < 0) {
         old_length = chunk_length;
         chunk_length = 0;
+    } else if (chunk_length == 0) {
+        return status;
     }
 
     do {
@@ -412,6 +408,8 @@ apr_status_t keepalive_recv_resp(response_t **resp, socket_t *sock, apr_pool_t *
     {
         new_resp->chunked = 1;
         new_resp->chunk = NULL;
+        chunk_length = 0;
+
         /* Find where headers ended */
         cl = current_line;
 

@@ -1,5 +1,8 @@
 Changes since 1.0:
 
+* Fix issue with chunked keep-alive responses when the initial chunk content
+  starts with a NULL byte.  [Justin Erenkrantz]
+
 * Fix HTTP keepalives over SSL.
   [Justin Erenkrantz]
 
